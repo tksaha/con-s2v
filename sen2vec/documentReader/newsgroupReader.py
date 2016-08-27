@@ -15,3 +15,5 @@ class NewsGroupReader(DocumentReader):
 			if  not(DocumentReader._folder_is_hidden(self, folder)):
 				doc_tag = folder[folder.rfind(".")+1: ]
 				yield doc_tag
+				# Go through second level folder 
+					#Third level folder gives documents 

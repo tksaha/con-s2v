@@ -30,7 +30,7 @@ def main():
 	newsReader = NewsGroupReader()
 	folder = "/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/newsgroup/20news-bydate"
 	for tags in newsReader.readDocument(folder):
-		print tags 
+		print (tags) 
 
 	pass 
 
