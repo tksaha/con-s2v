@@ -11,7 +11,7 @@ from collections import Counter
 
 #from concurrent.futures import ProcessPoolExecutor
 import logging
-from documentReader import newsgroupReader  
+from documentReader.newsgroupReader  import NewsGroupReader 
 
 
 # from six import text_type as unicode
@@ -27,8 +27,8 @@ LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
 
 
 def main():
-	#newsReader = newsgroupReader()
-	#print newsgroupReader.readDocument()
+	newsReader = NewsGroupReader()
+	print newsReader.readDocument()
 	pass 
 
 if __name__ == "__main__":

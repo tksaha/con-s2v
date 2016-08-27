@@ -1,10 +1,10 @@
-from documentReader import DocumentReader
+from documentReader.DocumentReader import DocumentReader
 
-class newsgroupReader(DocumentReader):
+class NewsGroupReader(DocumentReader):
 	""" News Group Document Reader"""
-	
+
 	def __init__(self,*args, **kwargs):
 		DocumentReader.__init__(self, *args, **kwargs)
 
-	def readDocument(): 
+	def readDocument(self): 
 		return "Implemented "
