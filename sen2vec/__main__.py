@@ -28,7 +28,10 @@ LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
 
 def main():
 	newsReader = NewsGroupReader()
-	print newsReader.readDocument()
+	folder = "/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/newsgroup/20news-bydate"
+	for tags in newsReader.readDocument(folder):
+		print tags 
+
 	pass 
 
 if __name__ == "__main__":
