@@ -17,9 +17,9 @@ class PostgresPythonConnector(DatabaseConnector):
 	def	connect_database(self): 
 		connection = psycopg2.connect(database=self.database, user=self.username,\
 			password=self.passwd, host=self.host, port=self.port)
-		print "Opened database successfully"
+		print ("Opened database successfully")
 		return connection
 		
 	def	disconnect_database(self,connection):	
 		connection.close(); 
-		print "Closed Database successfully"
+		print ("Closed Database successfully")
