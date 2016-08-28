@@ -5,7 +5,9 @@ from abc import ABCMeta, abstractmethod
 
 
 class DocumentReader:
-	"""DocumentReader Base"""
+	"""
+	DocumentReader Base
+	"""
 	__metaclass__ = ABCMeta
 
 	def __init__(self):

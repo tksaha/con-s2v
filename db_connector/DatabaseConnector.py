@@ -24,9 +24,9 @@ class DatabaseConnector:
 	def	disconnect_database(connection):	
 		pass 
 
-	def select(fields = [], table = '', where_fields = [], where_values = [], limit1 = '', limit2 = ''):
+	def select(self, fields = [], table = '', where_fields = [], where_values = [], limit1 = '', limit2 = ''):
 		try:
-			cursor = connector.cursor()
+			cursor = self.connector.cursor()
 			where_fields_values = [where_field+' = '+str(where_value) for (where_field, where_value) in zip(where_fields, where_values)]
 			statement = "SELECT "+', '.join(fields)
 			if(table != ''):
@@ -44,9 +44,9 @@ class DatabaseConnector:
 		finally:
 			return result
 		
-	def update(fields = [], values = [], where_fields = [], where_values = [], table = ''):
+	def update(self, fields = [], values = [], where_fields = [], where_values = [], table = ''):
 		try:
-			cursor = connector.cursor()
+			cursor = self.connector.cursor()
 			fields_values = [field+' = '+str(value) for (field, value) in zip(fields, values)]
 			where_fields_values = [where_field+' = '+str(where_value) for (where_field, where_value) in zip(where_fields, where_values)]
 			statement = "UPDATE "+table+" SET "+ ', '.join(fields_values)+" WHERE "+' AND '.join(where_fields_values)
@@ -55,9 +55,9 @@ class DatabaseConnector:
 		finally:
 			connector.commit()
 
-	def insert(values = [], table = '', fields = []):
+	def insert(self, values = [], table = '', fields = []):
 		try:
-			cursor = connector.cursor()
+			cursor = self.connector.cursor()
 			statement = "INSERT IGNORE INTO "+table
 			if(fields != []):
 				statement += " ("+', '.join(fields)+") "
