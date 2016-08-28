@@ -2,13 +2,13 @@
 
 import os
 import sys
-import psycopg2
+import mysql.connector
 from DatabaseConnector import * 
 
 
-class PostgresPythonConnector(DatabaseConnector):
+class MySQLPythonConnector(DatabaseConnector):
 	"""
-	PostgresPythonConnector: This class implements the Postgres 
+	MySQLPythonConnector: This class implements the MySQL 
 	Database connector for Python 
 
 	"""
@@ -16,13 +16,13 @@ class PostgresPythonConnector(DatabaseConnector):
 		DatabaseConnector.__init__(self, *args, **kwargs)
 
 	def	connect_database(self): 
-		self.connector = psycopg2.connect(database=self.database, user=self.username,\
+		self.connector = mysql.connector.connect(database=self.database, user=self.username,\
 			password=self.passwd, host=self.host, port=self.port)
 
-		print ("Opened Postgres Database successfully")
+		print ("Opened MySQL Database successfully")
 		#return connection
 		
 	def	disconnect_database(self, connection):	
 		self.connector.close(); 
 		self.connector = None
-		print ("Closed Postgres Database successfully")
+		print ("Closed MySQL Database successfully")
