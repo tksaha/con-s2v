@@ -14,7 +14,7 @@ import logging
 from documentReader.newsgroupReader  import NewsGroupReader 
 
 
-# from six import text_type as unicode
+from six import text_type as unicode
 # from six import iteritems
 # from six.moves import range
 
@@ -29,8 +29,8 @@ LOGFORMAT = "%(asctime).19s %(levelname)s %(filename)s: %(lineno)s %(message)s"
 def main():
 	newsReader = NewsGroupReader()
 	folder = "/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/newsgroup/20news-bydate"
-	for tags in newsReader.readDocument(folder):
-		print (tags) 
+	for doc_id,text in newsReader.readDocument(folder):
+		print (text)
 
 	pass 
 
