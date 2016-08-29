@@ -1,5 +1,6 @@
 import os 
 from documentReader.DocumentReader import DocumentReader
+from documentReader import postgresDataRecorder
 
 from bs4 import BeautifulSoup
 
@@ -42,4 +43,4 @@ class ReutersReader(DocumentReader):
 					except:
 						metadata = None
 					print(id, title, text, time, metadata)
-					
+			break
