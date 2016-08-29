@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+import os
+import sys 
+
+from documentReader.DataRecorder import DataRecorder
 from db_connector.postgresPythonConnector import PostgresPythonConnector as Connector
 
 
