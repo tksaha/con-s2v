@@ -5,7 +5,10 @@ from documentReader.postgresDataRecorder import PostgresDataRecorder
 from bs4 import BeautifulSoup
 
 class ReutersReader(DocumentReader):
-	""" Reuters Document Reader"""
+	""" 
+	Reuters Document Reader
+
+	"""
 
 	def __init__(self,*args, **kwargs):
 		DocumentReader.__init__(self, *args, **kwargs)
@@ -16,6 +19,8 @@ class ReutersReader(DocumentReader):
 #				content = open(folderPath+"/"+file, 'r', encoding='utf-8', errors='ignore').read()
 
 	def readDocument(self, folderPath):
+		"""
+		"""
 		pass
 		# for file in os.listdir(folderPath):
 		# 	if file.endswith(".sgm"):
