@@ -3,6 +3,7 @@
 import os
 import sys
 import mysql.connector
+import logging 
 from DatabaseConnector import * 
 
 

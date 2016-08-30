@@ -1,8 +1,9 @@
 import os 
+import logging 
 from documentReader.DocumentReader import DocumentReader
-from documentReader.postgresDataRecorder import PostgresDataRecorder
-
+from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from bs4 import BeautifulSoup
+
 
 class ReutersReader(DocumentReader):
 	""" 
@@ -11,10 +12,15 @@ class ReutersReader(DocumentReader):
 	"""
 
 	def __init__(self,*args, **kwargs):
+		"""
+		"""
 		DocumentReader.__init__(self, *args, **kwargs)
-		self.postgres_recorder = PostgresDataRecorder()
+		self.dbstring = "reuters,naeemul,naeemul,localhost,5432"
+		self.postgres_recorder = PostgresDataRecorder(self.dbstring)
 		
 	def readTopic(self, folderPath):
+		"""
+		"""
 		for file in os.listdir(folderPath):
 			if file.endswith(".lc.txt"):
 				category = file.split('-')[1]
@@ -26,6 +32,8 @@ class ReutersReader(DocumentReader):
 		print("Topic reading complete.")
 
 	def readDocument(self, folderPath):
+		"""
+		"""
 		
 		self.readTopic(folderPath) #First, reading and recording the Topics
 		

@@ -1,6 +1,7 @@
 import os 
 import sys 
 from abc import ABCMeta, abstractmethod
+import logging 
 
 
 
@@ -17,7 +18,9 @@ class DocumentReader:
 	def readDocument(self):
 		pass
 
-	# Protected Methods
+	"""
+	Protected Methods 
+	"""
 	def _splitIntoParagraph(self, document):
 		pass
 
@@ -28,9 +31,4 @@ class DocumentReader:
 		pass
 
 	def _folder_is_hidden(self, folder):
-		if os.name == 'nt':
-			import win32api, win32con
-			attribute = win32api.GetFileAttributes(folder)
-			return attribute & (win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM)
-		else:
-			return folder.startswith('.') #linux-osx
+		return folder.startswith('.') #linux-osx

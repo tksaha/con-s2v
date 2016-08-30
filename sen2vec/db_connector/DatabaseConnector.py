@@ -2,6 +2,7 @@
 
 import os 
 import sys 
+import logging 
 
 from abc import ABCMeta, abstractmethod
 
@@ -45,8 +46,9 @@ class DatabaseConnector:
 			cursor.execute(statement, values)
 			result = cursor.fetchall()			
 		except Exception as e:		
-			log_file = open('errors', 'a')
-			log_file.write('\n'+e.pgerror+": "+statement+'\n')
+			#log_file = open('errors', 'a')
+			#log_file.write('\n'+e.pgerror+": "+statement+'\n')
+			logging.error("%s%s%s%s%s" %(os.linesep, e.pgerror,": ", statement, os.linesep))
 			self.connector.rollback()
 		finally:
 			return result
@@ -62,6 +64,7 @@ class DatabaseConnector:
 			cursor.execute(statement, values)
 			self.connector.commit()
 		except Exception as e:		
-			log_file = open('errors', 'a')
-			log_file.write('\n'+e.pgerror+": "+statement+'\n')
+			#log_file = open('errors', 'a')
+			#log_file.write('\n'+e.pgerror+": "+statement+'\n')
+			logging.error("%s%s%s%s%s" %(os.linesep, e.pgerror,": ", statement, os.linesep))
 			self.connector.rollback()

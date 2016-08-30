@@ -2,6 +2,7 @@
 import os 
 import re 
 from documentReader.DocumentReader import DocumentReader
+import logging 
 
 
 class NewsGroupReader(DocumentReader):
