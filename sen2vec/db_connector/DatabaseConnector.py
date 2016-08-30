@@ -24,49 +24,44 @@ class DatabaseConnector:
 	@abstractmethod
 	def	disconnect_database(connection):	
 		pass 
-
-	def select(self, fields = [], table = '', where_fields = [], where_values = [], limit1 = '', limit2 = ''):
+	
+	def select(self, fields = [], tables = [], where = [], groupby = [], orderby = []):
 		try:
+			result = []
 			cursor = self.connector.cursor()
-			where_fields_values = [where_field+' = '+str(where_value) for (where_field, where_value) in zip(where_fields, where_values)]
-			statement = "SELECT "+', '.join(fields)
-			if(table != ''):
-				statement += " FROM "+table
-			if(where_fields_values != []):
-				statement += " WHERE "+' AND '.join(where_fields_values)
-			if(limit1 != ''):
-				statement += " LIMIT "+limit1+", "+limit2
-			print(statement)
-			cursor.execute(statement)
-			if(cursor.with_rows):
-				result = cursor.fetchall()
-			else:
-				return []
+			statement = "SELECT "+', '.join(fields)+" "
+			statement += "FROM "+','.join(tables)+" "
+			values = []
+			where_clause = []
+			if len(where) != 0:
+				for l, o, r in where:
+					where_clause += [l+" "+o+" "+"%s"]
+					values += [r]
+				statement += "WHERE "+' AND '.join(where_clause)+" "
+			if len(groupby) != 0:
+				statement += "GROUP BY "+', '.join(groupby)+" "
+			if len(orderby) != 0:
+				statement += "ORDER BY "+', '.join(orderby)+" "
+			cursor.execute(statement, values)
+			result = cursor.fetchall()			
+		except Exception as e:		
+			log_file = open('errors', 'a')
+			log_file.write('\n'+e.pgerror+": "+statement+'\n')
+			self.connector.rollback()
 		finally:
 			return result
-		
-	def update(self, fields = [], values = [], where_fields = [], where_values = [], table = ''):
-		try:
-			cursor = self.connector.cursor()
-			fields_values = [field+' = '+str(value) for (field, value) in zip(fields, values)]
-			where_fields_values = [where_field+' = '+str(where_value) for (where_field, where_value) in zip(where_fields, where_values)]
-			statement = "UPDATE "+table+" SET "+ ', '.join(fields_values)+" WHERE "+' AND '.join(where_fields_values)
-			print(statement)
-			cursor.execute(statement)
-		finally:
-			connector.commit()
-
+	
 	def insert(self, values = [], table = '', fields = []):
 		try:
 			cursor = self.connector.cursor()
-			statement = "INSERT IGNORE INTO "+table
+			statement = "INSERT INTO "+table
 			if(fields != []):
 				statement += " ("+', '.join(fields)+") "
-			statement += " VALUES ("+', '.join(values)+")"			
-			print(statement)
-			cursor.execute(statement)
-		except mysql.connector.errors.IntegrityError as IntEr:
+			placeholder = ["%s"]*len(values)
+			statement += " VALUES ("+', '.join(placeholder)+")"
+			cursor.execute(statement, values)
+			self.connector.commit()
+		except Exception as e:		
 			log_file = open('errors', 'a')
-			log_file.write('\n\nIntEr: '+statement+'\n\n')
-		finally:
-			connector.commit()		
+			log_file.write('\n'+e.pgerror+": "+statement+'\n')
+			self.connector.rollback()
