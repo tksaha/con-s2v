@@ -3,7 +3,8 @@ import logging
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from bs4 import BeautifulSoup
-
+import nltk
+from nltk.tokenize import sent_tokenize
 
 class ReutersReader(DocumentReader):
 	""" 
@@ -48,9 +49,9 @@ class ReutersReader(DocumentReader):
 
 				for doc in soup.findAll('reuters'):
 					try:
-						id = doc['newid']
+						document_id = doc['newid']
 					except:
-						id = None
+						document_id = None
 					try:
 						title = doc.find('title').text
 					except:
@@ -64,7 +65,7 @@ class ReutersReader(DocumentReader):
 					except:
 						metadata = None
 					
-					self.postgres_recorder.insertIntoDocTable(id, title, text, file, metadata) # Second, recording each document at a time
+					self.postgres_recorder.insertIntoDocTable(document_id, title, text, file, metadata) # Second, recording each document at a time
 					
 					texts = []
 					categories = []
@@ -80,5 +81,16 @@ class ReutersReader(DocumentReader):
 						except:
 							pass
 					
-					self.postgres_recorder.insertIntoDoc_TopTable(id, texts, categories) # Third, for each document, record the topic information in the document_topic table
+					self.postgres_recorder.insertIntoDoc_TopTable(document_id, texts, categories) # Third, for each document, record the topic information in the document_topic table
+					
+					paragraphs = text.split('\n\n')
+					for position, paragraph in enumerate(paragraphs):
+						paragraph_id = self.postgres_recorder.insertIntoParTable(paragraph)
+						self.postgres_recorder.insertIntoDoc_ParTable(document_id, paragraph_id, position)
+						
+						sentences = sent_tokenize(paragraph)
+						for sentence_position, sentence in enumerate(sentences):
+							sentence_id = self.postgres_recorder.insertIntoSenTable(sentence)
+							self.postgres_recorder.insertIntoPar_SenTable(paragraph_id, sentence_id, sentence_position)
+						
 		logging.info("Document reading complete.")

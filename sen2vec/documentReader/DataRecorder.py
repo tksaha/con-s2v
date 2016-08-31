@@ -25,7 +25,19 @@ class DataRecorder:
 		pass
 
 	@abstractmethod
+	def insertIntoTopTable(self):
+		pass
+		
+	@abstractmethod
+	def insertIntoDoc_TopTable(self):
+		pass
+		
+	@abstractmethod
 	def insertIntoDoc_ParTable(self):
+		pass
+		
+	@abstractmethod
+	def insertIntoPar_SenTable(self):
 		pass
 
 	# Put Interface for other Tables 

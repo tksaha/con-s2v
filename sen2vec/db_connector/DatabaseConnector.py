@@ -46,25 +46,28 @@ class DatabaseConnector:
 			cursor.execute(statement, values)
 			result = cursor.fetchall()			
 		except Exception as e:		
-			#log_file = open('errors', 'a')
-			#log_file.write('\n'+e.pgerror+": "+statement+'\n')
 			logging.error("%s%s%s%s%s" %(os.linesep, e.pgerror,": ", statement, os.linesep))
 			self.connector.rollback()
 		finally:
 			return result
 	
-	def insert(self, values = [], table = '', fields = []):
+	def insert(self, values = [], table = '', fields = [], returning = ''):
 		try:
+			result = ''
 			cursor = self.connector.cursor()
 			statement = "INSERT INTO "+table
 			if(fields != []):
 				statement += " ("+', '.join(fields)+") "
 			placeholder = ["%s"]*len(values)
 			statement += " VALUES ("+', '.join(placeholder)+")"
+			if(returning != ''):
+				statement += " RETURNING "+returning
 			cursor.execute(statement, values)
+			if returning != '':
+				result = cursor.fetchone()[0]
 			self.connector.commit()
-		except Exception as e:		
-			#log_file = open('errors', 'a')
-			#log_file.write('\n'+e.pgerror+": "+statement+'\n')
+		except Exception as e:
 			logging.error("%s%s%s%s%s" %(os.linesep, e.pgerror,": ", statement, os.linesep))
 			self.connector.rollback()
+		finally:
+			return result
