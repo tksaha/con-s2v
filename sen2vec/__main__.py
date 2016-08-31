@@ -59,7 +59,7 @@ def main():
 	reader = Klass()
 	logger.info("Successfuly loaded the class %s", str(Klass))
 	
-
+	reader.readDocument()
 
 	#instance = MyClass()
 	#newsReader = NewsGroupReader()

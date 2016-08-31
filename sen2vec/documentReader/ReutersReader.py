@@ -17,29 +17,33 @@ class ReutersReader(DocumentReader):
 		DocumentReader.__init__(self, *args, **kwargs)
 		self.dbstring = "reuters,naeemul,naeemul,localhost,5432"
 		self.postgres_recorder = PostgresDataRecorder(self.dbstring)
+		self.folderPath = "./sen2vec/documentReader/reuters21578"
 		
-	def readTopic(self, folderPath):
+	def readTopic(self):
 		"""
 		"""
-		for file in os.listdir(folderPath):
+		texts = []
+		categories = []
+		for file in os.listdir(self.folderPath):
 			if file.endswith(".lc.txt"):
 				category = file.split('-')[1]
-				content = open(folderPath+"/"+file, 'r', encoding='utf-8', errors='ignore').read()
+				content = open(self.folderPath+"/"+file, 'r', encoding='utf-8', errors='ignore').read()
 				for topic in content.split('\n'):
 					topic = topic.strip()
 					if len(topic) != 0:
-						self.postgres_recorder.postgres_connector.insert([topic, category], "topic", ["text", "category"])
-		print("Topic reading complete.")
+						texts += [topic]
+						categories += [category]
+		self.postgres_recorder.insertIntoTopTable(texts, categories)						
+		logging.info("Topic reading complete.")
 
-	def readDocument(self, folderPath):
+	def readDocument(self):
 		"""
 		"""
+		self.readTopic() #First, reading and recording the Topics
 		
-		self.readTopic(folderPath) #First, reading and recording the Topics
-		
-		for file in os.listdir(folderPath):
+		for file in os.listdir(self.folderPath):
 			if file.endswith(".sgm"):
-				content = open(folderPath+"/"+file, 'r', encoding='utf-8', errors='ignore').read()
+				content = open(self.folderPath+"/"+file, 'r', encoding='utf-8', errors='ignore').read()
 				soup = BeautifulSoup(content, "html.parser")
 
 				for doc in soup.findAll('reuters'):
@@ -59,16 +63,22 @@ class ReutersReader(DocumentReader):
 						metadata = "OLDID:"+doc['oldid']+"^"+"TOPICS:"+doc['topics']+"^"+"CGISPLIT:"+doc['cgisplit']+"^"+"LEWISSPLIT:"+doc['lewissplit']
 					except:
 						metadata = None
-					self.postgres_recorder.postgres_connector.insert([id, title, text, file, metadata], "document", ["id", "title", "text", "file", "metadata"]) # Second, recording each document at a time
+					
+					self.postgres_recorder.insertIntoDocTable(id, title, text, file, metadata) # Second, recording each document at a time
+					
+					texts = []
+					categories = []
 										
-					categories = ["topics", "places", "people", "orgs", "exchanges", "companies"] # List of possible topics
-					for category in categories:
+					possible_categories = ["topics", "places", "people", "orgs", "exchanges", "companies"] # List of possible topics
+					for category in possible_categories:
 						try:
 							values = doc.find(category).findAll('d')
 							for value in values:
-								value = value.text.strip()								
-								result = self.postgres_recorder.postgres_connector.select(["id"], ["topic"], [["text", "=", value], ["category", "=", category]], [], [])
-								self.postgres_recorder.postgres_connector.insert([id, result[0][0]], "document_topic", ["document_id", "topic_id"]) # Third, for each document, record the topic information in the document_topic table
+								value = value.text.strip()
+								texts += [value]
+								categories += [category]					
 						except:
 							pass
-		print("Document reading complete.")
+					
+					self.postgres_recorder.insertIntoDoc_TopTable(id, texts, categories) # Third, for each document, record the topic information in the document_topic table
+		logging.info("Document reading complete.")
