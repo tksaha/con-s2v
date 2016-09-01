@@ -3,8 +3,7 @@ import logging
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from bs4 import BeautifulSoup
-import nltk
-from nltk.tokenize import sent_tokenize
+
 
 from log_manager.log_config import Logger 
 
@@ -20,31 +19,11 @@ class ReutersReader(DocumentReader):
 		"""
 		DocumentReader.__init__(self, *args, **kwargs)
 		self.dbstring = os.environ["REUTERS_DBSTRING"]
-		Logger.logr.info(self.dbstring)
 		self.postgres_recorder = PostgresDataRecorder(self.dbstring)
 		self.folderPath = os.environ['REUTERS_PATH']
 
-		
-	def readTopic(self):
-		"""
-		"""
-		texts = []
-		categories = []
-		for file_ in os.listdir(self.folderPath):
-			if file_.endswith(".lc.txt"):
-				category = file_.split('-')[1]
-				content = open("%s%s%s" %(self.folderPath,"/",file_), 'r', 
-					encoding='utf-8', errors='ignore').read()
-				for topic in content.split('\n'):
-					topic = topic.strip()
-					if len(topic) != 0:
-						texts += [topic]
-						categories += [category]
 
-		self.postgres_recorder.insertIntoTopTable(texts, categories)						
-		Logger.logr.info("Topic reading complete.")
-
-	def __recordDocument (self, document_id, doc):
+	def __recordDocumentTopic (self, document_id, doc):
 		"""
 
 		"""
@@ -66,19 +45,44 @@ class ReutersReader(DocumentReader):
 		
 		self.postgres_recorder.insertIntoDoc_TopTable(document_id,\
 					topic_names, categories) 
-	def __recordParagraphAndSentence(self, document_id, doc_content)
+
+
+	def __recordParagraphAndSentence(self, document_id, doc_content):
 		"""
 		"""
-		paragraphs = text.split('\n\n')
+		paragraphs = self._splitIntoParagraphs(doc_content)
+
 		for position, paragraph in enumerate(paragraphs):
 			paragraph_id = self.postgres_recorder.insertIntoParTable(paragraph)
 			self.postgres_recorder.insertIntoDoc_ParTable(document_id, paragraph_id, position)
 			
-			sentences = sent_tokenize(paragraph)
+			sentences = self._splitIntoSentences(paragraph)
 			for sentence_position, sentence in enumerate(sentences):
 				sentence_id = self.postgres_recorder.insertIntoSenTable(sentence)
-				self.postgres_recorder.insertIntoPar_SenTable(paragraph_id, sentence_id, sentence_position)
-						
+				self.postgres_recorder.insertIntoPar_SenTable(paragraph_id, sentence_id,\
+					sentence_position)
+		
+
+	def readTopic(self):
+		"""
+		"""
+		topic_names = []
+		categories = []
+		for file_ in os.listdir(self.folderPath):
+			if file_.endswith(".lc.txt"):
+				category = file_.split('-')[1]
+				content = open("%s%s%s" %(self.folderPath,"/",file_), 'r', 
+					encoding='utf-8', errors='ignore').read()
+				for topic in content.split(os.linesep):
+					topic = topic.strip()
+					if len(topic) != 0:
+						topic_names += [topic]
+						categories += [category]
+
+		self.postgres_recorder.insertIntoTopTable(topic_names, categories)						
+		Logger.logr.info("Topic reading complete.")
+
+
 	def readDocument(self):
 		"""
 		First, reading and recording the Topics
@@ -90,14 +94,15 @@ class ReutersReader(DocumentReader):
 		
 		for file_ in os.listdir(self.folderPath):
 			if file_.endswith(".sgm"):
-				file_content = open(self.folderPath+"/"+file, 'r', 
+				file_content = open("%s%s%s" %(self.folderPath,"/",file_), 'r', 
 					encoding='utf-8', errors='ignore').read()
 				soup = BeautifulSoup(file_content, "html.parser")
 
 				for doc in soup.findAll('reuters'):
 					document_id = doc['newid']
-					title = doc.find('title').text
-					doc_content = doc.find('text').text
+					
+					title = doc.find('title').text if doc.find('title') is not None else None 
+					doc_content = doc.find('text').text if doc.find('text') is not None else None 
 					try:
 						metadata = "OLDID:"+doc['oldid']+"^"+"TOPICS:"+doc['topics']+\
 						"^"+"CGISPLIT:"+doc['cgisplit']+"^"+"LEWISSPLIT:"+doc['lewissplit']
@@ -108,8 +113,8 @@ class ReutersReader(DocumentReader):
 								doc_content, file_, metadata) 
 
 
-					self.__recordDocument (document_id, doc)			
-					self.__recordParagraphAndSentence(doc_content)
+					self.__recordDocumentTopic(document_id, doc)			
+					self.__recordParagraphAndSentence(document_id, doc_content)
 					
 					
-		logging.info("Document reading complete.")
+		Logger.logr.info("Document reading complete.")

@@ -5,7 +5,7 @@ import sys
 import psycopg2
 from db_connector.DatabaseConnector import * 
 
-#from log_manager.log_conf import Logger
+from log_manager.log_conf import Logger
 
 class PostgresPythonConnector(DatabaseConnector):
 	"""
