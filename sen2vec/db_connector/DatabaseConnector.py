@@ -77,3 +77,11 @@ class DatabaseConnector:
 			self.connector.rollback()
 		finally:
 			return result
+	def truncate_tables(self, tables=[]):
+		try:
+			statement = "truncate %s" % (",".join(tables))
+			cursor = self.connector.cursor()
+			cursor.execute(statement)
+			self.connector.commit()
+		except:
+			self.connector.rollback()

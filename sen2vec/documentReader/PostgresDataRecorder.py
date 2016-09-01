@@ -19,6 +19,12 @@ class PostgresDataRecorder(DataRecorder):
 		self.postgres_connector = PostgresPythonConnector(self.dbstring) 
 		self.postgres_connector.connect_database()
 
+	def trucateTables(self):
+		self.postgres_connector.truncate_tables(["topic", "document",\
+					"document_topic", "paragraph",\
+					"document_paragraph", "sentence",\
+					"paragraph_sentence"])
+
 	def insertIntoTopTable(self, names=[], categories=[]):
 		"""
 		"""

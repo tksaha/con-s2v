@@ -90,6 +90,7 @@ class ReutersReader(DocumentReader):
 		Third, for each document, record the lower level information 
 		like: paragraph, sentences in table 
 		"""
+		self.postgres_recorder.trucateTables()
 		self.readTopic() 
 		
 		for file_ in os.listdir(self.folderPath):
@@ -101,8 +102,11 @@ class ReutersReader(DocumentReader):
 				for doc in soup.findAll('reuters'):
 					document_id = doc['newid']
 					
-					title = doc.find('title').text if doc.find('title') is not None else None 
-					doc_content = doc.find('text').text if doc.find('text') is not None else None 
+					title = doc.find('title').text if doc.find('title') \
+								is not None else None 
+					doc_content = doc.find('text').text if doc.find('text')\
+							 is not None else None 
+
 					try:
 						metadata = "OLDID:"+doc['oldid']+"^"+"TOPICS:"+doc['topics']+\
 						"^"+"CGISPLIT:"+doc['cgisplit']+"^"+"LEWISSPLIT:"+doc['lewissplit']
