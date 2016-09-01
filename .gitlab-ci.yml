@@ -1,0 +1,3 @@
+test:
+  script:
+  - export DATABASE_URL=REUTERS_DBSTRING=news,postgres,postgres,localhost,5432
