@@ -1,4 +1,7 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+
 import os 
 import re 
 from documentReader.DocumentReader import DocumentReader
