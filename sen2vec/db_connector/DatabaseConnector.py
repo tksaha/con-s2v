@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
-
 import os 
 import sys 
-import logging 
-
 from abc import ABCMeta, abstractmethod
-
-
+from log_manager.log_config import Logger 
 
 class DatabaseConnector:
 	"""
-	Database Connector: Interface for different types of database connection from 
-	python
+	Database Connector: Interface for different types of 
+	database connection from python
 	"""
 	def __init__ (self, dbstring):
 		self.connector = None
@@ -26,7 +22,11 @@ class DatabaseConnector:
 	def	disconnect_database(connection):	
 		pass 
 	
-	def select(self, fields = [], tables = [], where = [], groupby = [], orderby = []):
+	def select(self, fields = [], tables = [], where = [], 
+		groupby = [], orderby = []):
+		"""
+
+		"""
 		try:
 			result = []
 			cursor = self.connector.cursor()
@@ -46,12 +46,17 @@ class DatabaseConnector:
 			cursor.execute(statement, values)
 			result = cursor.fetchall()			
 		except Exception as e:		
-			logging.error("%s%s%s%s%s" %(os.linesep, e.pgerror,": ", statement, os.linesep))
+			Logger.logr.error("%s%s%s%s%s" %(os.linesep, e.pgerror,
+					": ", statement, os.linesep))
 			self.connector.rollback()
 		finally:
 			return result
 	
-	def insert(self, values = [], table = '', fields = [], returning = ''):
+	def insert(self, values = [], table = '', 
+		fields = [], returning = ''):
+		"""
+
+		"""
 		try:
 			result = ''
 			cursor = self.connector.cursor()
@@ -67,7 +72,8 @@ class DatabaseConnector:
 				result = cursor.fetchone()[0]
 			self.connector.commit()
 		except Exception as e:
-			logging.error("%s%s%s%s%s" %(os.linesep, e.pgerror,": ", statement, os.linesep))
+			Logger.logr.error("%s%s%s%s%s" %(os.linesep, e.pgerror,
+				": ", statement, os.linesep))
 			self.connector.rollback()
 		finally:
 			return result

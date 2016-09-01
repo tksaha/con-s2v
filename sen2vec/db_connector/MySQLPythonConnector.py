@@ -5,7 +5,7 @@ import sys
 import mysql.connector
 import logging 
 from DatabaseConnector import * 
-
+from log_manager.log_conf import Logger
 
 class MySQLPythonConnector(DatabaseConnector):
 	"""
@@ -14,16 +14,22 @@ class MySQLPythonConnector(DatabaseConnector):
 
 	"""
 	def __init__(self, *args, **kwargs):
+		"""
+		"""
 		DatabaseConnector.__init__(self, *args, **kwargs)
 
 	def	connect_database(self): 
+		"""
+		"""
 		self.connector = mysql.connector.connect(database=self.database, user=self.username,\
 			password=self.passwd, host=self.host, port=self.port)
 
-		print ("Opened MySQL Database successfully")
-		#return connection
+		logging.info("Opened MySQL Database successfully")
+
 		
 	def	disconnect_database(self, connection):	
+		"""
+		"""
 		self.connector.close(); 
 		self.connector = None
-		print ("Closed MySQL Database successfully")
+		logging.info("Closed MySQL Database successfully")

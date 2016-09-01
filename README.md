@@ -8,3 +8,11 @@
 `conda env create -f sen2vec_environment.yml`
 
 Now you have successfully installed sen2vec environment.
+
+## Database Creation 
+If you have already installed postgresql, then the following 
+command should work:
+`create user sen2vec with password`
+`create database news`
+`psql -h localhost -d news -U sen2vec -w`
+`psql -d news -h localhost -d 5432 -U sen2vec -w`

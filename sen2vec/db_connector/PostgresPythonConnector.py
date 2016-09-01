@@ -3,9 +3,9 @@
 import os
 import sys
 import psycopg2
-import logging 
 from db_connector.DatabaseConnector import * 
 
+#from log_manager.log_conf import Logger
 
 class PostgresPythonConnector(DatabaseConnector):
 	"""
@@ -14,16 +14,24 @@ class PostgresPythonConnector(DatabaseConnector):
 
 	"""
 	def __init__(self, *args, **kwargs):
+		"""
+		"""
 		DatabaseConnector.__init__(self, *args, **kwargs)
 
 	def	connect_database(self): 
-		self.connector = psycopg2.connect(database=self.database, user=self.username,\
+		"""
+		"""
+		try: 
+			self.connector = psycopg2.connect(database=self.database, user=self.username,\
 			password=self.passwd, host=self.host, port=self.port)
-
-		logging.info("Opened Postgres Database successfully")
-		#return connection
+			Logger.logr.info("Opened Postgres Database successfully")
+		except:
+			Logger.logr.info(" Postgres Database connection unsuccessful")
+		
 		
 	def	disconnect_database(self, connection):	
+		"""
+		"""
 		self.connector.close(); 
 		self.connector = None
-		logging.info("Closed Postgres Database successfully")
+		logger.info("Closed Postgres Database successfully")

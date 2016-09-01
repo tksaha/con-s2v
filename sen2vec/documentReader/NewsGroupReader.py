@@ -11,7 +11,12 @@ class NewsGroupReader(DocumentReader):
 	"""
 
 	def __init__(self,*args, **kwargs):
+		"""
+		Initialization assumes that NEWSGROUP_PATH environment is set. 
+		To set in linux or mac: export NEWSGROUP_PATH=/some_directory_containing_newsgroup_data
+		"""
 		DocumentReader.__init__(self, *args, **kwargs)
+		self.newsfolder = os.environ['NEWSGROUP_PATH']
 
 	def __strip_newsgroup_header(text):
 	    """
@@ -64,11 +69,12 @@ class NewsGroupReader(DocumentReader):
 				text = "%s%s" %(text, line)
 		return text 
 
-	def readDocument(self, folderName): 
+	def readDocument(self): 
 		"""
 
 		"""
-		first_level_folders = os.listdir(folderName)
+		folderName = self.newsfolder
+		first_level_folders = os.listdir(self.folderName)
 		
 		for tag_folder in first_level_folders:
 			if  not(DocumentReader._folder_is_hidden(self, tag_folder)):
