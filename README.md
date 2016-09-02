@@ -6,12 +6,14 @@
 2. Get into anaconda/envs folder.
 3. Run the following command: 
 
-```conda env create -f sen2vec_environment.yml```
+```
+conda env create -f sen2vec_environment.yml
+```
 
 Now, you have successfully installed sen2vec environment.
 
 ## Database Creation 
-If you have already installed postgresql (http://postgresapp.com/), then 
+If you have already installed [postgresql] (http://postgresapp.com/), then 
 you can create a table with the following command: 
 
 ```
