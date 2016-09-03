@@ -1,5 +1,6 @@
 0.0.1 
 . Loading Documents into database 
+. Multilabel and Multiclass classification evaluation: http://scikit-learn.org/dev/modules/multiclass.html
 
 
 0.0.2
