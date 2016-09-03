@@ -1,2 +1,6 @@
 0.0.1 
 . Loading Documents into database 
+
+
+0.0.2
+. Include splitta for sentence boundary detection
