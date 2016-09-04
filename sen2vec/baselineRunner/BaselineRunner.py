@@ -4,6 +4,7 @@
 import os 
 import sys 
 from abc import ABCMeta, abstractmethod
+from db_connector.PostgresPythonConnector import PostgresPythonConnector
 
 
 class BaselineRunner:

@@ -5,4 +5,6 @@ export REUTERS_PATH=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/data_collection/n
 # database, username, passwd, host, port
 export REUTERS_DBSTRING=news,postgres,postgres,localhost,5432
 # export REUTERS_DBSTRING=reuters,naeemul,naeemul,localhost,5432
+export P2VECSENTRUNNERINFILE=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/gitlabcodes/sen2vec/Data/sents
+export P2VECSENTRUNNEROUTFILE=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/gitlabcodes/sen2vec/Data/sents_repr
 
