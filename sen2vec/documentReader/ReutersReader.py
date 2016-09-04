@@ -6,8 +6,6 @@ import logging
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from bs4 import BeautifulSoup
-
-
 from log_manager.log_config import Logger 
 
 

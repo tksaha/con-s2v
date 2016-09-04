@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
 import numpy as np
 import math
 from sklearn.metrics import roc_curve,auc 

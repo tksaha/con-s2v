@@ -7,7 +7,7 @@ import sys
 
 from documentReader.DataRecorder import DataRecorder
 from db_connector.PostgresPythonConnector import PostgresPythonConnector 
-#from log_manager.log_conf import Logger
+from log_manager.log_config import Logger 
 
 
 class PostgresDataRecorder(DataRecorder): 

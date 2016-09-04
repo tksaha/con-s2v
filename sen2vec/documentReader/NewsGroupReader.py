@@ -4,7 +4,7 @@
 import os 
 import re 
 from documentReader.DocumentReader import DocumentReader
-import logging 
+from log_manager.log_config import Logger  
 
 
 class NewsGroupReader(DocumentReader):
