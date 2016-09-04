@@ -7,6 +7,7 @@ from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from bs4 import BeautifulSoup
 from log_manager.log_config import Logger 
+from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
 
 
 class ReutersReader(DocumentReader):
@@ -123,3 +124,13 @@ class ReutersReader(DocumentReader):
 					
 					
 		Logger.logr.info("Document reading complete.")
+
+	def runBaselines(self):
+		"""
+		"""
+		Logger.logr.info("Starting Running Para2vec Baseline")
+		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
+		paraBaseline.prepareData()
+		paraBaseline.runTheBaseline()
+
+

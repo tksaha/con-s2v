@@ -6,6 +6,7 @@ from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from log_manager.log_config import Logger 
 import multiprocessing
+from baselineRunner.BaselineRunner import BaselineRunner
 
 
 assert gensim.models.doc2vec.FAST_VERSION > -1, \
@@ -38,25 +39,26 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		"""
 		self.postgresConnection.connect_database()
 		
-		sentfiletoWrite = open(self.sents,"w")
+		sentfiletoWrite = open(self.sents,"w", encoding='utf-8', errors='ignore')
 		
 		for result in memoryEfficientSelect(["id","content"],\
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]
 				content= result[row_id][1]
-				continue if len(content.split(" ")) < 5  else\
+				if len(content.split(" ")) < 5:
+					continue 
+				else:
 					sentfiletoWrite.write("%s,%s%s"\
-							%(content,id_,os.linesep))
-					
+						%(gensim.utils.to_unicode(content.lower()),id_,os.linesep))		
 		sentfiletoWrite.close()
 	
 	def runTheBaseline(self):
 		"""
 		"""
-		model = Doc2Vec(LabeledSentence(self.sents), size=100,\
+		para2vecModel = Doc2Vec(LabeledSentence(self.sents), size=100,\
 			 window=8, min_count=4, workers=self.cpu_count)
-		model.save('%s_model.doc2vec' %(self.sents))
+		para2vecmodel.save('%s_model.doc2vec' %(self.sents))
 	
 	def runEvaluationTask(self):
 		"""

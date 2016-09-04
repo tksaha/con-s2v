@@ -77,7 +77,10 @@ class DatabaseConnector:
 			cursor.execute(statement, values)
 			while True:				
 				result = cursor.fetchmany(5000)
-				yield result if len(result) >0 else break
+				if len(result) > 0:
+					yield result 
+				else: 
+					break 
 		except Exception as e:		
 			Logger.logr.error("%s%s%s%s%s" %(os.linesep, e.pgerror,
 					": ", statement, os.linesep))

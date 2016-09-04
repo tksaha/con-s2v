@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os 
+import sys 
+from abc import ABCMeta, abstractmethod
+
+
 class BaselineRunner:
 	def __init__(self, dbstring):
 		"""
 		"""
 		self.dbstring = dbstring
 		self.postgresConnection = PostgresPythonConnector(dbstring)
-	
 
 	@abstractmethod
 	def prepareData(self):
