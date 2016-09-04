@@ -52,6 +52,39 @@ class DatabaseConnector:
 			self.connector.rollback()
 		finally:
 			return result
+
+	def memoryEfficientSelect(self, fields = [], tables = [], where = [], 
+		groupby = [], orderby = []):
+		"""
+
+		"""
+		try:
+			result = []
+			cursor = self.connector.cursor()
+			statement = "SELECT "+', '.join(fields)+" "
+			statement += "FROM "+','.join(tables)+" "
+			values = []
+			where_clause = []
+			if len(where) != 0:
+				for l, o, r in where:
+					where_clause += [l+" "+o+" "+"%s"]
+					values += [r]
+				statement += "WHERE "+' AND '.join(where_clause)+" "
+			if len(groupby) != 0:
+				statement += "GROUP BY "+', '.join(groupby)+" "
+			if len(orderby) != 0:
+				statement += "ORDER BY "+', '.join(orderby)+" "
+			cursor.execute(statement, values)
+			while True:				
+				result = cursor.fetchmany(5000)
+				yield result if len(result) >0 else break
+		except Exception as e:		
+			Logger.logr.error("%s%s%s%s%s" %(os.linesep, e.pgerror,
+					": ", statement, os.linesep))
+			self.connector.rollback()
+
+		# finally:
+		# 	return result
 	
 	def insert(self, values = [], table = '', 
 		fields = [], returning = ''):
