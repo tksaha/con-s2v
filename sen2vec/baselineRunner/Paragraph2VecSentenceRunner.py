@@ -25,8 +25,6 @@ class TaggedLineSentence(object):
        		sent_dict = pickle.load(self.data_file)
        		content = sent_dict ["content"]
        		id_ = sent_dict["id"]
-       		Logger.logr.info(content)
-       		Logger.logr.info(id_)
        		yield TaggedDocument(words=content.split(),\
        			tags=['SENT_%s' %(id_)])
 
@@ -47,9 +45,10 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 	def prepareData(self):
 		"""
 		Query Sentence Data. As a rough heuristics 
-		sentences shorter than 9 words are excluded. We dump 
-		both the sentence and their ids in different files. I am 
-		not sure whether I am doing correct encoding.  
+		sentences shorter than 5 words are excluded. We dump 
+		both the sentence and their ids in different files. 
+		Prepad sentences with NULL word symbol if the number 
+		of words in a particular sentence is less than 9.
 		"""
 		self.postgresConnection.connect_database()
 		
@@ -60,24 +59,28 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]
-				content = result[row_id][1]
-				if len(content.split()) < 5:
-					continue 
-				else:
-					sent_dict = {}
-					sent_dict["id"] = id_ 
-					content = gensim.utils.to_unicode(content.lower())
-					content = content.replace("\n", " ")
-					sent_dict["content"] = content	
-					pickle.dump(sent_dict,sentfiletoWrite)
+				content = result[row_id][1].strip()
+				if len(content.split()) < 9:
+					n_nulls = 9 - len(content.split)
+					for n in range(0,n_nulls):
+						content = "NULL %s" %(content)
+					Logger.logr.info ("Size becomes %d", %len(content.split()))
+				
+				sent_dict = {}
+				sent_dict["id"] = id_ 
+				content = gensim.utils.to_unicode(content.lower())
+				content = content.replace("\n", " ")
+				sent_dict["content"] = content	
+				pickle.dump(sent_dict,sentfiletoWrite)
 					
 		sentfiletoWrite.close()
+		self.postgresConnection.close()
 	
 	def runTheBaseline(self):
 		"""
 		"""
 		para2vecModel = Doc2Vec(TaggedLineSentence("%s.p"%(self.sentsFile)),\
-			 size=100, window=4, min_count=4, workers=self.cores)
+			 size=100, window=8, min_count=1, workers=self.cores)
 		para2vecModel.save("%s"%(self.sentReprFile))
 
 	def runEvaluationTask(self):
