@@ -30,7 +30,7 @@ class PostgresPythonConnector(DatabaseConnector):
 			Logger.logr.info("Postgres Database connection unsuccessful")
 		
 		
-	def	disconnect_database(self, connection):	
+	def	disconnect_database(self):	
 		"""
 		"""
 		self.connector.close(); 

@@ -8,3 +8,7 @@ export REUTERS_DBSTRING=news,postgres,postgres,localhost,5432
 export P2VECSENTRUNNERINFILE=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/gitlabcodes/sen2vec/Data/sents
 export P2VECSENTRUNNEROUTFILE=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/gitlabcodes/sen2vec/Data/sents_repr
 
+export N2VOUTFILE=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/gitlabcodes/sen2vec/Data/node_repr
+export GINTERTHR=0.2
+export GINTRATHR=0.05
+

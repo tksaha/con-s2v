@@ -10,26 +10,44 @@ from log_manager.log_config import Logger
 import multiprocessing
 from baselineRunner.BaselineRunner import BaselineRunner
 from gensim.models.doc2vec import TaggedDocument
+from collections import namedtuple
 
 
 assert gensim.models.doc2vec.FAST_VERSION > -1, \
 	"this will be painfully slow otherwise"
 
-class TaggedLineSentence(object):
+#https://docs.python.org/2/library/collections.html
+ReuterDocument = namedtuple('ReuterDocument', 'words tags')
+
+
+def normalize_text(text):
+    norm_text = text.lower()
+
+    # Replace breaks with spaces
+    norm_text = norm_text.replace('<br />', ' ')
+
+    # Pad punctuation with spaces on both sides
+    for char in ['.', '"', ',', '(', ')', '!', '?', ';', ':']:
+        norm_text = norm_text.replace(char, ' ' + char + ' ')
+
+    return norm_text
+
+
+class LineSentence(object):
     def __init__(self, filename):
-        self.data_file=open(filename, 'rb')
+        self.filename = filename 
 
     def __iter__(self):
-       while True: 
-       	try:
-       		sent_dict = pickle.load(self.data_file)
-       		content = sent_dict ["content"]
-       		id_ = sent_dict["id"]
-       		yield TaggedDocument(words=content.split(),\
-       			tags=['SENT_%s' %(id_)])
-
-       	except EOFError:
-        	break
+    	self.data_file=open(self.filename, 'rb')
+    	while True: 
+    		try:
+    			sent_dict = pickle.load(self.data_file)
+    			content = sent_dict ["content"]
+    			id_ = sent_dict["id"]
+    			yield ReuterDocument(words=content.split(),\
+    				tags=['SENT_%s' %(id_)])
+    		except EOFError:
+    			break
 
 
 class Paragraph2VecSentenceRunner(BaselineRunner):
@@ -61,27 +79,30 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 				id_ = result[row_id][0]
 				content = result[row_id][1].strip()
 				if len(content.split()) < 9:
-					n_nulls = 9 - len(content.split)
+					n_nulls = 9 - len(content.split())
 					for n in range(0,n_nulls):
 						content = "NULL %s" %(content)
-					Logger.logr.info ("Size becomes %d", %len(content.split()))
+					Logger.logr.info ("Size becomes %d"%len(content.split()))
 				
 				sent_dict = {}
 				sent_dict["id"] = id_ 
 				content = gensim.utils.to_unicode(content.lower())
 				content = content.replace("\n", " ")
+				content = normalize_text(content)
 				sent_dict["content"] = content	
 				pickle.dump(sent_dict,sentfiletoWrite)
 					
 		sentfiletoWrite.close()
-		self.postgresConnection.close()
-	
+		self.postgresConnection.disconnect_database()
+
 	def runTheBaseline(self):
 		"""
 		"""
-		para2vecModel = Doc2Vec(TaggedLineSentence("%s.p"%(self.sentsFile)),\
+		para2vecModel = Doc2Vec(LineSentence("%s.p"%self.sentsFile),\
 			 size=100, window=8, min_count=1, workers=self.cores)
-		para2vecModel.save("%s"%(self.sentReprFile))
+		Logger.logr.info(str(para2vecModel.docvecs['SENT_133015']))
+		Logger.logr.info(str(para2vecModel.infer_vector(['the', 'albatross', 'is', 'chicken'])))
+		return para2vecModel
 
 	def runEvaluationTask(self):
 		"""

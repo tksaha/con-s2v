@@ -8,7 +8,7 @@ from db_connector.PostgresPythonConnector import PostgresPythonConnector
 
 
 class BaselineRunner:
-	def __init__(self, dbstring):
+	def __init__(self, dbstring, **kwargs):
 		"""
 		"""
 		self.dbstring = dbstring
