@@ -8,15 +8,17 @@ import random
 
 class Node2VecWalk():
 	def __init__(self, nx_G, is_directed, p, q):
+		"""
+		"""
 		self.G = nx_G
 		self.is_directed = is_directed
 		self.p = p
 		self.q = q
 
 	def node2vec_walk(self, walk_length, start_node):
-		'''
+		"""
 		Simulate a random walk starting from start node.
-		'''
+		"""
 		G = self.G
 		alias_nodes = self.alias_nodes
 		alias_edges = self.alias_edges
@@ -40,9 +42,9 @@ class Node2VecWalk():
 		return walk
 
 	def simulate_walks(self, num_walks, walk_length):
-		'''
+		"""
 		Repeatedly simulate random walks from each node.
-		'''
+		"""
 		G = self.G
 		walks = []
 		nodes = list(G.nodes())
@@ -56,9 +58,10 @@ class Node2VecWalk():
 		return walks
 
 	def get_alias_edge(self, src, dst):
-		'''
+		"""
 		Get the alias edge setup lists for a given edge.
-		'''
+		"""
+
 		G = self.G
 		p = self.p
 		q = self.q
@@ -77,9 +80,10 @@ class Node2VecWalk():
 		return alias_setup(normalized_probs)
 
 	def preprocess_transition_probs(self):
-		'''
+		"""
 		Preprocessing of transition probabilities for guiding the random walks.
-		'''
+		"""
+
 		G = self.G
 		is_directed = self.is_directed
 
@@ -108,12 +112,13 @@ class Node2VecWalk():
 
 
 	def alias_setup(self, probs):
-		'''
+		"""
 		Compute utility lists for non-uniform sampling from discrete distributions.
 		Refer to https://hips.seas.harvard.edu/blog/2013/03/03/
 		the-alias-method-efficient-sampling-with-many-discrete-outcomes/
 		for details
-		'''
+		"""
+
 		K = len(probs)
 		q = np.zeros(K)
 		J = np.zeros(K, dtype=np.int)
@@ -141,9 +146,9 @@ class Node2VecWalk():
 		return J, q
 
 	def alias_draw(self, J, q):
-		'''
+		"""
 		Draw sample from a non-uniform discrete distribution using alias sampling.
-		'''
+		"""
 		K = len(J)
 
 		kk = int(np.floor(np.random.rand()*K))
