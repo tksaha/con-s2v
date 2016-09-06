@@ -11,6 +11,7 @@ class IterativeUpdateRetrofitter:
 		"""
 		self.numIters = kwargs['numIters']
 		self.sen2vecFilename = kwargs['sen2vecFilename']
+		self.nx_Graph = kwargs['nx_Graph']
 
 	def readSentVecs(sen2vecFilename):
 		"""
@@ -47,7 +48,7 @@ class IterativeUpdateRetrofitter:
   		
   		for iter_ in range(numIters):
     		for sentenceId in allSentenceIds:
-      			sentNeighbors = nx_Graph.neighbors[sentenceId]
+      			sentNeighbors = self.nx_Graph.neighbors[sentenceId]
       			numNeighbors = len(sentNeighbors)
       			if numNeighbors == 0:
         			continue
@@ -64,6 +65,9 @@ class IterativeUpdateRetrofitter:
 
   	def retrofit():
   		"""
+  		Following the optimization function and iterative update 
+  		formula provided by the paper titled: "Retrofitting Word 
+  		Vectors to Semantic Lexicons. 
   		"""
   		sen2vecDict  = readSentVecs(self.sen2vecFilename)
   		retroFitted = retrofitWithIterUpdate(sen2vecDict, self.numIters)
