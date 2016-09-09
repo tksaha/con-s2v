@@ -15,39 +15,40 @@ from collections import namedtuple
 
 assert gensim.models.doc2vec.FAST_VERSION > -1, \
 	"this will be painfully slow otherwise"
-
-#https://docs.python.org/2/library/collections.html
+"""
+https://docs.python.org/2/library/collections.html
+"""
 ReuterDocument = namedtuple('ReuterDocument', 'words tags')
+label_sent = lambda id_: 'SENT_%s' %(id_)
+
 
 
 def normalize_text(text):
-    norm_text = text.lower()
-
-    # Replace breaks with spaces
-    norm_text = norm_text.replace('<br />', ' ')
-
-    # Pad punctuation with spaces on both sides
-    for char in ['.', '"', ',', '(', ')', '!', '?', ';', ':']:
-        norm_text = norm_text.replace(char, ' ' + char + ' ')
-
-    return norm_text
+	"""
+	Replace breaks with spaces and then pad punctuation with spaces on both sides
+	"""
+	norm_text = text.lower().replace('<br />', ' ')
+	for char in ['.', '"', ',', '(', ')', '!', '?', ';', ':']:
+		norm_text = norm_text.replace(char, ' ' + char + ' ')
+	return norm_text
 
 
 class LineSentence(object):
-    def __init__(self, filename):
-        self.filename = filename 
-
-    def __iter__(self):
-    	self.data_file=open(self.filename, 'rb')
-    	while True: 
-    		try:
-    			sent_dict = pickle.load(self.data_file)
-    			content = sent_dict ["content"]
-    			id_ = sent_dict["id"]
-    			yield ReuterDocument(words=content.split(),\
-    				tags=['SENT_%s' %(id_)])
-    		except EOFError:
-    			break
+	"""
+	"""
+	def __init__(self, filename):
+		self.filename = filename 
+	def __iter__(self):
+		self.data_file=open(self.filename, 'rb')
+		while True: 
+			try:
+				sent_dict = pickle.load(self.data_file)
+				content = sent_dict ["content"]
+				id_ = sent_dict["id"]
+				yield ReuterDocument(words=content.split(),\
+					tags=[label_sent(id_)])
+			except EOFError:
+				break
 
 
 class Paragraph2VecSentenceRunner(BaselineRunner):
@@ -58,7 +59,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		self.sentsFile = os.environ['P2VECSENTRUNNERINFILE']
 		self.sentReprFile = os.environ['P2VECSENTRUNNEROUTFILE']
 		self.cores = multiprocessing.cpu_count()
-
+		self.postgresConnection.connect_database()
 	
 	def prepareData(self):
 		"""
@@ -68,7 +69,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		Prepad sentences with NULL word symbol if the number 
 		of words in a particular sentence is less than 9.
 		"""
-		self.postgresConnection.connect_database()
+		
 		
 		sentfiletoWrite = open("%s.p"%(self.sentsFile),"wb")
 	
@@ -93,15 +94,28 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 				pickle.dump(sent_dict,sentfiletoWrite)
 					
 		sentfiletoWrite.close()
-		self.postgresConnection.disconnect_database()
+		
 
-	def runTheBaseline(self):
+	def runTheBaseline(self, latent_space_size):
 		"""
+		We run the para2vec Model and then store sen2vec as pickled 
+		dictionaries into the output file. 
 		"""
 		para2vecModel = Doc2Vec(LineSentence("%s.p"%self.sentsFile),\
-			 size=100, window=8, min_count=1, workers=self.cores)
-		Logger.logr.info(str(para2vecModel.docvecs['SENT_133015']))
-		Logger.logr.info(str(para2vecModel.infer_vector(['the', 'albatross', 'is', 'chicken'])))
+			 size=latent_space_size, window=8, min_count=1, workers=self.cores)
+		
+		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
+		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
+			 ["sentence"], [], [], ["id"]):
+			for row_id in range(0,len(result)):
+				id_ = result[row_id][0]
+				sen2vec_dict = {}
+				sen2vec_dict["id"] = id_
+				sen2vec_dict["vec"] = para2vecModel.docvecs[label_sent(id_)]
+				pickle.dump(sen2vec_dict, sent2vecFile)
+				
+		sent2vecFile.close()
+		self.postgresConnection.disconnect_database()
 		return para2vecModel
 
 	def runEvaluationTask(self):

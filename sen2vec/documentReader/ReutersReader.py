@@ -129,13 +129,15 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self):
 		"""
 		"""
+		latent_space_size = 128
 		Logger.logr.info("Starting Running Para2vec Baseline")
 		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
-		paraBaseline.prepareData()
-		p2vModel = paraBaseline.runTheBaseline()
+		#paraBaseline.prepareData()
+		p2vModel = paraBaseline.runTheBaseline(latent_space_size)
 
 		Logger.logr.info("Starting Running Node2vec Baseline")
 		n2vBaseline = Node2VecRunner(self.dbstring, p2vmodel=p2vModel)
 		n2vBaseline.prepareData()
+		n2vBaseline.runTheBaseline(latent_space_size)
 
 

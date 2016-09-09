@@ -9,6 +9,6 @@ export P2VECSENTRUNNERINFILE=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/gitlabco
 export P2VECSENTRUNNEROUTFILE=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/gitlabcodes/sen2vec/Data/sents_repr
 
 export N2VOUTFILE=/Users/tksaha/Dropbox/Journey_to_IUPUI/NLP/gitlabcodes/sen2vec/Data/node_repr
-export GINTERTHR=0.2
-export GINTRATHR=0.05
+export GINTERTHR=0.4
+export GINTRATHR=0.1
 

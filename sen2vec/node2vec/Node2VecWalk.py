@@ -6,7 +6,7 @@ import networkx as nx
 import random
 
 
-class Node2VecWalk():
+class Node2VecWalk:
 	def __init__(self, nx_G, is_directed, p, q):
 		"""
 		"""
