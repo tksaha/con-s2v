@@ -12,6 +12,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import multiprocessing
 import joblib
 from joblib import Parallel, delayed
+from node2vec.Node2Vec import Node2Vec 
 
 
 
@@ -116,8 +117,7 @@ class Node2VecRunner(BaselineRunner):
 		self.p = kwargs['p']
 		self.q = kwargs['q']
 		"""
-
-		from node2vec import Node2Vec 
+		
 		node2vecInstance = Node2Vec (dimension=latent_space_size, window_size=8,\
 			 cpu_count=self.cores, outputfile=self.n2vReprFile,\
 			 num_walks=10, walk_length=80, p=4, q=1)

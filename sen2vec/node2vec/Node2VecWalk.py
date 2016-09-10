@@ -4,6 +4,7 @@
 import numpy as np
 import networkx as nx
 import random
+from log_manager.log_config import Logger 
 
 
 class Node2VecWalk:
@@ -30,10 +31,10 @@ class Node2VecWalk:
 			cur_nbrs = sorted(G.neighbors(cur))
 			if len(cur_nbrs) > 0:
 				if len(walk) == 1:
-					walk.append(cur_nbrs[alias_draw(alias_nodes[cur][0], alias_nodes[cur][1])])
+					walk.append(cur_nbrs[self.alias_draw(alias_nodes[cur][0], alias_nodes[cur][1])])
 				else:
 					prev = walk[-2]
-					next = cur_nbrs[alias_draw(alias_edges[(prev, cur)][0], 
+					next = cur_nbrs[self.alias_draw(alias_edges[(prev, cur)][0], 
 						alias_edges[(prev, cur)][1])]
 					walk.append(next)
 			else:
@@ -48,9 +49,9 @@ class Node2VecWalk:
 		G = self.G
 		walks = []
 		nodes = list(G.nodes())
-		print 'Walk iteration:'
+		Logger.logr.info('Walk iteration:')
 		for walk_iter in range(num_walks):
-			print str(walk_iter+1), '/', str(num_walks)
+			#Logger.logr.info(str(walk_iter+1), '/', str(num_walks))
 			random.shuffle(nodes)
 			for node in nodes:
 				walks.append(self.node2vec_walk(walk_length=walk_length, start_node=node))
@@ -77,7 +78,7 @@ class Node2VecWalk:
 		norm_const = sum(unnormalized_probs)
 		normalized_probs =  [float(u_prob)/norm_const for u_prob in unnormalized_probs]
 
-		return alias_setup(normalized_probs)
+		return self.alias_setup(normalized_probs)
 
 	def preprocess_transition_probs(self):
 		"""
@@ -92,7 +93,7 @@ class Node2VecWalk:
 			unnormalized_probs = [G[node][nbr]['weight'] for nbr in sorted(G.neighbors(node))]
 			norm_const = sum(unnormalized_probs)
 			normalized_probs =  [float(u_prob)/norm_const for u_prob in unnormalized_probs]
-			alias_nodes[node] = alias_setup(normalized_probs)
+			alias_nodes[node] = self.alias_setup(normalized_probs)
 
 		alias_edges = {}
 		triads = {}
