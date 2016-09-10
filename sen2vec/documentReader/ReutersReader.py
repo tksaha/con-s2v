@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from log_manager.log_config import Logger 
 from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
 from baselineRunner.Node2VecRunner import Node2VecRunner
+from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 
 
 class ReutersReader(DocumentReader):
@@ -145,6 +146,11 @@ class ReutersReader(DocumentReader):
 		Logger.logr.info("Starting Running Node2vec Baseline")
 		n2vBaseline = Node2VecRunner(self.dbstring, p2vmodel=p2vModel)
 		n2vBaseline.prepareData()
-		n2vBaseline.runTheBaseline(latent_space_size)
+		nx_Graph = n2vBaseline.runTheBaseline(latent_space_size)
+
+		Logger.logr.info("Starting Running Iterative Update Method")
+		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
+		iterUdateBaseline.prepareData()
+		iterUdateBaseline.runTheBaseline()
 
 

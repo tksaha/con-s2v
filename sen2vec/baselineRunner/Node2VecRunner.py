@@ -25,8 +25,9 @@ class Node2VecRunner(BaselineRunner):
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
 		self.Graph = nx.Graph()
-		self.p2vModel = kwargs['p2vmodel'] 
+		#self.p2vModel = kwargs['p2vmodel'] 
 		self.cores = multiprocessing.cpu_count()
+		self.graphFile = os.environ["GRAPHFILE"]
 
 
 	def _insertAllNodes(self):
@@ -53,14 +54,14 @@ class Node2VecRunner(BaselineRunner):
 					if node_id in sentence_id_list: 
 						if sim >= self.intraThr:
 							self.Graph.add_edge(sentence_id, node_id, weight=sim)
-							Logger.logr.info("Adding intra edge (%d, %d) with sim=%f" %(sentence_id, node_id, sim))
+							#Logger.logr.info("Adding intra edge (%d, %d) with sim=%f" %(sentence_id, node_id, sim))
 						
 					else:
 						if sim >= self.interThr:
 							self.Graph.add_edge(sentence_id, node_id, weight=sim)
-							Logger.logr.info("Adding inter edge (%d, %d) with sim=%f" %(sentence_id, node_id, sim))
+							#Logger.logr.info("Adding inter edge (%d, %d) with sim=%f" %(sentence_id, node_id, sim))
 
-		Logger.logr.info('The graph is connected  = %d' %(nx.is_connected(self.Graph)))
+		#Logger.logr.info('The graph is connected  = %d' %(nx.is_connected(self.Graph)))
 
 	def _iterateOverSentences(self, paragraph_id, sentence_id_list):
 
@@ -102,7 +103,7 @@ class Node2VecRunner(BaselineRunner):
 			for row_id in range(0,len(doc_result)):
 				self._iterateOverParagraphs(doc_result[row_id][0])
 					
-		nx.write_gpickle(self.Graph, "Graph_%f_%f.gpickle" %(self.intraThr, self.interThr))
+		nx.write_gpickle(self.Graph, self.graphFile)
 		self.postgresConnection.disconnect_database()
 
 
@@ -122,6 +123,7 @@ class Node2VecRunner(BaselineRunner):
 			 cpu_count=self.cores, outputfile=self.n2vReprFile,\
 			 num_walks=10, walk_length=80, p=4, q=1)
 		n2vec = node2vecInstance.get_representation(self.Graph)
+		return self.Graph
 	
 	def runEvaluationTask(self):
 		"""

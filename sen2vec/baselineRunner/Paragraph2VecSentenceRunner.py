@@ -69,11 +69,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		Prepad sentences with NULL word symbol if the number 
 		of words in a particular sentence is less than 9.
 		"""
-		
-		
 		sentfiletoWrite = open("%s.p"%(self.sentsFile),"wb")
-	
-
 		for result in self.postgresConnection.memoryEfficientSelect(["id","content"],\
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
