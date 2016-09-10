@@ -52,12 +52,12 @@ class Node2VecRunner(BaselineRunner):
 					if node_id in sentence_id_list: 
 						if sim >= self.intraThr:
 							self.Graph.add_edge(sentence_id, node_id, weight=sim)
-							Logger.logr.info("Adding intra edge with sim=%f" %sim)
+							Logger.logr.info("Adding intra edge (%d, %d) with sim=%f" %(sentence_id, node_id, sim))
 						
 					else:
 						if sim >= self.interThr:
 							self.Graph.add_edge(sentence_id, node_id, weight=sim)
-							Logger.logr.info("Adding inter edge with sim=%f" %sim)
+							Logger.logr.info("Adding inter edge (%d, %d) with sim=%f" %(sentence_id, node_id, sim))
 
 		Logger.logr.info('The graph is connected  = %d' %(nx.is_connected(self.Graph)))
 
