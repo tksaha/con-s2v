@@ -5,7 +5,7 @@ import numpy as np
 import networkx as nx
 import random
 from gensim.models import Word2Vec
-
+from log_manager.log_config import Logger 
 
 from node2vec.Node2VecWalk import Node2VecWalk
 
@@ -30,7 +30,9 @@ class Node2Vec:
 		Learn embeddings by optimizing the Skipgram 
 		objective using SGD.
 		"""
-		walks = [list(map(str, walk)) for walk in walks]		
+		Logger.logr.info("Starting the Walk")
+		walks = [list(map(str, walk)) for walk in walks]	
+
 		model = Word2Vec(walks, size=self.dimension,\
 			 window=self.window_size, min_count=0,\
 			 workers=self.cpu_count)
@@ -45,6 +47,8 @@ class Node2Vec:
 		"""
 
 		n2vWalk= Node2VecWalk(nx_G, False, self.p, self.q)
+		Logger.logr.info("Calculating Transition Probability")
 		n2vWalk.preprocess_transition_probs()
+		Logger.logr.info("Simulating Walks")
 		walks = n2vWalk.simulate_walks(self.num_walks, self.walk_length)
 		return self.learn_embeddings(walks)

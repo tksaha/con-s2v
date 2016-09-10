@@ -120,6 +120,8 @@ class Node2VecRunner(BaselineRunner):
 				self._iterateOverParagraphs(doc_result[row_id][0])
 					
 		nx.write_gpickle(self.Graph, self.graphFile)
+		Logger.logr.info("Total number of edges=%i"%self.Graph.number_of_edges())
+
 		self.postgresConnection.disconnect_database()
 
 
@@ -134,10 +136,10 @@ class Node2VecRunner(BaselineRunner):
 		self.p = kwargs['p']
 		self.q = kwargs['q']
 		"""
-		
+		Logger.logr.info("Running Node2vec Internal")
 		node2vecInstance = Node2Vec (dimension=latent_space_size, window_size=8,\
 			 cpu_count=self.cores, outputfile=self.n2vReprFile,\
-			 num_walks=10, walk_length=80, p=4, q=1)
+			 num_walks=10, walk_length=10, p=4, q=1)
 		n2vec = node2vecInstance.get_representation(self.Graph)
 		return self.Graph
 	
