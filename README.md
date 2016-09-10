@@ -46,8 +46,7 @@ Set the dataset folder path and the connection string in the environment.sh file
 then run the following command-
 
 ```
-source environment.sh #Unix
-source environment.sh #os-x
+source environment.sh #Unix, os-x
 ```
 
 ## Running the Project 
