@@ -120,8 +120,10 @@ class DatabaseConnector:
 			cursor = self.connector.cursor()
 			cursor.execute(query)
 			self.connector.commit()
-		except:
+		except Exception as e:
+			Logger.logr.info(str(e))
 			self.connector.rollback()
+			
 
 
 	def truncate_tables(self, tables=[]):
@@ -131,5 +133,7 @@ class DatabaseConnector:
 			cursor.execute(statement)
 			self.connector.commit()
 
-		except:
+		except Exception as e:
+			Logger.logr.info(str(e))
 			self.connector.rollback()
+

@@ -95,13 +95,15 @@ class ReutersReader(DocumentReader):
 		Third, for each document, record the lower level information 
 		like: paragraph, sentences in table 
 		"""
+
 		if ld <= 0:
 			return 0 
-
+			
 		self.postgres_recorder.trucateTables()
 		self.postgres_recorder.altersequences()
 
 		self.readTopic() 
+		
 		
 		for file_ in os.listdir(self.folderPath):
 			if file_.endswith(".sgm"):

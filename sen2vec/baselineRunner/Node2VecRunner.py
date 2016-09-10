@@ -12,6 +12,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import multiprocessing
 import joblib
 from joblib import Parallel, delayed
+import pickle
+import numpy as np 
 from node2vec.Node2Vec import Node2Vec 
 
 
@@ -25,9 +27,10 @@ class Node2VecRunner(BaselineRunner):
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
 		self.Graph = nx.Graph()
-		#self.p2vModel = kwargs['p2vmodel'] 
+		self.p2vModel = kwargs['p2vmodel'] 
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
+		self.s2vDict = {}
 
 
 	def _insertAllNodes(self):
@@ -47,10 +50,11 @@ class Node2VecRunner(BaselineRunner):
 		for sentence_id in sentence_id_list:
 			for node_id in self.Graph.nodes():
 				if node_id != sentence_id:
-					doc_vec_1 = self.p2vModel.docvecs['SENT_%i'%sentence_id]
-					doc_vec_2 = self.p2vModel.docvecs['SENT_%i'%node_id]
 					
-					sim =  cosine_similarity(doc_vec_1.reshape(1,-1), doc_vec_2.reshape(1,-1))
+					doc_vec_1 = self.s2vDict[node_id]
+					doc_vec_2 = self.s2vDict[sentence_id]
+					sim = np.inner(doc_vec_1, doc_vec_2)
+
 					if node_id in sentence_id_list: 
 						if sim >= self.intraThr:
 							self.Graph.add_edge(sentence_id, node_id, weight=sim)
@@ -96,6 +100,18 @@ class Node2VecRunner(BaselineRunner):
 		"""
 		self.postgresConnection.connect_database()
 		self._insertAllNodes()
+
+		p2vfileToRead = open ("%s.p" %self.p2vReprFile, "rb")
+		while True: 
+			try:
+				sent_dict = pickle.load(p2vfileToRead)
+				id_ = sent_dict["id"]
+				vec = sent_dict["vec"]
+				vec = vec / np.linalg.norm(vec)
+				self.s2vDict[id_] = vec 
+			except Exception as e:
+				Logger.logr.info(str(e))
+				break 
 
 
 		for doc_result in self.postgresConnection.memoryEfficientSelect(["id","metadata"],\

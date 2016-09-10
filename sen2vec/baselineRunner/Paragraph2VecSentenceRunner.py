@@ -79,7 +79,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 					n_nulls = 9 - len(content.split())
 					for n in range(0,n_nulls):
 						content = "NULL %s" %(content)
-					Logger.logr.info ("Size becomes %d"%len(content.split()))
+					#Logger.logr.info ("Size becomes %d"%len(content.split()))
 				
 				sent_dict = {}
 				sent_dict["id"] = id_ 
