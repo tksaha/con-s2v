@@ -43,7 +43,7 @@ def main():
 	argparser = ArgumentParserUtility('Sen2Vec')
 	argparser.add_argument_to_parser("dataset", "Please enter dataset "\
 		"to work on [reuter, news]", True)
-	argparser.add_argument_to_parser("ld", "Load into Database [Yes, No]", True)
+	argparser.add_argument_to_parser("ld", "Load into Database [0, 1]", True)
 	argparser.parse_argument()
 
 	

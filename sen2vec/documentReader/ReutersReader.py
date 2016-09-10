@@ -85,25 +85,20 @@ class ReutersReader(DocumentReader):
 		self.postgres_recorder.insertIntoTopTable(topic_names, categories)						
 		Logger.logr.info("Topic reading complete.")
 
-	def _alterSequences(self):
-		self.postgres_recorder.execute_query("ALTER SEQUENCE topic_id_seq\
-			 RESTART WITH 1")
-		self.postgres_recorder.execute_query("ALTER SEQUENCE paragraph_id_seq\
-			 RESTART WITH 1")
-		self.postgres_recorder.execute_query("ALTER SEQUENCE sentence_id_seq\
-			 RESTART WITH 1")
 
 	def readDocument(self, ld):
+
 		"""
 		First, reading and recording the Topics
 		Second, recording each document at a time	
 		Third, for each document, record the lower level information 
 		like: paragraph, sentences in table 
 		"""
-		return 0 if ld>0 else pass
+		if ld <= 0:
+			return 0 
 
 		self.postgres_recorder.trucateTables()
-		self._alterSequences()
+		self.postgres_recorder.altersequences()
 
 		self.readTopic() 
 		
@@ -144,7 +139,7 @@ class ReutersReader(DocumentReader):
 		latent_space_size = 128
 		Logger.logr.info("Starting Running Para2vec Baseline")
 		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
-		#paraBaseline.prepareData()
+		paraBaseline.prepareData()
 		p2vModel = paraBaseline.runTheBaseline(latent_space_size)
 
 		Logger.logr.info("Starting Running Node2vec Baseline")

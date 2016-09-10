@@ -27,10 +27,11 @@ class PostgresDataRecorder(DataRecorder):
 					"document_topic", "paragraph",\
 					"document_paragraph", "sentence",\
 					"paragraph_sentence"])
-		
-		ALTER SEQUENCE Topic_id_seq RESTART WITH 1
-		ALTER SEQUENCE Paragraph_id_seq RESTART WITH 1
-		ALTER SEQUENCE sentence_id_seq RESTART WITH 1
+
+	def altersequences(self):
+		self.postgres_connector.execute_query("ALTER SEQUENCE topic_id_seq RESTART WITH 1")
+		self.postgres_connector.execute_query("ALTER SEQUENCE paragraph_id_seq RESTART WITH 1")
+		self.postgres_connector.execute_query("ALTER SEQUENCE sentence_id_seq RESTART WITH 1")
 
 	def insertIntoTopTable(self, names=[], categories=[]):
 		"""
