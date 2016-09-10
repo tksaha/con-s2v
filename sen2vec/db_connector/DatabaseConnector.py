@@ -120,5 +120,12 @@ class DatabaseConnector:
 			cursor = self.connector.cursor()
 			cursor.execute(statement)
 			self.connector.commit()
+
+			cursor.execute("ALTER SEQUENCE Topic_id_seq RESTART WITH 1")
+			cursor.execute("ALTER SEQUENCE Paragraph_id_seq RESTART WITH 1")
+			cursor.execute("ALTER SEQUENCE sentence_id_seq RESTART WITH 1") 
+
+			self.connector.commit()
+
 		except:
 			self.connector.rollback()

@@ -27,6 +27,10 @@ class PostgresDataRecorder(DataRecorder):
 					"document_topic", "paragraph",\
 					"document_paragraph", "sentence",\
 					"paragraph_sentence"])
+		
+		ALTER SEQUENCE Topic_id_seq RESTART WITH 1
+		ALTER SEQUENCE Paragraph_id_seq RESTART WITH 1
+		ALTER SEQUENCE sentence_id_seq RESTART WITH 1
 
 	def insertIntoTopTable(self, names=[], categories=[]):
 		"""

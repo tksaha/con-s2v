@@ -10,6 +10,9 @@ from log_manager.log_config import Logger
 from baselineRunner.BaselineRunner import BaselineRunner
 from sklearn.metrics.pairwise import cosine_similarity
 import multiprocessing
+import joblib
+from joblib import Parallel, delayed
+
 
 
 class Node2VecRunner(BaselineRunner): 
@@ -97,7 +100,8 @@ class Node2VecRunner(BaselineRunner):
 			["document"], [], [], ["id"]):
 			for row_id in range(0,len(doc_result)):
 				self._iterateOverParagraphs(doc_result[row_id][0])
-
+					
+		nx.write_gpickle(self.Graph, "Graph_%f_%f.gpickle" %(self.intraThr, self.interThr))
 		self.postgresConnection.disconnect_database()
 
 
