@@ -37,16 +37,21 @@ def main():
 	"""
 	Logging levels can be: critical, error, warning, info, debug and notset
 	We can Log as info, debug, warning, error and critical
-	It Dynamic Loads corresonding dataset specific classes. 
+	It Dynamic Loads corresonding dataset specific classes. ld 
+	denotes load document into database or not 
 	"""
 	argparser = ArgumentParserUtility('Sen2Vec')
 	argparser.add_argument_to_parser("dataset", "Please enter dataset "\
 		"to work on [reuter, news]", True)
+	argparser.add_argument_to_parser("ld", "Load into Database [Yes, No]", True)
 	argparser.parse_argument()
 
 	
 	dataset = argparser.get_value_of_argument("dataset")
-	module = None 
+	ld = argparser.get_value_of_argument("ld")
+
+	module = None
+
 	try: 
 		module = module_dict[dataset]
 		klass = class_dict[dataset]
@@ -58,7 +63,7 @@ def main():
 	reader = Klass()
 	Logger.logr.info("Successfuly loaded the class %s", str(Klass))
 	
-	#reader.readDocument()
+	reader.readDocument(int(ld)) 
 	reader.runBaselines()
 
 if __name__ == "__main__":

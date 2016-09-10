@@ -114,17 +114,21 @@ class DatabaseConnector:
 			self.connector.rollback()
 		finally:
 			return result
+
+	def execute_query(self, query):
+		try: 
+			cursor = self.connector.cursor()
+			cursor.execute(query)
+			self.connector.commit()
+		except:
+			self.connector.rollback()
+
+
 	def truncate_tables(self, tables=[]):
 		try:
 			statement = "truncate %s" % (",".join(tables))
 			cursor = self.connector.cursor()
 			cursor.execute(statement)
-			self.connector.commit()
-
-			cursor.execute("ALTER SEQUENCE Topic_id_seq RESTART WITH 1")
-			cursor.execute("ALTER SEQUENCE Paragraph_id_seq RESTART WITH 1")
-			cursor.execute("ALTER SEQUENCE sentence_id_seq RESTART WITH 1") 
-
 			self.connector.commit()
 
 		except:

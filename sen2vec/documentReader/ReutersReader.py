@@ -85,15 +85,26 @@ class ReutersReader(DocumentReader):
 		self.postgres_recorder.insertIntoTopTable(topic_names, categories)						
 		Logger.logr.info("Topic reading complete.")
 
+	def _alterSequences(self):
+		self.postgres_recorder.execute_query("ALTER SEQUENCE topic_id_seq\
+			 RESTART WITH 1")
+		self.postgres_recorder.execute_query("ALTER SEQUENCE paragraph_id_seq\
+			 RESTART WITH 1")
+		self.postgres_recorder.execute_query("ALTER SEQUENCE sentence_id_seq\
+			 RESTART WITH 1")
 
-	def readDocument(self):
+	def readDocument(self, ld):
 		"""
 		First, reading and recording the Topics
 		Second, recording each document at a time	
 		Third, for each document, record the lower level information 
 		like: paragraph, sentences in table 
 		"""
+		return 0 if ld>0 else pass
+
 		self.postgres_recorder.trucateTables()
+		self._alterSequences()
+
 		self.readTopic() 
 		
 		for file_ in os.listdir(self.folderPath):
@@ -125,6 +136,7 @@ class ReutersReader(DocumentReader):
 					
 					
 		Logger.logr.info("Document reading complete.")
+		return 1
 
 	def runBaselines(self):
 		"""
