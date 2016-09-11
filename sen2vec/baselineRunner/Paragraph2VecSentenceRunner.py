@@ -22,17 +22,6 @@ ReuterDocument = namedtuple('ReuterDocument', 'words tags')
 label_sent = lambda id_: 'SENT_%s' %(id_)
 
 
-
-def normalize_text(text):
-	"""
-	Replace breaks with spaces and then pad punctuation with spaces on both sides
-	"""
-	norm_text = text.lower().replace('<br />', ' ')
-	for char in ['.', '"', ',', '(', ')', '!', '?', ';', ':']:
-		norm_text = norm_text.replace(char, ' ' + char + ' ')
-	return norm_text
-
-
 class LineSentence(object):
 	"""
 	"""
@@ -84,7 +73,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 				sent_dict = {}
 				sent_dict["id"] = id_ 
 				content = gensim.utils.to_unicode(content.lower())
-				content = content.replace("\n", " ")
+				#content = content.replace("\n", " ")
 				content = normalize_text(content)
 				sent_dict["content"] = content	
 				pickle.dump(sent_dict,sentfiletoWrite)

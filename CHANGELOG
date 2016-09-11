@@ -3,6 +3,7 @@
 . Multilabel and Multiclass classification evaluation: http://scikit-learn.org/dev/modules/multiclass.html
 . Use autopip8 for code formatting 
 . Stick to naming convention of modules, classes and variables 
+. Need to add that the user needs to download nltk punkt
 
 
 0.0.2

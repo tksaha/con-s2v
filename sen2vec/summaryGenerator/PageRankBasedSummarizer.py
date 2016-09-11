@@ -7,7 +7,7 @@ import networkx as nx
 
 
 
-class PageRankGraphBasedSummerizer(Summarizer):
+class PageRankBasedSummerizer(Summarizer):
 	"""
 	Implements PageRank summarizer using graph as a data structure. 
 	We use networkx as the graph data structure. 
@@ -35,7 +35,7 @@ class PageRankGraphBasedSummerizer(Summarizer):
 		This will return a summary sentence ID sorted by rank. 
 		Implemented as a generator structure  
 		"""
-		_generateSummary(dumpingfactor)
+		self._generateSummary(dumpingfactor)
 
 		for key,value in self.pagerankedNodes:
 			yield key 
