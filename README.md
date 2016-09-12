@@ -1,4 +1,4 @@
-**Discourse Informed Sentence To Vector **
+#Discourse Informed Sentence To Vector 
 _____________________________________________________
 
 
