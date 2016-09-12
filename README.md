@@ -1,3 +1,8 @@
+========================================
+Discourse Informed Sentence To Vector 
+========================================
+
+
 ## Requirements
 * [Anaconda with Python 3.5](https://www.continuum.io/downloads)
 
