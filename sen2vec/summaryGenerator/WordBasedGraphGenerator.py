@@ -92,7 +92,9 @@ class WordBasedGraphGenerator:
 
 	def _create_matrix(self, sentences, threshold, tf_metrics, idf_metrics):
 		"""
-		Creates matrix of shape |sentences|×|sentences|.
+		Creates matrix of shape |sentences|×|sentences|. We use the cosine 
+		similarity as it is. It is not normalized by the degree of a particular 
+		node. 
 		"""
 	  
 		sentences_count = len(sentences)
@@ -102,19 +104,8 @@ class WordBasedGraphGenerator:
 		for row, (sentence1, tf1) in enumerate(zip(sentences, tf_metrics)):
 			for col, (sentence2, tf2) in enumerate(zip(sentences, tf_metrics)):
 				matrix[row, col] = self._compute_cosine(sentence1, sentence2, tf1, tf2, idf_metrics)
-
-		# 		if matrix[row, col] > threshold:
-		# 			matrix[row, col] = 1.0
-		# 			degrees[row] += 1
-		# 		else:
-		# 			matrix[row, col] = 0
-
-		# for row in range(sentences_count):
-		# 	for col in range(sentences_count):
-		# 		if degrees[row] == 0:
-		# 			degrees[row] = 1
-
-		# 		matrix[row][col] = matrix[row][col] / degrees[row]
+				if matrix[row][col] <= threshold:
+					matrix[row][col] = 0
 
 		return matrix
 
