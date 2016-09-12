@@ -1,5 +1,5 @@
-#Discourse Informed Sentence To Vector 
-_____________________________________________________
+# Discourse Informed Sentence To Vector 
+
 
 
 ## Requirements
