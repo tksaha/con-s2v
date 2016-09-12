@@ -16,8 +16,17 @@ Now, you have successfully installed sen2vec environment and now you can activat
 source activate sen2vec
 ```
 
+
+If you have added more packages into the environment, you 
+can update the .yml file using the following command: 
+
+```
+conda env export > sen2vec_environment.yml
+```
+
+
 ## Database Creation 
-If you have already installed [postgresql] (http://postgresapp.com/), then 
+If you have already installed [postgresql](http://postgresapp.com/), then 
 you can create a table with the following command for the newsgroup [news] dataset: 
 
 ```
@@ -40,6 +49,12 @@ psql -h localhost -d news -U postgres -w
 \password
 ```
 
+If you have made any changes to the database, you can updated the dump 
+file using following command (schema only): 
+```
+pg_dump -s -Fc yourdb > sql_dump.dump
+```
+
 ## Setting Environment Variables
 
 Set the dataset folder path and the connection string in the environment.sh file properly and 
@@ -49,12 +64,13 @@ then run the following command-
 source environment.sh #Unix, os-x
 ```
 
+
 ## Running the Project 
 Run sen2vec with -h argument to see all possible options:
 
 ```
 python sen2vec -h
-usage: sen2vec [-h] -dataset DATASET
+usage: sen2vec [-h] -dataset DATASET -ld LD
 
 Sen2Vec
 
@@ -62,11 +78,12 @@ optional arguments:
   -h, --help            show this help message and exit
   -dataset DATASET, --dataset DATASET
                         Please enter dataset to work on [reuter, news]
+  -ld LD, --ld LD       Load into Database [0, 1]
 ```
 
 For example, you can run for the news dataset using the following command-
 
 ```
-python sen2vec -dataset news
+python sen2vec -dataset news -ld 1
 ```
 
