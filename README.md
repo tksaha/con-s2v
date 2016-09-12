@@ -1,7 +1,8 @@
 ## Requirements
 * [Anaconda with Python 3.5](https://www.continuum.io/downloads)
 
-## Installation
+## Python Environment setup and Update
+
 1. Copy the sen2vec_environment.yml file into anaconda/envs folder
 2. Get into anaconda/envs folder.
 3. Run the following command:
@@ -25,7 +26,8 @@ conda env export > sen2vec_environment.yml
 ```
 
 
-## Database Creation 
+## Database Creation and update 
+
 If you have already installed [postgresql](http://postgresapp.com/), then 
 you can create a table with the following command for the newsgroup [news] dataset: 
 
