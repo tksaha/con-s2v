@@ -7,7 +7,7 @@ from abc import ABCMeta, abstractmethod
 
 
 class Summarizer:
-	def __init__(self, *args, *kwargs):
+	def __init__(self, *args, **kwargs):
 		pass
 
 

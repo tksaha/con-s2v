@@ -4,6 +4,7 @@
 import os 
 import sys
 import pickle
+import numpy as np
 from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from log_manager.log_config import Logger 
@@ -50,6 +51,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		self.sentReprFile = os.environ['P2VECSENTRUNNEROUTFILE']
 		self.cores = multiprocessing.cpu_count()
 		self.postgresConnection.connect_database()
+		self.utFunction = Utility("Text Utility")
 	
 	def prepareData(self):
 		"""
@@ -65,14 +67,12 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]
 				content = gensim.utils.to_unicode(result[row_id][1].strip())
-				content = Utility.normalize_text(content)
+				content = self.utFunction.normalize_text(content)
 
 				if len(content) < 9:
 					n_nulls = 9 - len(content)
 					for n in range(0,n_nulls):
 						content.insert(0,"NULL")
-						
-					Logger.logr.info ("Size becomes %d"%len(content.split()))
 				
 				sent_dict = {}
 				sent_dict["id"] = id_ 

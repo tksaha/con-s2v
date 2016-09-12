@@ -143,17 +143,17 @@ class ReutersReader(DocumentReader):
 		Logger.logr.info("Starting Running Para2vec Baseline")
 		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
 		paraBaseline.prepareData()
-		paraBaseline.runTheBaseline(latent_space_size)
+		#paraBaseline.runTheBaseline(latent_space_size)
 
 		Logger.logr.info("Starting Running Node2vec Baseline")
 		n2vBaseline = Node2VecRunner(self.dbstring)
 		n2vBaseline.prepareData()
 		n2vBaseline.runTheBaseline(latent_space_size)
 
-		Logger.logr.info("Starting Running Iterative Update Method")
-		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
-		iterUdateBaseline.prepareData()
-		iterUdateBaseline.runTheBaseline()
+		# Logger.logr.info("Starting Running Iterative Update Method")
+		# iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
+		# iterUdateBaseline.prepareData()
+		# iterUdateBaseline.runTheBaseline()
 
 
 

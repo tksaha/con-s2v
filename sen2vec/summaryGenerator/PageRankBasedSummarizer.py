@@ -4,10 +4,11 @@ import os
 import sys 
 import networkx as nx 
 
+import operator 
+from summaryGenerator.Summarizer import Summarizer
 
 
-
-class PageRankBasedSummerizer(Summarizer):
+class PageRankBasedSummarizer(Summarizer):
 	"""
 	Implements PageRank summarizer using graph as a data structure. 
 	We use networkx as the graph data structure. 
@@ -17,6 +18,9 @@ class PageRankBasedSummerizer(Summarizer):
 		"""
 		self.nx_G = kwargs['nx_G']
 		self.pagerankedNodes = {}
+		# for a, b, data in sorted(self.nx_G.edges(data=True), key= lambda abdata: (abdata[0],abdata[1])):
+		# 	print('{a} {b} {w}'.format(a=a, b=b, w=data['weight']))
+
 
 
 	def _generateSummary(self, dumpingfactor):
@@ -27,7 +31,7 @@ class PageRankBasedSummerizer(Summarizer):
 		Returns dictionary of nodes with pagerank as value 
 		"""
 		pageRankDict = nx.pagerank(self.nx_G, alpha=dumpingfactor)
-		self.pagerankedNodes = sorted(pageRankDict.items(), key=operator.itemgetter(1)) 
+		self.pagerankedNodes = sorted(pageRankDict.items(), key=operator.itemgetter(1), reverse=True) 
 
 
 	def getSummary(self, dumpingfactor):
@@ -38,5 +42,5 @@ class PageRankBasedSummerizer(Summarizer):
 		self._generateSummary(dumpingfactor)
 
 		for key,value in self.pagerankedNodes:
-			yield key 
+			yield key, value 
 

@@ -9,10 +9,9 @@ import gensim.models.doc2vec
 from log_manager.log_config import Logger 
 from baselineRunner.BaselineRunner import BaselineRunner
 from sklearn.metrics.pairwise import cosine_similarity
-import multiprocessing
-import joblib
-from joblib import Parallel, delayed
 import pickle
+import operator 
+import multiprocessing 
 import numpy as np 
 from node2vec.Node2Vec import Node2Vec 
 from summaryGenerator.WordBasedGraphGenerator import WordBasedGraphGenerator
@@ -27,6 +26,8 @@ class Node2VecRunner(BaselineRunner):
 		self.n2vReprFile = os.environ["N2VOUTFILE"]
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
+		self.intraThrSummary = float(os.environ["GTHRSUM"])
+		self.dumpingFactor = float(os.environ["DUMPFACTOR"])
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
@@ -48,7 +49,7 @@ class Node2VecRunner(BaselineRunner):
 		Process sentences differently for inter and 
 		intra documents. 
 		"""
-		for sentence_id in sentence_id_list:
+		for sentence_id in self.sentenceDict.keys():
 			for node_id in self.Graph.nodes():
 				if node_id != sentence_id:
 					
@@ -56,7 +57,7 @@ class Node2VecRunner(BaselineRunner):
 					doc_vec_2 = self.s2vDict[sentence_id]
 					sim = np.inner(doc_vec_1, doc_vec_2)
 
-					if node_id in sentence_id_list: 
+					if node_id in self.sentenceDict.keys(): 
 						if sim >= self.intraThr:
 							self.Graph.add_edge(sentence_id, node_id, weight=sim)
 							#Logger.logr.info("Adding intra edge (%d, %d) with sim=%f" %(sentence_id, node_id, sim))
@@ -68,7 +69,7 @@ class Node2VecRunner(BaselineRunner):
 
 		#Logger.logr.info('The graph is connected  = %d' %(nx.is_connected(self.Graph)))
 
-	def _iterateOverSentences(self, paragraph_id, sentence_id_list):
+	def _iterateOverSentences(self, paragraph_id):
 
 		
 		for sent_result in self.postgresConnection.memoryEfficientSelect(["sentence_id"],\
@@ -79,32 +80,38 @@ class Node2VecRunner(BaselineRunner):
 		
 	def _constructSingleDocGraphP2V(self):
 		graph = nx.Graph() 
-		for node_id in self.sentenceDict.keys():
-			for in_node_id in self.sentenceDict.keys():
-				if node_id == in_node_id:
-					continue 
-				else:
-					doc_vec_1 = self.s2vDict[node_id]
-					doc_vec_2 = self.s2vDict[sentence_id]
-					sim = np.inner(doc_vec_1, doc_vec_2)
-					if sim > intraThrSummary: 
-						graph.add_edge(node_id, in_node_id)
-		return graph 
+		sortedSentenceDict = sorted(self.sentenceDict.items(), key=operator.itemgetter(0), reverse=True) 
 
-	def _summarizeAndWriteLabels(self):
+		for node_id,value in sortedSentenceDict:
+			for in_node_id, value in sortedSentenceDict:
+				doc_vec_1 = self.s2vDict[node_id]
+				doc_vec_2 = self.s2vDict[in_node_id]
+				sim = np.inner(doc_vec_1, doc_vec_2)
+				if 	sim > self.intraThrSummary: 
+					graph.add_edge(node_id, in_node_id, weight=sim)
+
+		return graph
+
+	def _summarizeAndWriteLabels(self, metadata):
+
+
 		wbasedGenerator = WordBasedGraphGenerator (sentDictionary=self.sentenceDict, threshold=self.intraThrSummary)
-		nx_G, idMap = wbasedGenerator.generateGraph
+		nx_G, idMap = wbasedGenerator.generateGraph()
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
 
-		for sumSentID in prSummary.getsummary(self.dumpingFactor):
-			print (sumSentID)
+		for sumSentID, value  in prSummary.getSummary(self.dumpingFactor):
+			#print (idMap[sumSentID], value )
+			pass
 
-		nx_G = _constructSingleDocGraphP2V()
+		#print ("=====================%s" %os.linesep)
+
+		nx_G = self._constructSingleDocGraphP2V()
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
-		prSummary.getsummary(self.dumpingFactor)
+		#prSummary.getSummary(self.dumpingFactor)
 
-		for sumSentID in prSummary.getsummary(self.dumpingFactor):
-			print (sumSentID)
+		for sumSentID, value in prSummary.getSummary(self.dumpingFactor):
+			#print (sumSentID,value )
+			pass
 
 
 
@@ -121,10 +128,13 @@ class Node2VecRunner(BaselineRunner):
 			for row_id in range(0, len(para_result)):
 				self._iterateOverSentences(para_result[row_id][0])
 
-		for sent_result in self.postgresConnection.memoryEfficientSelect(["id", "content"],\
-				["sentence"], [["id", "in", "(%s)"%(",".join(self.sentenceDict.keys()))]], [], []):
-			for row_id in range(len(sent_result)):
-				self.sentenceDict[sent_result[row_id][0]] = sent_result[row_id][1]
+		
+	
+		for id_ in self.sentenceDict.keys():
+			for sent_result in self.postgresConnection.memoryEfficientSelect(["id", "content"],\
+				["sentence"], [["id", "=", id_]], [], []):
+				for row_id in range(len(sent_result)):
+					self.sentenceDict[id_] = sent_result[row_id][1]
 
 
 		self._summarizeAndWriteLabels(metadata)
@@ -143,22 +153,10 @@ class Node2VecRunner(BaselineRunner):
 		p2vfileToRead = open ("%s.p" %self.p2vReprFile, "rb")
 		self.s2vDict = pickle.load(p2vfileToRead)
 
-
-		# while True: 
-		# 	try:
-		# 		sent_dict = pickle.load(p2vfileToRead)
-		# 		id_ = sent_dict["id"]
-		# 		vec = sent_dict["vec"]
-		# 		vec = vec / np.linalg.norm(vec)
-		# 		self.s2vDict[id_] = vec 
-		# 	except Exception as e:
-		# 		Logger.logr.info(str(e))
-		# 		break 
-
-
 		for doc_result in self.postgresConnection.memoryEfficientSelect(["id", "metadata"],\
 			["document"], [], [], ["id"]):
 			for row_id in range(0,len(doc_result)):
+				Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
 				self._iterateOverParagraphs(doc_result[row_id][0], doc_result[row_id][1])
 					
 		nx.write_gpickle(self.Graph, self.graphFile)
