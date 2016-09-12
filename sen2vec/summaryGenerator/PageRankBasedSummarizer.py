@@ -25,10 +25,14 @@ class PageRankBasedSummarizer(Summarizer):
 
 	def _generateSummary(self, dumpingfactor):
 		"""
-		pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1e-06, nstart=None, weight='weight', dangling=None)
+		pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1e-06, 
+		nstart=None, weight='weight', dangling=None)
 		G = nx.Digraph(nx.path_graph(4))
 		pr = nx.pagerank (G, alpha=0.9)
 		Returns dictionary of nodes with pagerank as value 
+
+		PageRank function always make a matrix right stochastic i.e. a real square matrix, 
+		with each row summing to 1. 
 		"""
 		pageRankDict = nx.pagerank(self.nx_G, alpha=dumpingfactor)
 		self.pagerankedNodes = sorted(pageRankDict.items(), key=operator.itemgetter(1), reverse=True) 
