@@ -3,6 +3,8 @@ import sys
 from abc import ABCMeta, abstractmethod
 import logging 
 from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
+
 
 
 
@@ -26,4 +28,6 @@ class Utility:
 		norm_text = norm_text.replace("\n", " ")
 		stops = set(stopwords.words("english"))
 
-		return [words for words in norm_text.split() if words not in stops]
+		stemmer = SnowballStemmer("english")
+
+		return [stemmer.stem(words) for words in norm_text.split() if words not in stops]

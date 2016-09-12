@@ -27,7 +27,7 @@ class PageRankBasedSummerizer(Summarizer):
 		Returns dictionary of nodes with pagerank as value 
 		"""
 		pageRankDict = nx.pagerank(self.nx_G, alpha=dumpingfactor)
-		self.pagerankedNodes = sorted(pageRankDict.items(), key=operator.itemgetter()) 
+		self.pagerankedNodes = sorted(pageRankDict.items(), key=operator.itemgetter(1)) 
 
 
 	def getSummary(self, dumpingfactor):

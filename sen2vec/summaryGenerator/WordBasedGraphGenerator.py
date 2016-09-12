@@ -26,6 +26,15 @@ class WordBasedGraphGenerator:
 		self.threshold = kwargs['threshold']
 
 
+		self.sentenceDictionary = sorted(sentenceDictionary.items(), key=operator.itemgetter(1))
+		self.id_mapping_dictionary ={}
+
+		count = 0  
+		for id_, value in sentenceDictionary:
+			id_mapping_dictionary[count] = id_ 
+			count = count + 1 
+
+
 	def generateGraph:
 		"""
 		Sentence Dictionary will contain a sentence id 
@@ -39,6 +48,7 @@ class WordBasedGraphGenerator:
         idf_metrics = self._compute_idf(sentencesWords)
 
         matrix = self._create_matrix(sentences_words, self.threshold, tf_metrics, idf_metrics)
+        return nx.from_numpy_matrix(matrix), self.id_mapping_dictionary
 
 
 	def _compute_tf(self, sentences):

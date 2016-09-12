@@ -11,6 +11,7 @@ import multiprocessing
 from baselineRunner.BaselineRunner import BaselineRunner
 from gensim.models.doc2vec import TaggedDocument
 from collections import namedtuple
+from utility.Utility import Utility 
 
 
 assert gensim.models.doc2vec.FAST_VERSION > -1, \
@@ -34,7 +35,7 @@ class LineSentence(object):
 				sent_dict = pickle.load(self.data_file)
 				content = sent_dict ["content"]
 				id_ = sent_dict["id"]
-				yield ReuterDocument(words=content.split(),\
+				yield ReuterDocument(words=content,\
 					tags=[label_sent(id_)])
 			except EOFError:
 				break
@@ -63,18 +64,18 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]
-				content = result[row_id][1].strip()
-				if len(content.split()) < 9:
-					n_nulls = 9 - len(content.split())
+				content = gensim.utils.to_unicode(result[row_id][1].strip())
+				content = Utility.normalize_text(content)
+
+				if len(content) < 9:
+					n_nulls = 9 - len(content)
 					for n in range(0,n_nulls):
-						content = "NULL %s" %(content)
-					#Logger.logr.info ("Size becomes %d"%len(content.split()))
+						content.insert(0,"NULL")
+						
+					Logger.logr.info ("Size becomes %d"%len(content.split()))
 				
 				sent_dict = {}
 				sent_dict["id"] = id_ 
-				content = gensim.utils.to_unicode(content.lower())
-				#content = content.replace("\n", " ")
-				content = normalize_text(content)
 				sent_dict["content"] = content	
 				pickle.dump(sent_dict,sentfiletoWrite)
 					
@@ -90,23 +91,32 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 			 size=latent_space_size, window=8, min_count=1, workers=self.cores)
 		
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
+		sen2vec_dict = {}
+
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
-				id_ = result[row_id][0]
-				sen2vec_dict = {}
-				sen2vec_dict["id"] = id_
-				sen2vec_dict["vec"] = para2vecModel.docvecs[label_sent(id_)]
-				pickle.dump(sen2vec_dict, sent2vecFile)
+				id_ = result[row_id][0]	
+				vec = para2vecModel.docvecs[label_sent(id_)]
+				sen2vec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
+
+
+		Logger.logr.info("Total Number of Documents written=%i", len(sen2vec_dict))			
+		pickle.dump(sen2vec_dict, sent2vecFile)
 				
 		sent2vecFile.close()
 		self.postgresConnection.disconnect_database()
-		return para2vecModel
+		
 
 	def runEvaluationTask(self):
 		"""
+		Generate Summary sentences for each document. 
+		Write sentence id and corresponding metadata 
+		into a file. 
 		"""
-		pass
+		
+
+
 
 	
 	def prepareStatisticsAndWrite(self):
