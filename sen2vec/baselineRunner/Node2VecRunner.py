@@ -10,6 +10,7 @@ from log_manager.log_config import Logger
 from baselineRunner.BaselineRunner import BaselineRunner
 from sklearn.metrics.pairwise import cosine_similarity
 import pickle
+import math 
 import operator 
 import multiprocessing 
 import numpy as np 
@@ -28,6 +29,7 @@ class Node2VecRunner(BaselineRunner):
 		self.intraThr = float(os.environ["GINTRATHR"])
 		self.intraThrSummary = float(os.environ["GTHRSUM"])
 		self.dumpingFactor = float(os.environ["DUMPFACTOR"])
+		self.topNSummary = float(os.environ["TOPNSUMMARY"])
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
@@ -92,30 +94,39 @@ class Node2VecRunner(BaselineRunner):
 
 		return graph
 
-	def _summarizeAndWriteLabels(self, metadata):
+	def _dumpSummmaryToTable(self, doc_id, prSummary, idMap, methodID):
+		position = 1
+		for sumSentID, value  in prSummary.getSummary(self.dumpingFactor):
+			if 	methodID == 1:
+				sumSentID = idMap [sumSentID]
 
+			self.postgresConnection.insert ([doc_id, methodID, sumSentID, position], "summary",\
+			 ["doc_id", "method_id", "sentence_id", "position"])
+
+
+			if  position > len(self.sentenceDict) or  position > math.ceil(len(self.sentenceDict) * self.topNSummary):
+				Logger.logr.info("Dumped %i sentence as summary from %i sentence in total" %(position, len(self.sentenceDict)))
+				break
+			position = position +1 
+
+	def _summarizeAndWriteLabels(self, doc_id):
+		"""
+		insert(self, values = [], table = '', 
+		fields = [], returning = '')
+		"""
 
 		wbasedGenerator = WordBasedGraphGenerator (sentDictionary=self.sentenceDict, threshold=self.intraThrSummary)
 		nx_G, idMap = wbasedGenerator.generateGraph()
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
-
-		for sumSentID, value  in prSummary.getSummary(self.dumpingFactor):
-			#print (idMap[sumSentID], value )
-			pass
-
-		#print ("=====================%s" %os.linesep)
+		self._dumpSummmaryToTable(doc_id, prSummary, idMap, 1)
 
 		nx_G = self._constructSingleDocGraphP2V()
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
-		#prSummary.getSummary(self.dumpingFactor)
-
-		for sumSentID, value in prSummary.getSummary(self.dumpingFactor):
-			#print (sumSentID,value )
-			pass
+		self._dumpSummmaryToTable(doc_id, prSummary, "", 2)
+		
 
 
-
-	def _iterateOverParagraphs(self, doc_id, metadata):
+	def _iterateOverParagraphs(self, doc_id):
 		"""
 		Prepare a large graph. Prepare per document graph, 
 		summarize and label as train or test.
@@ -137,8 +148,8 @@ class Node2VecRunner(BaselineRunner):
 					self.sentenceDict[id_] = sent_result[row_id][1]
 
 
-		self._summarizeAndWriteLabels(metadata)
-		self._insertGraphEdges()
+		self._summarizeAndWriteLabels(doc_id)
+		#self._insertGraphEdges()
 
 
 	def prepareData(self):
@@ -153,11 +164,11 @@ class Node2VecRunner(BaselineRunner):
 		p2vfileToRead = open ("%s.p" %self.p2vReprFile, "rb")
 		self.s2vDict = pickle.load(p2vfileToRead)
 
-		for doc_result in self.postgresConnection.memoryEfficientSelect(["id", "metadata"],\
+		for doc_result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			["document"], [], [], ["id"]):
 			for row_id in range(0,len(doc_result)):
 				Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
-				self._iterateOverParagraphs(doc_result[row_id][0], doc_result[row_id][1])
+				self._iterateOverParagraphs(doc_result[row_id][0])
 					
 		nx.write_gpickle(self.Graph, self.graphFile)
 		Logger.logr.info("Total number of edges=%i"%self.Graph.number_of_edges())
