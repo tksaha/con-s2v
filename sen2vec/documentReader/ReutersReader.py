@@ -122,9 +122,16 @@ class ReutersReader(DocumentReader):
 					try:
 						metadata = "OLDID:"+doc['oldid']+"^"+"TOPICS:"+doc['topics']+\
 						"^"+"CGISPLIT:"+doc['cgisplit']+"^"+"LEWISSPLIT:"+doc['lewissplit']
+
+						if doc['lewissplit'] == "NOT-USED" or doc['topics'] == "NO"\
+						or doc['topics'] == "BYPASS" :
+							Logger.logr.info("SKipping because of ModApte Split")
+							continue
+
 					except:
 						metadata = None
-					
+						continue 
+
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
 								doc_content, file_, metadata) 
 
@@ -145,10 +152,10 @@ class ReutersReader(DocumentReader):
 		paraBaseline.prepareData()
 		#paraBaseline.runTheBaseline(latent_space_size)
 
-		Logger.logr.info("Starting Running Node2vec Baseline")
-		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.prepareData()
-		n2vBaseline.runTheBaseline(latent_space_size)
+		# Logger.logr.info("Starting Running Node2vec Baseline")
+		# n2vBaseline = Node2VecRunner(self.dbstring)
+		# n2vBaseline.prepareData()
+		# n2vBaseline.runTheBaseline(latent_space_size)
 
 		# Logger.logr.info("Starting Running Iterative Update Method")
 		# iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
