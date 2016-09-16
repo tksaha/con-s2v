@@ -7,7 +7,7 @@ import unittest
 from sen2vec import sen2vec
 
 
-class TestDeepwalk(unittest.TestCase):
+class TestSen2Vec(unittest.TestCase):
 
     def setUp(self):
         pass
