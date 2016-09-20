@@ -58,10 +58,10 @@ psql -h localhost -d news -U postgres -w
 If you have made any changes to the database, you can updated the dump 
 file using following command (schema only): 
 
-[You may need to set peer authentication:[Peer authentication](http://stackoverflow.com/questions/10430645/how-can-i-get-pg-dump-to-authenticate-properly)]
+[You may need to set peer authentication: [Peer authentication](http://stackoverflow.com/questions/10430645/how-can-i-get-pg-dump-to-authenticate-properly)]
 
 ```
-sudo -u postgres pg_dump -s --no-owner -FC reuter --no-owner>sql-dump.dump > sql_dump.dump
+sudo -u postgres pg_dump -s --no-owner -FC news --no-owner>sql-dump.dump > sql_dump.dump
 ```
 
 ## Setting Environment Variables

@@ -6,6 +6,11 @@ export REUTERS_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/reut
 # database, username, passwd, host, port
 export REUTERS_DBSTRING=reuter,postgres,postgres,localhost,5432
 # export REUTERS_DBSTRING=reuters,naeemul,naeemul,localhost,5432
+export NEWSGROUP_DBSTRING=news,postgres,postgres,localhost,5432
+export NEWSGROUP_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/newsgroup/20news-bydate
+
+
+
 export P2VECSENTRUNNERINFILE=~/Documents/sen2vec/Data/sents
 export P2VECSENTRUNNEROUTFILE=~/Documents/sen2vec/Data/sents_repr
 

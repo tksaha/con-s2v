@@ -140,7 +140,7 @@ class NewsGroupReader(DocumentReader):
 						category = topic.split('.')[0]
 						self.postgres_recorder.insertIntoDoc_TopTable(document_id, \
 									[topic], [category]) 		
-						self.__recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder, topic, istrain)
+						self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder, topic, istrain)
 					
 					
 		Logger.logr.info("Document reading complete.")
