@@ -20,6 +20,8 @@ class ReutersReader(DocumentReader):
 
 	def __init__(self,*args, **kwargs):
 		"""
+		It reads he environment variable and initializes the 
+		base class. 
 		"""
 		DocumentReader.__init__(self, *args, **kwargs)
 		self.dbstring = os.environ["REUTERS_DBSTRING"]
@@ -49,23 +51,7 @@ class ReutersReader(DocumentReader):
 		
 		self.postgres_recorder.insertIntoDoc_TopTable(document_id,\
 					topic_names, categories) 
-
-
-	def __recordParagraphAndSentence(self, document_id, doc_content):
-		"""
-		"""
-		paragraphs = self._splitIntoParagraphs(doc_content)
-
-		for position, paragraph in enumerate(paragraphs):
-			paragraph_id = self.postgres_recorder.insertIntoParTable(paragraph)
-			self.postgres_recorder.insertIntoDoc_ParTable(document_id, paragraph_id, position)
-			
-			sentences = self._splitIntoSentences(paragraph)
-			for sentence_position, sentence in enumerate(sentences):
-				sentence_id = self.postgres_recorder.insertIntoSenTable(sentence)
-				self.postgres_recorder.insertIntoPar_SenTable(paragraph_id, sentence_id,\
-					sentence_position)
-		
+	
 
 	def readTopic(self):
 		"""
@@ -137,11 +123,21 @@ class ReutersReader(DocumentReader):
 
 
 					self.__recordDocumentTopic(document_id, doc)			
-					self.__recordParagraphAndSentence(document_id, doc_content)
+					self.__recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder)
 					
 					
 		Logger.logr.info("Document reading complete.")
 		return 1
+
+	def prepareDatasetDM(self):
+		"""
+		Interested in both the binary and multiclass classification. 
+		Interested topic: acq, money-fx, crude, trade, interest. We will 
+		first generate binary classification data and then multiclass 
+		classification data for two summarization methods
+		"""
+		interested_topic_list = ['acq', 'money-fx', 'crude', 'trade', 'interest']
+	
 
 	def runBaselines(self):
 		"""

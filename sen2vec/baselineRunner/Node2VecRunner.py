@@ -117,6 +117,8 @@ class Node2VecRunner(BaselineRunner):
 
 		wbasedGenerator = WordBasedGraphGenerator (sentDictionary=self.sentenceDict, threshold=self.intraThrSummary)
 		nx_G, idMap = wbasedGenerator.generateGraph()
+
+		
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
 		self._dumpSummmaryToTable(doc_id, prSummary, idMap, 1)
 

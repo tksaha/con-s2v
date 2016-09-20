@@ -8,22 +8,18 @@ import random
 import importlib
 from io import open
 from utility.ArgumentParserUtility  import ArgumentParserUtility
-#from argparse import ArgumentParser, FileType, ArgumentDefaultsHelpFormatter
-#from collections import Counter
 
-#from concurrent.futures import ProcessPoolExecutor
 
 from documentReader.NewsGroupReader import NewsGroupReader 
 from documentReader.ReutersReader import ReutersReader
 
 
 from six import text_type as unicode
+
 # from six import iteritems
 # from six.moves import range
-
-
 # import psutil
-# from multiprocessing import cpu_count
+
 
 from log_manager.log_config import Logger 
 

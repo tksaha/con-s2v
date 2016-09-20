@@ -25,6 +25,7 @@ class NewsGroupReader(DocumentReader):
 		self.folderPath = os.environ['NEWSGROUP_PATH']
 
 
+
 	def __strip_newsgroup_header(self, text):
 	    """
 	    Given text in "news" format, strip the headers, by removing everything
@@ -91,27 +92,15 @@ class NewsGroupReader(DocumentReader):
 		self.postgres_recorder.insertIntoTopTable(topic_names, categories)						
 		Logger.logr.info("Topic reading complete.")
 		return topic_names
-
-
-	def __recordParagraphAndSentence(self, document_id, doc_content):
-		"""
-		"""
-		paragraphs = self._splitIntoParagraphs(doc_content)
-
-		for position, paragraph in enumerate(paragraphs):
-			paragraph_id = self.postgres_recorder.insertIntoParTable(paragraph)
-			self.postgres_recorder.insertIntoDoc_ParTable(document_id, paragraph_id, position)
-			
-			sentences = self._splitIntoSentences(paragraph)
-			for sentence_position, sentence in enumerate(sentences):
-				sentence_id = self.postgres_recorder.insertIntoSenTable(sentence)
-				self.postgres_recorder.insertIntoPar_SenTable(paragraph_id, sentence_id,\
-					sentence_position)
-	
 	
 	def readDocument(self, ld): 
 		"""
+		Stripping is by default inactive. For future reference it has been 
+		imported from scikit-learn newsgroup reader package. 
 
+		doc_content = self.__strip_newsgroup_header(doc_content)
+		doc_content = self.__strip_newsgroup_footer(doc_content)
+		doc_content = self.__strip_newsgroup_quoting(doc_content)
 		"""
 		if ld <= 0:
 			return 0 
@@ -129,9 +118,6 @@ class NewsGroupReader(DocumentReader):
 											first_level_folder, "/", topic)):
 						doc_content = self.__get_text_from_file("%s%s%s%s%s%s%s" \
 							%(self.folderPath, "/", first_level_folder, "/", topic, "/", file_))
-#						doc_content = self.__strip_newsgroup_header(doc_content)
-#						doc_content = self.__strip_newsgroup_footer(doc_content)
-#						doc_content = self.__strip_newsgroup_quoting(doc_content)
 						
 						document_id += 1
 						title = None						
@@ -147,7 +133,7 @@ class NewsGroupReader(DocumentReader):
 						category = topic.split('.')[0]
 						self.postgres_recorder.insertIntoDoc_TopTable(document_id, \
 									[topic], [category]) 		
-						self.__recordParagraphAndSentence(document_id, doc_content)
+						self.__recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder)
 					
 					
 		Logger.logr.info("Document reading complete.")
