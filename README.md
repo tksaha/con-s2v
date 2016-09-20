@@ -36,7 +36,7 @@ If you have already installed [postgresql](http://postgresapp.com/), then
 you can create a table with the following command for the newsgroup [news] dataset: 
 
 ```
-psql -c create database news
+psql -c "create database news"
 ```
 
 After creating the database, use pg_restore to create the schemas which is agnostic to 
@@ -57,8 +57,11 @@ psql -h localhost -d news -U postgres -w
 
 If you have made any changes to the database, you can updated the dump 
 file using following command (schema only): 
+
+[You may need to set peer authentication:[Peer authentication](http://stackoverflow.com/questions/10430645/how-can-i-get-pg-dump-to-authenticate-properly)]
+
 ```
-pg_dump -s -Fc yourdb > sql_dump.dump
+sudo -u postgres pg_dump -s --no-owner -FC reuter --no-owner>sql-dump.dump > sql_dump.dump
 ```
 
 ## Setting Environment Variables

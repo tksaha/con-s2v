@@ -50,10 +50,11 @@ class PostgresDataRecorder(DataRecorder):
 		"""
 		return self.postgres_connector.insert([content], "paragraph", ["content"], 'id')
 		
-	def insertIntoSenTable(self, content):
+	def insertIntoSenTable(self, content, topic, istrain, document_id, paragraph_id):
 		"""
 		"""
-		return self.postgres_connector.insert([content], "sentence", ["content"], 'id')
+		return self.postgres_connector.insert([content, topic,\
+			istrain, document_id, paragraph_id], "sentence", ["content","topic","istrain","doc_id","par_id"], 'id')
 
 	def insertIntoDoc_TopTable(self, id, names, categories):
 		"""

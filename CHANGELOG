@@ -4,6 +4,7 @@
 . Use autopip8 for code formatting 
 . Stick to naming convention of modules, classes and variables 
 . Need to add that the user needs to download nltk punkt
+. ALTER table sentence add column topic text, add column istrain text, add column doc_id integer, add column par_id integer
 
 
 0.0.2

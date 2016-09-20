@@ -24,19 +24,20 @@ class DocumentReader:
 		pass
 
 
-	def __recordParagraphAndSentence(self, document_id, doc_content, recorder):
+	def _recordParagraphAndSentence(self, document_id, doc_content, recorder, topic, istrain):
 		"""
 		"""
 		paragraphs = self._splitIntoParagraphs(doc_content)
 
 		for position, paragraph in enumerate(paragraphs):
 			paragraph_id = self.postgres_recorder.insertIntoParTable(paragraph)
-			self.recorder.insertIntoDoc_ParTable(document_id, paragraph_id, position)
+			recorder.insertIntoDoc_ParTable(document_id, paragraph_id, position)
 			
 			sentences = self._splitIntoSentences(paragraph)
 			for sentence_position, sentence in enumerate(sentences):
-				sentence_id = self.recorder.insertIntoSenTable(sentence)
-				self.recorder.insertIntoPar_SenTable(paragraph_id, sentence_id,\
+				sentence_id = recorder.insertIntoSenTable(sentence,\
+					 topic, istrain, document_id, paragraph_id)
+				recorder.insertIntoPar_SenTable(paragraph_id, sentence_id,\
 					sentence_position)
 
 	"""

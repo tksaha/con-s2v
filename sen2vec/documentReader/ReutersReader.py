@@ -37,7 +37,7 @@ class ReutersReader(DocumentReader):
 		categories = []
 							
 		possible_categories = ["topics", "places", "people", "orgs", 
-				"exchanges", "companies"] # List of possible topics
+				"exchanges", "companies"] 
 
 		for category in possible_categories:
 			try:
@@ -71,6 +71,24 @@ class ReutersReader(DocumentReader):
 
 		self.postgres_recorder.insertIntoTopTable(topic_names, categories)						
 		Logger.logr.info("Topic reading complete.")
+
+
+
+	def _getTopic(self, document_id, doc):
+		"""
+		Interested topic: acq, money-fx, crude, trade, interest. 
+		A topic can be one of the interested topic. A topic 
+		is assigned based on the order if multiple interested topics 
+		are assigned for a particular document. 
+		"""
+		interested_topic_list = ['acq', 'money-fx', 'crude', 'trade', 'interest']
+
+		topics = doc.find("topics").findAll('d')
+		for topic in topics: 
+			if topic in interested_topic_list: 
+				return topic; 
+
+		return "other"
 
 
 	def readDocument(self, ld):
@@ -113,7 +131,6 @@ class ReutersReader(DocumentReader):
 						or doc['topics'] == "BYPASS" :
 							Logger.logr.info("SKipping because of ModApte Split")
 							continue
-
 					except:
 						metadata = None
 						continue 
@@ -121,22 +138,18 @@ class ReutersReader(DocumentReader):
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
 								doc_content, file_, metadata) 
 
-
+					topic = self._getTopic(document_id, doc)
+					if doc['lewissplit'].lower() == 'train':
+					   istrain = 'Yes'
+					else:
+					   istrain = 'NO'
+					   
 					self.__recordDocumentTopic(document_id, doc)			
-					self.__recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder)
+					self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder,topic, istrain)
 					
 					
 		Logger.logr.info("Document reading complete.")
 		return 1
-
-	def prepareDatasetDM(self):
-		"""
-		Interested in both the binary and multiclass classification. 
-		Interested topic: acq, money-fx, crude, trade, interest. We will 
-		first generate binary classification data and then multiclass 
-		classification data for two summarization methods
-		"""
-		interested_topic_list = ['acq', 'money-fx', 'crude', 'trade', 'interest']
 	
 
 	def runBaselines(self):

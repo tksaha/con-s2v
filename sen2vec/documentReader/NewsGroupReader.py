@@ -122,10 +122,17 @@ class NewsGroupReader(DocumentReader):
 						document_id += 1
 						title = None						
 
+						metadata = None
+						istrain = None 
 						try:
-							metadata = "SPLIT:"+first_level_folder.split('-')[-1]
+							trainortest = first_level_folder.split('-')[-1]
+							metadata = "SPLIT:%s"%trainortest
+							if trainortest.lower() == 'train':
+								istrain = 'YES'
+							else:
+								istrain = 'NO'
 						except:
-							metadata = None
+							pass 
 
 						self.postgres_recorder.insertIntoDocTable(document_id, title, \
 									doc_content, file_, metadata) 
@@ -133,7 +140,7 @@ class NewsGroupReader(DocumentReader):
 						category = topic.split('.')[0]
 						self.postgres_recorder.insertIntoDoc_TopTable(document_id, \
 									[topic], [category]) 		
-						self.__recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder)
+						self.__recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder, topic, istrain)
 					
 					
 		Logger.logr.info("Document reading complete.")
