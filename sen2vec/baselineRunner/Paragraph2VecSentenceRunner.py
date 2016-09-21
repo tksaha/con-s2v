@@ -49,6 +49,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		BaselineRunner.__init__(self, *args, **kwargs)
 		self.sentsFile = os.environ['P2VECSENTRUNNERINFILE']
 		self.sentReprFile = os.environ['P2VECSENTRUNNEROUTFILE']
+		self.trainTestFolder = os.environ['TRTESTFOLDER']
 		self.cores = multiprocessing.cpu_count()
 		self.postgresConnection.connect_database()
 		self.utFunction = Utility("Text Utility")
@@ -105,8 +106,17 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		pickle.dump(sen2vec_dict, sent2vecFile)
 				
 		sent2vecFile.close()
-		self.postgresConnection.disconnect_database()
 		
+
+	def writeClassificationData(self,result, fileToWrite, s2vDict):
+		for row_id in range(0, len(result)):
+	 		id_ = result[row_id][0]
+	 		topic = result[row_id][1]
+
+	 		vec = s2vDict[id_] 
+	 		vec_str = ','.join(str(x) for x in vec)
+	 		fileToWrite.write("%s,%s,%s%s"%(id_,vec_str,topic, os.linesep))
+
 
 	def runEvaluationTask(self):
 		"""
@@ -114,12 +124,28 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		Write sentence id and corresponding metadata 
 		into a file. 
 		"""
-		
+		method_list = [1, 2]
+		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
+		s2vDict = pickle.load (sent2vecFile)
 
 
+
+		for method_id in method_list:
+			trainFileToWrite = open("%ss2vtrain_%i.csv"%(self.trainTestFolder, method_id), "w")
+			testFileToWrite = open("%ss2vtest_%i.csv"%(self.trainTestFolder, method_id), "w")
+
+			for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'YES'"] ], [], []):
+				self.writeClassificationData (result, trainFileToWrite, s2vDict)
+
+			for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'NO'"] ], [], []):
+			 	self.writeClassificationData (result, testFileToWrite, s2vDict)
 
 	
 	def prepareStatisticsAndWrite(self):
 		"""
 		"""
-		pass
+		self.postgresConnection.disconnect_database()

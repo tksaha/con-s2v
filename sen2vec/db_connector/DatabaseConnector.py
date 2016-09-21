@@ -67,14 +67,14 @@ class DatabaseConnector:
 			where_clause = []
 			if len(where) != 0:
 				for l, o, r in where:
-					where_clause += [l+" "+o+" "+"%s"]
-					values += [r]
+					where_clause += ["%s %s %s" %(l,o,r)]		
+
 				statement += "WHERE "+' AND '.join(where_clause)+" "
 			if len(groupby) != 0:
 				statement += "GROUP BY "+', '.join(groupby)+" "
 			if len(orderby) != 0:
 				statement += "ORDER BY "+', '.join(orderby)+" "
-			cursor.execute(statement, values)
+			cursor.execute(statement)
 			while True:				
 				result = cursor.fetchmany(5000)
 				if len(result) > 0:

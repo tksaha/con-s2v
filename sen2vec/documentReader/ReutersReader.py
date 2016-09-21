@@ -79,13 +79,19 @@ class ReutersReader(DocumentReader):
 		Interested topic: acq, money-fx, crude, trade, interest. 
 		A topic can be one of the interested topic. A topic 
 		is assigned based on the order if multiple interested topics 
-		are assigned for a particular document. 
+		are assigned for a particular document. We take top-10 
+		frequent topics mentioned in "Text Categorization with support 
+		vector machines: Learning with many relevant features."
 		"""
-		interested_topic_list = ['acq', 'money-fx', 'crude', 'trade', 'interest']
+		interested_topic_list = ['earn', 'acq', 'money-fx', 'grain', 'crude', 'trade'\
+			,'interest', 'ship', 'wheat', 'corn']
 
 		topics = doc.find("topics").findAll('d')
+		#Logger.logr.info(topics)
 		for topic in topics: 
+			topic = topic.text.strip() 
 			if topic in interested_topic_list: 
+				#Logger.logr.info("Returning topic %s"%topic)
 				return topic; 
 
 		return "other"
@@ -94,8 +100,7 @@ class ReutersReader(DocumentReader):
 	def readDocument(self, ld):
 
 		"""
-		First, reading and recording the Topics
-		Second, recording each document at a time	
+		First, reading and recording the Topics. Second, recording each document at a time	
 		Third, for each document, record the lower level information 
 		like: paragraph, sentences in table 
 		"""
@@ -140,7 +145,7 @@ class ReutersReader(DocumentReader):
 
 					topic = self._getTopic(document_id, doc)
 					if doc['lewissplit'].lower() == 'train':
-					   istrain = 'Yes'
+					   istrain = 'YES'
 					else:
 					   istrain = 'NO'
 					   
@@ -155,15 +160,18 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self):
 		"""
 		"""
-		latent_space_size = 128
+		latent_space_size = 5
 		Logger.logr.info("Starting Running Para2vec Baseline")
 		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
 		paraBaseline.prepareData()
 		paraBaseline.runTheBaseline(latent_space_size)
 
+
 		Logger.logr.info("Starting Running Node2vec Baseline")
 		n2vBaseline = Node2VecRunner(self.dbstring)
 		n2vBaseline.prepareData()
+
+		paraBaseline.runEvaluationTask()
 		# n2vBaseline.runTheBaseline(latent_space_size)
 
 		# Logger.logr.info("Starting Running Iterative Update Method")
