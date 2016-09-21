@@ -63,6 +63,8 @@ class IMDBReader(DocumentReader):
 		for first_level_folder in next(os.walk(self.folderPath))[1]:
 			if not(DocumentReader._folder_is_hidden(self, first_level_folder)):
 				for topic in topic_names:					
+					if first_level_folder == 'test' and topic == 'unsup':
+						continue
 					for file_ in os.listdir("%s%s%s%s%s" %(self.folderPath, "/", \
 											first_level_folder, "/", topic)):
 						doc_content = self.__get_text_from_file("%s%s%s%s%s%s%s" \
