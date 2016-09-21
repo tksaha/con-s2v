@@ -12,6 +12,7 @@ from utility.ArgumentParserUtility  import ArgumentParserUtility
 
 from documentReader.NewsGroupReader import NewsGroupReader 
 from documentReader.ReutersReader import ReutersReader
+from documentReader.IMDBReader import IMDBReader
 
 
 from six import text_type as unicode
@@ -25,9 +26,11 @@ from log_manager.log_config import Logger
 
 
 module_dict ={"reuter": "documentReader.ReutersReader", 
-		"news": "documentReader.NewsGroupReader" }
+		"news": "documentReader.NewsGroupReader",
+		"imdb": "documentReader.IMDBReader" }
 class_dict = {"reuter": "ReutersReader", 
-		"news": "NewsGroupReader"}
+		"news": "NewsGroupReader",
+		"imdb": "IMDBReader"}
 
 def main():
 	"""
@@ -38,7 +41,7 @@ def main():
 	"""
 	argparser = ArgumentParserUtility('Sen2Vec')
 	argparser.add_argument_to_parser("dataset", "Please enter dataset "\
-		"to work on [reuter, news]", True)
+		"to work on [reuter, news, imdb]", True)
 	argparser.add_argument_to_parser("ld", "Load into Database [0, 1]", True)
 	argparser.parse_argument()
 
