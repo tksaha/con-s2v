@@ -49,7 +49,7 @@ class ReutersReader(DocumentReader):
 			except:
 				pass
 		
-		self.postgres_recorder.insertIntoDoc_TopTable(document_id,\
+		self.postgres_recorder.insertIntoDocTopTable(document_id,\
 					topic_names, categories) 
 	
 
@@ -87,11 +87,9 @@ class ReutersReader(DocumentReader):
 			,'interest', 'ship', 'wheat', 'corn']
 
 		topics = doc.find("topics").findAll('d')
-		#Logger.logr.info(topics)
 		for topic in topics: 
 			topic = topic.text.strip() 
 			if topic in interested_topic_list: 
-				#Logger.logr.info("Returning topic %s"%topic)
 				return topic; 
 
 		return "other"
@@ -105,29 +103,22 @@ class ReutersReader(DocumentReader):
 		like: paragraph, sentences in table 
 		"""
 
-		if ld <= 0:
-			return 0 
-			
+		if ld <= 0: return 0 
 		self.postgres_recorder.trucateTables()
-		self.postgres_recorder.altersequences()
-
+		self.postgres_recorder.alterSequences()
 		self.readTopic() 
 		
 		
 		for file_ in os.listdir(self.folderPath):
 			if file_.endswith(".sgm"):
-				file_content = open("%s%s%s" %(self.folderPath,"/",file_), 'r', 
-					encoding='utf-8', errors='ignore').read()
+				file_content = self._getTextFromFile("%s%s%s" %(self.folderPath,"/",file_))
 				soup = BeautifulSoup(file_content, "html.parser")
-
 				for doc in soup.findAll('reuters'):
-					document_id = doc['newid']
-					
+					document_id = doc['newid']	
 					title = doc.find('title').text if doc.find('title') \
 								is not None else None 
 					doc_content = doc.find('text').text if doc.find('text')\
 							 is not None else None 
-
 					try:
 						metadata = "OLDID:"+doc['oldid']+"^"+"TOPICS:"+doc['topics']+\
 						"^"+"CGISPLIT:"+doc['cgisplit']+"^"+"LEWISSPLIT:"+doc['lewissplit']
@@ -142,13 +133,8 @@ class ReutersReader(DocumentReader):
 
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
 								doc_content, file_, metadata) 
-
 					topic = self._getTopic(document_id, doc)
-					if doc['lewissplit'].lower() == 'train':
-					   istrain = 'YES'
-					else:
-					   istrain = 'NO'
-					   
+					istrain = 'Yes' if doc['lewissplit'].lower() == 'train' else 'NO'				   
 					self.__recordDocumentTopic(document_id, doc)			
 					self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder,topic, istrain)
 					
@@ -160,24 +146,25 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self):
 		"""
 		"""
-		latent_space_size = 5
-		Logger.logr.info("Starting Running Para2vec Baseline")
-		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
-		paraBaseline.prepareData()
-		paraBaseline.runTheBaseline(latent_space_size)
+		# latent_space_size = 5
+		# Logger.logr.info("Starting Running Para2vec Baseline")
+		# paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
+		# paraBaseline.prepareData()
+		# paraBaseline.runTheBaseline(latent_space_size)
 
 
-		Logger.logr.info("Starting Running Node2vec Baseline")
-		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.prepareData()
+		# Logger.logr.info("Starting Running Node2vec Baseline")
+		# n2vBaseline = Node2VecRunner(self.dbstring)
+		# n2vBaseline.prepareData()
 
-		paraBaseline.runEvaluationTask()
+		# paraBaseline.runEvaluationTask()
 		# n2vBaseline.runTheBaseline(latent_space_size)
 
 		# Logger.logr.info("Starting Running Iterative Update Method")
 		# iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
 		# iterUdateBaseline.prepareData()
 		# iterUdateBaseline.runTheBaseline()
+		pass 
 
 
 

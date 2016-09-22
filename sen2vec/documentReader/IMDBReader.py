@@ -11,7 +11,8 @@ import re
 
 class IMDBReader(DocumentReader):
 	""" 
-	IMDB Document Reader.
+	IMDB Document Reader. Reads IMDB documents extracted from 
+	: 
 	"""
 
 	def __init__(self,*args, **kwargs):
@@ -24,72 +25,44 @@ class IMDBReader(DocumentReader):
 		self.postgres_recorder = PostgresDataRecorder(self.dbstring)
 		self.folderPath = os.environ['IMDB_PATH']
 	
-	
-	def __get_text_from_file(self, file):
-		"""
-
-		"""
-		text = ""
-		with open(file, encoding='utf-8', errors='ignore') as f:
-			for line in f:
-				text = "%s%s" %(text, line)
-		return text
-	
-	
 	def readTopic(self):
 		"""
 		"""
-		first_level_folder =  "train"
-		folder_names = next(os.walk("%s%s%s" %(self.folderPath, "/", first_level_folder)))[1]
-		topic_names = [name for name in folder_names if not (DocumentReader._folder_is_hidden(self, name))]
-		categories = [name.split('.')[0] for name in topic_names]
-
-		self.postgres_recorder.insertIntoTopTable(topic_names, categories)						
-		Logger.logr.info("Topic reading complete.")
-		return topic_names
+		rootDir = "%s/train" %self.folderPath
+		return _getTopics(rootDir)
 	
 	def readDocument(self, ld): 
 		"""
 		"""
-		if ld <= 0:
-			return 0 
-			
+		if ld <= 0: return 0 	
 		self.postgres_recorder.trucateTables()
-		self.postgres_recorder.altersequences()
-
+		self.postgres_recorder.alterSequences()
 		topic_names = self.readTopic()
+		
 		
 		document_id = 0
 		for first_level_folder in next(os.walk(self.folderPath))[1]:
-			if not(DocumentReader._folder_is_hidden(self, first_level_folder)):
+			if not(DocumentReader._folderIsHidden(self, first_level_folder)):
 				for topic in topic_names:					
 					if first_level_folder == 'test' and topic == 'unsup':
 						continue
 					for file_ in os.listdir("%s%s%s%s%s" %(self.folderPath, "/", \
 											first_level_folder, "/", topic)):
-						doc_content = self.__get_text_from_file("%s%s%s%s%s%s%s" \
+						doc_content = self.__getTextFromFile("%s%s%s%s%s%s%s" \
 							%(self.folderPath, "/", first_level_folder, "/", topic, "/", file_))
 						
 						document_id += 1
-						title = None						
-
-						metadata = None
-						istrain = None 
+						title, metadata, istrain = None, None, None					
 						try:
 							trainortest = first_level_folder
 							metadata = "SPLIT:%s"%trainortest
-							if trainortest.lower() == 'train':
-								istrain = 'YES'
-							else:
-								istrain = 'NO'
+							istrain = 'Yes' if trainortest.lower() == 'train' else 'NO'			
 						except:
-							pass 
-
+							Logger.logr.info("NO MetaData or Train Test Tag")
 						self.postgres_recorder.insertIntoDocTable(document_id, title, \
 									doc_content, file_, metadata) 
-
 						category = topic.split('.')[0]
-						self.postgres_recorder.insertIntoDoc_TopTable(document_id, \
+						self.postgres_recorder.insertIntoDocTopTable(document_id, \
 									[topic], [category]) 		
 						self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder, topic, istrain)
 					

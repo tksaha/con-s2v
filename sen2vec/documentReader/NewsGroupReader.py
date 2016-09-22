@@ -26,7 +26,7 @@ class NewsGroupReader(DocumentReader):
 
 
 
-	def __strip_newsgroup_header(self, text):
+	def __stripNewsgroupHeader(self, text):
 	    """
 	    Given text in "news" format, strip the headers, by removing everything
 	    before the first blank line.
@@ -35,7 +35,7 @@ class NewsGroupReader(DocumentReader):
 	    return after	
 
 
-	def __strip_newsgroup_quoting(self, text):
+	def __stripNewsgroupQuoting(self, text):
 	    """
 	    Given text in "news" format, strip lines beginning with the quote
 	    characters > or |, plus lines that often introduce a quoted section
@@ -49,7 +49,7 @@ class NewsGroupReader(DocumentReader):
 	    return '\n'.join(good_lines)
 
 
-	def __strip_newsgroup_footer(self, text):
+	def __stripNewsgroupFooter(self, text):
 	    """
 	    Given text in "news" format, attempt to remove a signature block.
 	    As a rough heuristic, we assume that signatures are set apart by either
@@ -68,77 +68,55 @@ class NewsGroupReader(DocumentReader):
 	        return text
 	
 	
-	def __get_text_from_file(self, file):
-		"""
-
-		"""
-		text = ""
-		with open(file, encoding='utf-8', errors='ignore') as f:
-			for line in f:
-				text = "%s%s" %(text, line)
-		return text
-	
-	
 	def readTopic(self):
 		"""
+		http://pythoncentral.io/how-to-traverse-a-directory-tree-in-python-guide-to-os-walk/
 		"""
-		first_level_folders = os.listdir(self.folderPath)
-		first_level_folders = [name for name in first_level_folders if not (DocumentReader._folder_is_hidden(self, name))]
-		first_level_folder = first_level_folders[0] #either train or test folder should be fine
-		folder_names = os.listdir("%s%s%s" %(self.folderPath, "/", first_level_folder))
-		topic_names = [name for name in folder_names if not (DocumentReader._folder_is_hidden(self, name))]
-		categories = [name.split('.')[0] for name in topic_names]
 
-		self.postgres_recorder.insertIntoTopTable(topic_names, categories)						
-		Logger.logr.info("Topic reading complete.")
-		return topic_names
+		rootDir = "%s/20news-bydate-train" %self.folderPath
+		return self._getTopics(rootDir)
+
+	def stripDocContent(self, doc_content):
+		doc_content = self.__strip_newsgroup_header(doc_content)
+		doc_content = self.__strip_newsgroup_footer(doc_content)
+		return self.__strip_newsgroup_quoting(doc_content)
+
 	
 	def readDocument(self, ld): 
 		"""
 		Stripping is by default inactive. For future reference it has been 
 		imported from scikit-learn newsgroup reader package. 
 
-		doc_content = self.__strip_newsgroup_header(doc_content)
-		doc_content = self.__strip_newsgroup_footer(doc_content)
-		doc_content = self.__strip_newsgroup_quoting(doc_content)
+		
 		"""
-		if ld <= 0:
-			return 0 
-			
+		if ld <= 0: return 0 			
 		self.postgres_recorder.trucateTables()
-		self.postgres_recorder.altersequences()
-
+		self.postgres_recorder.alterSequences()
 		topic_names = self.readTopic()
 		
+
 		document_id = 0
 		for first_level_folder in os.listdir(self.folderPath):
-			if not(DocumentReader._folder_is_hidden(self, first_level_folder)):
+			if not(DocumentReader._folderISHidden(self, first_level_folder)):
 				for topic in topic_names:					
 					for file_ in os.listdir("%s%s%s%s%s" %(self.folderPath, "/", \
 											first_level_folder, "/", topic)):
-						doc_content = self.__get_text_from_file("%s%s%s%s%s%s%s" \
+						doc_content = self._getTextFromFile("%s%s%s%s%s%s%s" \
 							%(self.folderPath, "/", first_level_folder, "/", topic, "/", file_))
 						
 						document_id += 1
-						title = None						
-
-						metadata = None
-						istrain = None 
+						title, metadata, istrain = None, None, None 						
 						try:
 							trainortest = first_level_folder.split('-')[-1]
 							metadata = "SPLIT:%s"%trainortest
-							if trainortest.lower() == 'train':
-								istrain = 'YES'
-							else:
-								istrain = 'NO'
+							istrain = 'YES' if (trainortest.lower() == 'train') else 'NO'
 						except:
-							pass 
-
+							Logger.logr.info("NO MetaData or Train Test Tag")
+							
 						self.postgres_recorder.insertIntoDocTable(document_id, title, \
 									doc_content, file_, metadata) 
-
 						category = topic.split('.')[0]
-						self.postgres_recorder.insertIntoDoc_TopTable(document_id, \
+						self.postgres_recorder.insertIntoDocTopTable(document_id, \
 									[topic], [category]) 		
 						self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder, topic, istrain)
 					

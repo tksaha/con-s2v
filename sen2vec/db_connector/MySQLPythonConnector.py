@@ -19,7 +19,7 @@ class MySQLPythonConnector(DatabaseConnector):
 		"""
 		DatabaseConnector.__init__(self, *args, **kwargs)
 
-	def	connect_database(self): 
+	def	connectDatabase(self): 
 		"""
 		"""
 		self.connector = mysql.connector.connect(database=self.database, user=self.username,\
@@ -28,7 +28,7 @@ class MySQLPythonConnector(DatabaseConnector):
 		logging.info("Opened MySQL Database successfully")
 
 		
-	def	disconnect_database(self, connection):	
+	def	disconnectDatabase(self, connection):	
 		"""
 		"""
 		self.connector.close(); 
