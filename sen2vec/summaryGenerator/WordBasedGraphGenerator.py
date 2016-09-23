@@ -51,7 +51,7 @@ class WordBasedGraphGenerator:
 		sentencesWords = []
 		for id_,sentence in self.sentenceDictionary:
 			#Logger.logr.info("ID for array =%i" %id_) 
-			sentencesWords.append(self.utFunction.normalize_text(sentence))
+			sentencesWords.append(self.utFunction.normalizeText(sentence, remove_stopwords=0))
 
 		tf_metrics = self._compute_tf(sentencesWords)
 		idf_metrics = self._compute_idf(sentencesWords)

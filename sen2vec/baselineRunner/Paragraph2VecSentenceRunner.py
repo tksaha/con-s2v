@@ -12,7 +12,10 @@ import multiprocessing
 from baselineRunner.BaselineRunner import BaselineRunner
 from gensim.models.doc2vec import TaggedDocument
 from collections import namedtuple
-from utility.Utility import Utility 
+from utility.Utility import Utility
+import pandas as pd
+from sklearn import linear_model
+from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
 
 
 assert gensim.models.doc2vec.FAST_VERSION > -1, \
@@ -51,16 +54,15 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		self.sentReprFile = os.environ['P2VECSENTRUNNEROUTFILE']
 		self.trainTestFolder = os.environ['TRTESTFOLDER']
 		self.cores = multiprocessing.cpu_count()
-		self.postgresConnection.connect_database()
+		self.postgresConnection.connectDatabase()
 		self.utFunction = Utility("Text Utility")
 	
 	def prepareData(self):
 		"""
-		Query Sentence Data. As a rough heuristics 
-		sentences shorter than 5 words are excluded. We dump 
-		both the sentence and their ids in different files. 
-		Prepad sentences with NULL word symbol if the number 
-		of words in a particular sentence is less than 9.
+		Query Sentence Data. We dump both the sentence and 
+		their ids in different files. Pre-pad sentences with 
+		NULL word symbol if the number of words in a sentence 
+		is less than 9.
 		"""
 		sentfiletoWrite = open("%s.p"%(self.sentsFile),"wb")
 		for result in self.postgresConnection.memoryEfficientSelect(["id","content"],\
@@ -68,7 +70,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]
 				content = gensim.utils.to_unicode(result[row_id][1].strip())
-				content = self.utFunction.normalize_text(content)
+				content = self.utFunction.normalizeText(content, remove_stopwords=0)
 
 				if len(content) < 9:
 					n_nulls = 9 - len(content)
@@ -143,6 +145,59 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
 			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'NO'"] ], [], []):
 			 	self.writeClassificationData (result, testFileToWrite, s2vDict)
+			 	
+	
+	def getXY(self, data):
+		"""
+		This function assumes that the data (pandas DF) has id in the 
+		first column, label in the last column and features 
+		in the middle. It returns features as X and label as Y.
+		"""
+		X = data[data.columns[1: data.shape[1]-1 ]]
+		Y = data[data.shape[1]-1]
+		return (X, Y)
+	
+	
+	def runClassificationTask(self):
+		"""
+		This function uses the generated train and test 
+		files to build a logistic regression model using 
+		scikit-learn. It will save the results 
+		into files.
+		"""
+		method_list = [1, 2]
+		
+		for method_id in method_list:
+			train = pd.read_csv("%ss2vtrain_%i.csv"%(self.trainTestFolder, method_id), header=None)
+			test = pd.read_csv("%ss2vtest_%i.csv"%(self.trainTestFolder, method_id), header=None)
+									
+			train_X, train_Y = self.getXY(train)
+			test_X, test_Y = self.getXY(test)
+			
+			logistic = linear_model.LogisticRegression()
+			logit = logistic.fit(train_X, train_Y)
+			
+			result = pd.DataFrame()
+			result['predicted_values'] = logit.predict(test_X)
+			result['true_values'] = test_Y
+			result.to_csv("%ss2vresult_%i.csv"%(self.trainTestFolder, method_id), index=False)
+			
+			labels = set(result['true_values'])
+			class_labels = {}
+			for i, label in enumerate(labels):
+				class_labels[label] = label
+				
+			evaluaiton = ClassificationEvaluation(result['true_values'], result['predicted_values'], class_labels)
+			
+			evaluationResultFile = open("%ss2veval_%i.txt"%(self.trainTestFolder, method_id), "w")
+			evaluationResultFile.write("%s%s%s" %("######Classification Report######\n", \
+						evaluaiton._getClassificationReport(), "\n\n"))
+			evaluationResultFile.write("%s%s%s" %("######Confusion Matrix######\n", \
+						evaluaiton._getConfusionMatrix(), "\n\n"))
+			evaluationResultFile.write("%s%s%s" %("######Cohen's Kappa######\n", \
+						evaluaiton._getCohenKappaScore(), "\n\n"))
+						
+			Logger.logr.info("Evaluation Completed.")
 
 	
 	def prepareStatisticsAndWrite(self):

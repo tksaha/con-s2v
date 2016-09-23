@@ -66,7 +66,7 @@ def main():
 	Logger.logr.info("Successfuly loaded the class %s", str(Klass))
 	
 	reader.readDocument(int(ld)) 
-	#reader.runBaselines()
+	reader.runBaselines()
 
 if __name__ == "__main__":
    sys.exit(main())

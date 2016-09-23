@@ -160,7 +160,7 @@ class Node2VecRunner(BaselineRunner):
 		sentences. select(self, fields = [], tables = [], where = [], 
 		groupby = [], orderby = [])
 		"""
-		self.postgresConnection.connect_database()
+		self.postgresConnection.connectDatabase()
 		self._insertAllNodes()
 
 		p2vfileToRead = open ("%s.p" %self.p2vReprFile, "rb")
@@ -175,7 +175,7 @@ class Node2VecRunner(BaselineRunner):
 		nx.write_gpickle(self.Graph, self.graphFile)
 		Logger.logr.info("Total number of edges=%i"%self.Graph.number_of_edges())
 
-		self.postgresConnection.disconnect_database()
+		self.postgresConnection.disconnectDatabase()
 
 
 	def runTheBaseline(self, latent_space_size):
