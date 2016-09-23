@@ -36,6 +36,7 @@ struct vocab_word {
 
 char train_file[MAX_STRING], output_file[MAX_STRING];
 char save_vocab_file[MAX_STRING], read_vocab_file[MAX_STRING];
+char initfromFile[MAX_STRING];
 struct vocab_word *vocab;
 int binary = 0, cbow = 1, debug_mode = 2, window = 5, min_count = 5, num_threads = 12, min_reduce = 1;
 int *vocab_hash;
@@ -116,6 +117,8 @@ int ReadWordIndex(FILE *fin) {
   if (feof(fin)) return -1;
   return SearchVocab(word);
 }
+
+
 
 // Adds a word to the vocabulary
 int AddWordToVocab(char *word) {
@@ -352,9 +355,31 @@ void InitNet() {
     for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++)
      syn1neg[a * layer1_size + b] = 0;
   }
-  for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
-    next_random = next_random * (unsigned long long)25214903917 + 11;
-    syn0[a * layer1_size + b] = (((next_random & 0xFFFF) / (real)65536) - 0.5) / layer1_size;
+  if (initfromFile[0]!=0)
+  {
+    
+    long long nwords, latdim, it;int b; 
+    double temp; char *word; 
+    word = (char*)malloc(MAX_STRING* sizeof(char));
+   
+    FILE *finit = fopen(initfromFile, "rb");
+    fscanf(finit, "%lld %lld", &nwords, &latdim);
+    
+    for (it=0; it<nwords; it++)
+    {
+      fscanf(finit,"%s",word);
+      int index = SearchVocab(word);
+      for (b=0; b<latdim; b++)
+      {
+        syn0[b + index*layer1_size] = temp; 
+      }
+    }
+  }
+  else{
+    for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
+      next_random = next_random * (unsigned long long)25214903917 + 11;
+      syn0[a * layer1_size + b] = (((next_random & 0xFFFF) / (real)65536) - 0.5) / layer1_size;
+    }
   }
   CreateBinaryTree();
 }
@@ -652,6 +677,8 @@ int main(int argc, char **argv) {
     printf("\t\tSet size of word vectors; default is 100\n");
     printf("\t-window <int>\n");
     printf("\t\tSet max skip length between words; default is 5\n");
+    printf("\t-init\n");
+    printf("\t\tWhether it will be initialized from a file?\n");
     printf("\t-sample <float>\n");
     printf("\t\tSet threshold for occurrence of words. Those that appear with higher frequency in the training data\n");
     printf("\t\twill be randomly down-sampled; default is 1e-3, useful range is (0, 1e-5)\n");
@@ -682,6 +709,7 @@ int main(int argc, char **argv) {
     printf("\t-sentence-vectors <int>\n");
     printf("\t\tAssume the first token at the beginning of each line is a sentence ID. This token will be trained\n");
     printf("\t\twith full sentence context instead of just the window. Use 1 to turn on.\n");
+    printf("\t\tMaximum 30 * 0.7 = 21M words in the vocabulary. If you want more words to be in the vocabulary please change the hash size\n");
     printf("\nExamples:\n");
     printf("./word2vec -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3\n\n");
     return 0;
@@ -700,6 +728,7 @@ int main(int argc, char **argv) {
   if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
   if ((i = ArgPos((char *)"-window", argc, argv)) > 0) window = atoi(argv[i + 1]);
+  if ((i = ArgPos((char *)"-init", argc, argv)) > 0) strcpy(initfromFile, argv[i + 1]);
   if ((i = ArgPos((char *)"-sample", argc, argv)) > 0) sample = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-hs", argc, argv)) > 0) hs = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-negative", argc, argv)) > 0) negative = atoi(argv[i + 1]);
@@ -708,6 +737,8 @@ int main(int argc, char **argv) {
   if ((i = ArgPos((char *)"-min-count", argc, argv)) > 0) min_count = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-classes", argc, argv)) > 0) classes = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-sentence-vectors", argc, argv)) > 0) sentence_vectors = atoi(argv[i + 1]);
+  
+
   vocab = (struct vocab_word *)calloc(vocab_max_size, sizeof(struct vocab_word));
   vocab_hash = (int *)calloc(vocab_hash_size, sizeof(int));
   expTable = (real *)malloc((EXP_TABLE_SIZE + 1) * sizeof(real));
