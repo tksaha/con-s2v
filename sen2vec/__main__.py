@@ -13,6 +13,7 @@ from utility.ArgumentParserUtility  import ArgumentParserUtility
 from documentReader.NewsGroupReader import NewsGroupReader 
 from documentReader.ReutersReader import ReutersReader
 from documentReader.IMDBReader import IMDBReader
+from documentReader.RTReader import RTReader
 
 
 from six import text_type as unicode
@@ -27,10 +28,12 @@ from log_manager.log_config import Logger
 
 module_dict ={"reuter": "documentReader.ReutersReader", 
 		"news": "documentReader.NewsGroupReader",
-		"imdb": "documentReader.IMDBReader" }
+		"imdb": "documentReader.IMDBReader",
+		"rt": "documentReader.RTReader" }
 class_dict = {"reuter": "ReutersReader", 
 		"news": "NewsGroupReader",
-		"imdb": "IMDBReader"}
+		"imdb": "IMDBReader",
+		"rt": "RTReader"}
 
 def main():
 	"""

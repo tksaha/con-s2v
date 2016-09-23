@@ -29,7 +29,7 @@ class IMDBReader(DocumentReader):
 		"""
 		"""
 		rootDir = "%s/train" %self.folderPath
-		return _getTopics(rootDir)
+		return self._getTopics(rootDir)
 	
 	def readDocument(self, ld): 
 		"""
@@ -42,13 +42,13 @@ class IMDBReader(DocumentReader):
 		
 		document_id = 0
 		for first_level_folder in next(os.walk(self.folderPath))[1]:
-			if not(DocumentReader._folderIsHidden(self, first_level_folder)):
+			if not(DocumentReader._folderISHidden(self, first_level_folder)):
 				for topic in topic_names:					
 					if first_level_folder == 'test' and topic == 'unsup':
 						continue
 					for file_ in os.listdir("%s%s%s%s%s" %(self.folderPath, "/", \
 											first_level_folder, "/", topic)):
-						doc_content = self.__getTextFromFile("%s%s%s%s%s%s%s" \
+						doc_content = self._getTextFromFile("%s%s%s%s%s%s%s" \
 							%(self.folderPath, "/", first_level_folder, "/", topic, "/", file_))
 						
 						document_id += 1

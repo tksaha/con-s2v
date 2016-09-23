@@ -50,7 +50,7 @@ class DocumentReader:
 		return folder.startswith('.') #linux-osx
 
 
-	def _recordParagraphAndSentence(self, document_id, doc_content, recorder, topic, istrain):
+	def _recordParagraphAndSentence(self, document_id, doc_content, recorder, topic, istrain, skipShort=False):
 		"""
 		It seems Mikolov and others did n't remove the stop words. So, we also do the 
 		same for vector construction. 
@@ -64,11 +64,12 @@ class DocumentReader:
 			sentences = self._splitIntoSentences(paragraph)
 			for sentence_position, sentence in enumerate(sentences):
 				sentence_ = self.utFunction.normalizeText(sentence, 0)
-				if len(sentence_) < 4:
+				if len(sentence_) < 4 and skipShort:
 					Logger.logr.info("Skipping sentence=%s because normalization gives: %s"\
 						 %(sentence, ' '.join(sentence_)))
+					continue
 				else:
-					Logger.logr.info("Kipping sentence=%s because normalization gives: %s"\
+					Logger.logr.info("Keeping sentence=%s because normalization gives: %s"\
 						 %(sentence, ' '.join(sentence_)))
 				sentence_id = recorder.insertIntoSenTable(sentence,\
 					 topic, istrain, document_id, paragraph_id)
