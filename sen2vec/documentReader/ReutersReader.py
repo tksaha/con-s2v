@@ -134,7 +134,7 @@ class ReutersReader(DocumentReader):
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
 								doc_content, file_, metadata) 
 					topic = self._getTopic(document_id, doc)
-					istrain = 'Yes' if doc['lewissplit'].lower() == 'train' else 'NO'				   
+					istrain = 'YES' if doc['lewissplit'].lower() == 'train' else 'NO'				   
 					self.__recordDocumentTopic(document_id, doc)			
 					self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder,topic, istrain)
 					

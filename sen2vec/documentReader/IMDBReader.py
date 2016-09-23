@@ -56,7 +56,7 @@ class IMDBReader(DocumentReader):
 						try:
 							trainortest = first_level_folder
 							metadata = "SPLIT:%s"%trainortest
-							istrain = 'Yes' if trainortest.lower() == 'train' else 'NO'			
+							istrain = 'YES' if trainortest.lower() == 'train' else 'NO'			
 						except:
 							Logger.logr.info("NO MetaData or Train Test Tag")
 						self.postgres_recorder.insertIntoDocTable(document_id, title, \
