@@ -364,13 +364,19 @@ void InitNet() {
    
     FILE *finit = fopen(initfromFile, "rb");
     fscanf(finit, "%lld %lld", &nwords, &latdim);
-    
+    if (latdim != layer1_size)
+    {
+      printf("Dimension does not match\n");
+      exit(1);
+    }
+
     for (it=0; it<nwords; it++)
     {
       fscanf(finit,"%s",word);
       int index = SearchVocab(word);
       for (b=0; b<latdim; b++)
       {
+        fscanf(finit,"%lf",&temp);
         syn0[b + index*layer1_size] = temp; 
       }
     }
