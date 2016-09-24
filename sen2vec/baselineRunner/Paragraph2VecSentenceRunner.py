@@ -91,7 +91,8 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 		dictionaries into the output file. 
 		"""
 		para2vecModel = Doc2Vec(LineSentence("%s.p"%self.sentsFile),\
-			 size=latent_space_size, window=8, min_count=1, workers=self.cores)
+			 size=latent_space_size, hs=0, negative=5,\
+			 window=8, min_count=1, workers=self.cores)
 		
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
 		sen2vec_dict = {}

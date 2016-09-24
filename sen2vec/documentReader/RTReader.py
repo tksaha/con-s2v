@@ -76,7 +76,7 @@ class RTReader(DocumentReader):
 	def runBaselines(self):
 		"""
 		"""
-		latent_space_size = 128
+		latent_space_size = 300
 		Logger.logr.info("Starting Running Para2vec Baseline")
 		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
 		paraBaseline.prepareData()
