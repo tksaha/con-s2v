@@ -43,13 +43,24 @@ int *vocab_hash;
 long long vocab_max_size = 1000, vocab_size = 0, layer1_size = 100, sentence_vectors = 0;
 long long train_words = 0, word_count_actual = 0, iter = 5, file_size = 0, classes = 0;
 real alpha = 0.025, starting_alpha, sample = 1e-3;
-real *syn0, *syn1, *syn1neg, *expTable;
+
+// All synapses and exponential table
+real *syn0, *syn1, *syn1neg, *expTable; 
 clock_t start;
 
 int hs = 0, negative = 5;
 const int table_size = 1e8;
 int *table;
 
+
+/* http://qwone.com/~jason/writing/unigram.pdf
+The chance of observing a given document is simply
+the product of the word probabilities. To calculate the chance of observing a
+given set of word frequencies, we must count all the possible orderings that
+achieve that set of frequencies. 
+
+Used for negative sampling only.
+*/
 void InitUnigramTable() {
   int a, i;
   long long train_words_pow = 0;
@@ -143,6 +154,26 @@ int AddWordToVocab(char *word) {
 int VocabCompare(const void *a, const void *b) {
     return ((struct vocab_word *)b)->cn - ((struct vocab_word *)a)->cn;
 }
+
+// https://github.com/dav/word2vec/blob/master/src/word2vec.c
+void DestroyVocab() {
+  int a;
+
+  for (a = 0; a < vocab_size; a++) {
+    if (vocab[a].word != NULL) {
+      free(vocab[a].word);
+    }
+    if (vocab[a].code != NULL) {
+      free(vocab[a].code);
+    }
+    if (vocab[a].point != NULL) {
+      free(vocab[a].point);
+    }
+  }
+  free(vocab[vocab_size].word);
+  free(vocab);
+}
+
 
 // Sorts the vocabulary by frequency using word counts
 void SortVocab() {
@@ -355,9 +386,9 @@ void InitNet() {
     for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++)
      syn1neg[a * layer1_size + b] = 0;
   }
+// Tanay's Modification 
   if (initfromFile[0]!=0)
-  {
-    
+  {    
     long long nwords, latdim, it;int b; 
     double temp; char *word; 
     word = (char*)malloc(MAX_STRING* sizeof(char));
@@ -380,6 +411,8 @@ void InitNet() {
         syn0[b + index*layer1_size] = temp; 
       }
     }
+    // Once done free word 
+    free(word);
   }
   else{
     for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
@@ -387,7 +420,21 @@ void InitNet() {
       syn0[a * layer1_size + b] = (((next_random & 0xFFFF) / (real)65536) - 0.5) / layer1_size;
     }
   }
+// End of Tanay's Modification 
+
   CreateBinaryTree();
+}
+
+void DestroyNet() {
+  if (syn0 != NULL) {
+    free(syn0);
+  }
+  if (syn1 != NULL) {
+    free(syn1);
+  }
+  if (syn1neg != NULL) {
+    free(syn1neg);
+  }
 }
 
 void *TrainModelThread(void *id) {
@@ -655,6 +702,9 @@ void TrainModel() {
     free(cl);
   }
   fclose(fo);
+  free(table);
+  free(pt);
+  DestroyVocab();
 }
 
 int ArgPos(char *str, int argc, char **argv) {
@@ -753,5 +803,8 @@ int main(int argc, char **argv) {
     expTable[i] = expTable[i] / (expTable[i] + 1);                   // Precompute f(x) = x / (x + 1)
   }
   TrainModel();
+  DestroyNet();
+  free(vocab_hash);
+  free(expTable);
   return 0;
 }
