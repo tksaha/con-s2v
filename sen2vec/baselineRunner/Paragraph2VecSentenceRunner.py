@@ -193,6 +193,8 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 			evaluationResultFile = open("%ss2veval_%i.txt"%(self.trainTestFolder, method_id), "w")
 			evaluationResultFile.write("%s%s%s" %("######Classification Report######\n", \
 						evaluaiton._getClassificationReport(), "\n\n"))
+			evaluationResultFile.write("%s%s%s" %("######Accuracy Score######\n", \
+						evaluaiton._getAccuracyScore(), "\n\n"))
 			evaluationResultFile.write("%s%s%s" %("######Confusion Matrix######\n", \
 						evaluaiton._getConfusionMatrix(), "\n\n"))
 			evaluationResultFile.write("%s%s%s" %("######Cohen's Kappa######\n", \

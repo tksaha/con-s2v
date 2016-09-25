@@ -43,3 +43,7 @@ class ClassificationEvaluation:
 	def _getClassificationReport(self):
 		return mt.classification_report(self.true_values, self.predicted_values, labels = self.class_keys, target_names = self.class_names)
 		pass
+	
+	def _getAccuracyScore(self):
+		return mt.accuracy_score(self.true_values, self.predicted_values)
+		pass

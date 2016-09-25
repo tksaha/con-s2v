@@ -146,25 +146,26 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self):
 		"""
 		"""
-		# latent_space_size = 5
-		# Logger.logr.info("Starting Running Para2vec Baseline")
-		# paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
-		# paraBaseline.prepareData()
-		# paraBaseline.runTheBaseline(latent_space_size)
+		latent_space_size = 300
+		Logger.logr.info("Starting Running Para2vec Baseline")
+		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
+		paraBaseline.prepareData()
+		paraBaseline.runTheBaseline(latent_space_size)
 
+		Logger.logr.info("Starting Running Node2vec Baseline")
+		n2vBaseline = Node2VecRunner(self.dbstring)
+		n2vBaseline.prepareData()
 
-		# Logger.logr.info("Starting Running Node2vec Baseline")
-		# n2vBaseline = Node2VecRunner(self.dbstring)
-		# n2vBaseline.prepareData()
+		paraBaseline.runEvaluationTask()
+		paraBaseline.runClassificationTask()
+		
+#		n2vBaseline.runTheBaseline(latent_space_size)
 
-		# paraBaseline.runEvaluationTask()
-		# n2vBaseline.runTheBaseline(latent_space_size)
-
-		# Logger.logr.info("Starting Running Iterative Update Method")
-		# iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
-		# iterUdateBaseline.prepareData()
-		# iterUdateBaseline.runTheBaseline()
-		pass 
+#		Logger.logr.info("Starting Running Iterative Update Method")
+#		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
+#		iterUdateBaseline.prepareData()
+#		iterUdateBaseline.runTheBaseline()
+		pass
 
 
 

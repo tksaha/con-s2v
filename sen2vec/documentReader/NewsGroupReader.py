@@ -7,7 +7,8 @@ from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from log_manager.log_config import Logger
 import re
-
+from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner
+from baselineRunner.Node2VecRunner  import Node2VecRunner
 
 class NewsGroupReader(DocumentReader):
 	""" 
@@ -128,4 +129,23 @@ class NewsGroupReader(DocumentReader):
 	def runBaselines(self):
 		"""
 		"""
+		latent_space_size = 300
+		Logger.logr.info("Starting Running Para2vec Baseline")
+		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
+		paraBaseline.prepareData()
+		paraBaseline.runTheBaseline(latent_space_size)
+
+		Logger.logr.info("Starting Running Node2vec Baseline")
+		n2vBaseline = Node2VecRunner(self.dbstring)
+		n2vBaseline.prepareData()
+
+		paraBaseline.runEvaluationTask()
+		paraBaseline.runClassificationTask()
+		
+#		n2vBaseline.runTheBaseline(latent_space_size)
+
+#		Logger.logr.info("Starting Running Iterative Update Method")
+#		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
+#		iterUdateBaseline.prepareData()
+#		iterUdateBaseline.runTheBaseline()
 		pass
