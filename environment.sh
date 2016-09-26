@@ -7,12 +7,18 @@ export REUTERS_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/reut
 export REUTERS_DBSTRING=reuter,postgres,postgres,localhost,5432
 # export REUTERS_DBSTRING=reuters,naeemul,naeemul,localhost,5432
 export NEWSGROUP_DBSTRING=news,postgres,postgres,localhost,5432
-export NEWSGROUP_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/newsgroup/20news-bydate
+export IMDB_DBSTRING=imdb,postgres,postgres,localhost,5432
 
+export NEWSGROUP_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/newsgroup/20news-bydate
+export IMDB_PATH=~/Documents/sen2vec/Data/aclImdb
 
 
 export P2VECSENTRUNNERINFILE=~/Documents/sen2vec/Data/sents
 export P2VECSENTRUNNEROUTFILE=~/Documents/sen2vec/Data/sents_repr
+
+export P2VECRUNNERINFILE=~/Documents/sen2vec/Data/docs
+export P2VECRUNNEROUTFILE=~/Documents/sen2vec/Data/docs_repr
+
 export TRTESTFOLDER=~/Documents/sen2vec/Data/
 
 export N2VOUTFILE=~/Documents/sen2vec/Data/node_repr

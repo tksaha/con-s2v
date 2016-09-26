@@ -75,7 +75,7 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 				if len(content) < 9:
 					n_nulls = 9 - len(content)
 					for n in range(0,n_nulls):
-						content.insert(0,"NULL")
+						content.insert(0,"null")
 				
 				sent_dict = {}
 				sent_dict["id"] = id_ 
@@ -139,7 +139,8 @@ class Paragraph2VecSentenceRunner(BaselineRunner):
 
 			for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
-			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'YES'"] ], [], []):
+			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'YES'"],\
+			 	["sentence.topic","<>","'unsup'"] ], [], []):
 				self.writeClassificationData (result, trainFileToWrite, s2vDict)
 
 			for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\

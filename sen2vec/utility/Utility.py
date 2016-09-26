@@ -33,4 +33,4 @@ class Utility:
 			stops = set(stopwords.words("english"))
 
 		stemmer = SnowballStemmer("english")
-		return [stemmer.stem(words) for words in norm_text.split() if words not in stops]
+		return [stemmer.stem(words.strip()) for words in norm_text.split() if words not in stops]
