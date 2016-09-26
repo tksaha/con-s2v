@@ -26,14 +26,11 @@ from six import text_type as unicode
 from log_manager.log_config import Logger 
 
 
-module_dict ={"reuter": "documentReader.ReutersReader", 
-		"news": "documentReader.NewsGroupReader",
-		"imdb": "documentReader.IMDBReader",
-		"rt": "documentReader.RTReader" }
-class_dict = {"reuter": "ReutersReader", 
-		"news": "NewsGroupReader",
-		"imdb": "IMDBReader",
-		"rt": "RTReader"}
+module_dict ={"reuter": "documentReader.ReutersReader", "news": "documentReader.NewsGroupReader",
+		"imdb": "documentReader.IMDBReader","rt": "documentReader.RTReader",
+		"stree2way":"documentReader.SentimentTreeBankReader" }
+class_dict = {"reuter": "ReutersReader", "news": "NewsGroupReader","imdb": "IMDBReader",
+		"rt": "RTReader", "stree2way": "SentimentTreeBank2WayReader"}
 
 def main():
 	"""
@@ -44,7 +41,7 @@ def main():
 	"""
 	argparser = ArgumentParserUtility('Sen2Vec')
 	argparser.add_argument_to_parser("dataset", "Please enter dataset "\
-		"to work on [reuter, news, imdb]", True)
+		"to work on [reuter, news, imdb, stree2way]", True)
 	argparser.add_argument_to_parser("ld", "Load into Database [0, 1]", True)
 	argparser.parse_argument()
 

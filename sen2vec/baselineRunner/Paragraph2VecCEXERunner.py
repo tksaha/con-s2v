@@ -75,26 +75,42 @@ class Paragraph2VecCEXERunner(BaselineRunner):
 
 		args = [self.doc2vecMIKOLOVExecutableDir, "-train","%s.txt"%self.docsFile,\
 		    "-output",self.doc2vecOut,\
-			"-cbow",str(0),"-size", str(latent_space_size), "-window",str(10),\
+			"-cbow",str(1),"-size", str(latent_space_size), "-window",str(10),\
 			"-negative",str(5),"-hs",str(0),"-sample",str(1e-4) ,\
-			"-threads",str(self.cores),\
-			"-binary",str(1), "-iter",str(20),"-min_count",str(0),\
+			"-threads",str(self.cores*2),\
+			"-binary",str(0), "-iter",str(20),"-min-count",str(1),\
 			"-sentence-vectors", str(1)]
 
 		Logger.logr.info(args)
 		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = proc.communicate()
-
 		doc2vecModel = Doc2Vec.load_word2vec_format(self.doc2vecOut, binary=False)
+
+
+		args = [self.doc2vecMIKOLOVExecutableDir, "-train","%s.txt"%self.docsFile,\
+		    "-output","%s_DBOW"%(self.doc2vecOut),\
+			"-cbow",str(0),"-size", str(latent_space_size), "-window",str(10),\
+			"-negative",str(5),"-hs",str(0),"-sample",str(1e-4) ,\
+			"-threads",str(self.cores*2),\
+			"-binary",str(0), "-iter",str(20),"-min-count",str(1),\
+			"-sentence-vectors", str(1)]
+
+		Logger.logr.info(args)
+		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		out, err = proc.communicate()
+		doc2vecModelDBOW = Doc2Vec.load_word2vec_format("%s_DBOW"%self.doc2vecOut, binary=False)
 
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			 ["document"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]	
-				vec = doc2vecModel[label_doc(id_)]
+				vec1 = doc2vecModel[label_doc(id_)]
+				vec2 = doc2vecModelDBOW[label_doc(id_)]
+				vec = np.hstack((vec1,vec2))
+				Logger.logr.info("Reading a vector of length %s"%vec.shape)
 				doc2vec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
-		Logger.logr.info("Total Number of Documents written=%i", len(sen2vec_dict))			
+		Logger.logr.info("Total Number of Documents written=%i", len(doc2vec_dict))			
 		pickle.dump(doc2vec_dict, doc2vecFile)			
 		doc2vecFile.close()
 		
