@@ -2,15 +2,20 @@
 # Path to Reuters data
 #export REUTERS_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/reuters/reuter21578_temp
 export REUTERS_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/reuters/reuters21578
+
+
+
 # export REUTERS_PATH=./sen2vec/documentReader/reuters21578
 # database, username, passwd, host, port
 export REUTERS_DBSTRING=reuter,postgres,postgres,localhost,5432
 # export REUTERS_DBSTRING=reuters,naeemul,naeemul,localhost,5432
 export NEWSGROUP_DBSTRING=news,postgres,postgres,localhost,5432
 export IMDB_DBSTRING=imdb,postgres,postgres,localhost,5432
+export SENTTREE_DBSTRING=senttree,postgres,postgres,localhost,5432
 
 export NEWSGROUP_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/newsgroup/20news-bydate
 export IMDB_PATH=~/Documents/sen2vec/Data/aclImdb
+export SENTTREE_PATH=~/Documents/sen2vec/Data/stanfordSentimentTreebank
 
 
 export P2VECSENTRUNNERINFILE=~/Documents/sen2vec/Data/sents

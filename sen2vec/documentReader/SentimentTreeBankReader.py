@@ -30,50 +30,52 @@ class SentimentTreeBank2WayReader(DocumentReader):
 		Logger.logr.info("[%i] Topic reading complete." %(len(topic_names)))
 		return topic_names
 
-	def readDSplit(fileName):
+	def readDSplit(self,fileName):
 		"""
 		1 Train, 2 Test, 3 dev
 		"""
 		line_count = 0 
 		dSPlitDict = {}
-		for line in open(fileName):
+		for line in open(fileName, encoding='utf-8', errors='ignore'):
 			if line_count == 0: 
-				continue
-			else:
-				line_count = line_count + 1
-				doc_id,_, splitid = line.strip().partition(" ")
+				pass
+			else:	
+				doc_id,_, splitid = line.strip().partition(",")
+				dSPlitDict[int(doc_id)] = int(splitid)
+			line_count = line_count + 1
 
-		dSPlitDict[int(doc_id)] = int(splitid)
 		Logger.logr.info("Finished reading %i sentences and their splits"%line_count)
 
 		return dSPlitDict;
 
-	def readSentences(fileName):
+	def readSentences(self,fileName):
 		line_count = 0
 		sentenceDict = {}
-		for line in open(fileName):
+		for line in open(fileName, encoding='utf-8', errors='ignore'):
 			if line_count == 0:
-				continue
-			else:
-				line_count = line_count + 1
-				doc_id,_,sentence = line.strip().partition(",")
+				pass
+			else:		
+				doc_id,_,sentence = line.strip().partition("\t")
 				sentenceDict[int(doc_id)] = sentence.strip()
+			line_count = line_count + 1
+		return sentenceDict
 		Logger.logr.info("Finished reading %i sentence"%line_count)
 
-	def phraseToSentiment(fileName):
+	def phraseToSentiment(self, fileName):
 		line_count = 0 
 		phraseToSentimentDict = {}
 
-		for line in open(fileName):
+		for line in open(fileName, encoding='utf-8', errors='ignore'):
 			if line_count == 0:
-				continue
+				pass
 			else:
-				line_count = line_count + 1
-				phrase_id,_, sentiment = line.strip().split("|")
+				phrase_id,_, sentiment = line.strip().partition("|")
 				phraseToSentimentDict[int(phrase_id)] = float(sentiment)
+			line_count = line_count + 1
+		return phraseToSentimentDict
 		Logger.logr.info("Finished reading %i phrases"%line_count)
 
-	def getTopicCategory(sentiment_val):
+	def getTopicCategory(self, sentiment_val):
 		"""
 		[0, 0.2] very negative 
 		(0.2, 0.4] negative 
@@ -99,18 +101,18 @@ class SentimentTreeBank2WayReader(DocumentReader):
 		topic_names = self.readTopic()
 
 		allPhrasesFile = "%s/dictionary.txt"%(self.folderPath)
-		dSPlitDict = self.readDSplit("%s/dataSplit.txt"%self.folderPath)
-		sentenceDict = self.readSentences("%s/dataSentences.txt"%self.folderPath)
-		phraseToSentiment = self.phraseToSentiment("%s/sentiment_labels.txt"%self.folderPath)
+		dSPlitDict = self.readDSplit("%s/datasetSplit.txt"%self.folderPath)
+		sentenceDict = self.readSentences("%s/datasetSentences.txt"%self.folderPath)
+		phraseToSentimentDict = self.phraseToSentiment("%s/sentiment_labels.txt"%self.folderPath)
 
-		for line in open(allPhrasesFile):
-				phrase, _ , phrase_id = line.strip().split("|")
+		for line in open(allPhrasesFile, encoding='utf-8', errors='ignore'):
+				phrase, _ , phrase_id = line.strip().partition("|")
 				contains_in_train, contains_in_test, contains_in_dev, is_a_sentence = False, False, False, False
-				sentiment_val = phraseToSentimentDict[phrase_id]
+				sentiment_val = phraseToSentimentDict[int(phrase_id)]
 				if sentiment_val >0.4 and sentiment_val<=0.6:
 					continue 
-				topic, category = getTopicCategory(sentiment_val)
-				for sent_id, sentence in sentenceDict.iteritems():
+				topic, category = self.getTopicCategory(sentiment_val)
+				for sent_id, sentence in sentenceDict.items():
 					if phrase in sentence: 
 						train_label = dSPlitDict[sent_id]
 						if train_label ==1:
