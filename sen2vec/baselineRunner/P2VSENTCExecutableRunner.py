@@ -29,7 +29,7 @@ class P2VCExecutableRunner(Paragraph2VecSentenceRunner):
 		self.sentReprFile = os.environ['P2VCEXECOUTFILE']
 		self.word2vecOut = os.environ['P2VECWORD2VECOUT']
 		self.trainTestFolder = os.environ['P2VCEXECTRTESTFOLDER']
-		self.word2vecExecutableDir= os.environ['WORD2VECEXECDIR']
+		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
 	
 	def prepareData(self):
 		"""
@@ -65,18 +65,18 @@ class P2VCExecutableRunner(Paragraph2VecSentenceRunner):
 
 		args = [self.word2vecExecutableDir, "-train","%s.txt"%self.sentfiletoWrite,\
 		    "-output",self.word2vecOut,\
-			"-cbow",str(1),"-size", latent_space_size, "-window",str(8),\
+			"-cbow",str(0),"-size", latent_space_size, "-window",str(8),\
 			"-negative",str(5),"-hs",str(0),"-sample",str(1e-4) ,\
 			"-threads",str(self.cores),\
-			"-binary",str(0), "-iter",str(20),"-min_count",str(0),\
-			"-sentence-vectors", str(1)]
+			"-binary",str(0), "-iter",str(20),"-min_count",str(1),\
+			"-sentence-vectors", str(1)
 
 		Logger.logr.info(args)
 		proc = subprocess.Popen(args, out=stdout.PIPE, err=stderr.PIPE)
 		out, err = proc.communicate()
 
 		line_count = 0 
-		for line in self.word2vecOut:
+		for line in open(self.word2vecOut):
 			if line_count == 0: 
 				line_count = line_count + 1
 				continue 

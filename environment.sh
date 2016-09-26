@@ -19,6 +19,13 @@ export P2VECSENTRUNNEROUTFILE=~/Documents/sen2vec/Data/sents_repr
 export P2VECRUNNERINFILE=~/Documents/sen2vec/Data/docs
 export P2VECRUNNEROUTFILE=~/Documents/sen2vec/Data/docs_repr
 
+export P2VDOCOUT=~/Documents/sen2vec/Data/docs_repr_CEXE
+export P2VECRUNNERCEXEOUTFILE=~/Documents/sen2vec/Data/docs_repr_CEXE
+export DOC2VECEXECDIR=~/Documents/sen2vec/sen2vec/word2vec/word2vec
+
+
+
+
 export TRTESTFOLDER=~/Documents/sen2vec/Data/
 
 export N2VOUTFILE=~/Documents/sen2vec/Data/node_repr

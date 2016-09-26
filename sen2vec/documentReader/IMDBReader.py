@@ -10,6 +10,8 @@ import re
 from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner
 from baselineRunner.Node2VecRunner  import Node2VecRunner
 from baselineRunner.Paragraph2VecRunner import Paragraph2VecRunner
+from baselineRunner.Paragraph2VecCEXERunner import Paragraph2VecCEXERunner
+
 
 class IMDBReader(DocumentReader):
 	""" 
@@ -89,16 +91,22 @@ class IMDBReader(DocumentReader):
 		# paraBaseline.runEvaluationTask()
 		# paraBaseline.runClassificationTask()
 		
-#		n2vBaseline.runTheBaseline(latent_space_size)
+		#n2vBaseline.runTheBaseline(latent_space_size)
 
-#		Logger.logr.info("Starting Running Iterative Update Method")
-#		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
-#		iterUdateBaseline.prepareData()
-#		iterUdateBaseline.runTheBaseline()
+		#Logger.logr.info("Starting Running Iterative Update Method")
+		#iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
+		#iterUdateBaseline.prepareData()
+		#iterUdateBaseline.runTheBaseline()
 		
-		docBaseLine = Paragraph2VecRunner(self.dbstring)
+		#docBaseLine = Paragraph2VecRunner(self.dbstring)
 		#docBaseLine.prepareData()
 		#docBaseLine.runTheBaseline(latent_space_size)
+		#docBaseLine.runEvaluationTask()
+		#docBaseLine.runClassificationTask()
+
+		docBaseLineCEXE = Paragraph2VecCEXERunner(self.dbstring)
+		docBaseLineCEXE.prepareData()
+		docBaseLineCEXE.runTheBaseline(latent_space_size)
 		docBaseLine.runEvaluationTask()
 		docBaseLine.runClassificationTask()
 

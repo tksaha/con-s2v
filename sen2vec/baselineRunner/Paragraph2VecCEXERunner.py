@@ -16,10 +16,8 @@ from utility.Utility import Utility
 import pandas as pd
 from sklearn import linear_model
 from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
+import subprocess 
 
-
-assert gensim.models.doc2vec.FAST_VERSION > -1, \
-	"this will be painfully slow otherwise"
 """
 https://docs.python.org/2/library/collections.html
 """
@@ -27,44 +25,28 @@ ImdbDocument = namedtuple('Document', 'words tags')
 label_doc = lambda id_: 'DOC_%s' %(id_)
 
 
-class LineSentence(object):
-	"""
-	"""
-	def __init__(self, filename):
-		self.filename = filename 
-	def __iter__(self):
-		self.data_file=open(self.filename, 'rb')
-		while True: 
-			try:
-				doc_dict = pickle.load(self.data_file)
-				content = doc_dict ["content"]
-				id_ = doc_dict["id"]
-				yield ImdbDocument(words=content,\
-					tags=[label_doc(id_)])
-			except EOFError:
-				break
-
-
-class Paragraph2VecRunner(BaselineRunner):
+class Paragraph2VecCEXERunner(BaselineRunner):
 	def __init__(self, *args, **kwargs):
 		"""
 		"""
 		BaselineRunner.__init__(self, *args, **kwargs)
 		self.docsFile = os.environ['P2VECRUNNERINFILE']
-		self.docReprFile = os.environ['P2VECRUNNEROUTFILE']
+		self.doc2vecOut = os.environ['P2VDOCOUT']
+		self.docReprFile = os.environ['P2VECRUNNERCEXEOUTFILE']
 		self.trainTestFolder = os.environ['TRTESTFOLDER']
 		self.cores = multiprocessing.cpu_count()
 		self.postgresConnection.connectDatabase()
+		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
 		self.utFunction = Utility("Text Utility")
 	
 	def prepareData(self):
 		"""
-		Query Document Data. We dump both the Document and 
-		their ids. Pre-pad sentences with 
-		NULL word symbol if the number of words in a sentence 
+		Query Sentence Data. We dump sentences with their sentence 
+		ids. Pre-pad sentences with null word symbol if the number 
+		of words in a sentence 
 		is less than 9.
 		"""
-		docfiletoWrite = open("%s.p"%(self.docsFile),"wb")
+		docfiletoWrite = open("%s.txt"%(self.docsFile),"w")
 		for result in self.postgresConnection.memoryEfficientSelect(["id","content"],\
 			 ["document"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
@@ -76,38 +58,44 @@ class Paragraph2VecRunner(BaselineRunner):
 					n_nulls = 9 - len(content)
 					for n in range(0,n_nulls):
 						content.insert(0,"null")
-				
-				doc_dict = {}
-				doc_dict["id"] = id_ 
-				doc_dict["content"] = content	
-				pickle.dump(doc_dict,docfiletoWrite)
-					
+				docfiletoWrite.write("%s %s%s"%(label_doc(id_),' '.join(content), os.linesep))
+			docfiletoWrite.flush()
+
 		docfiletoWrite.close()
-		
+
 
 	def runTheBaseline(self, latent_space_size):
 		"""
 		We run the para2vec Model and then store sen2vec as pickled 
 		dictionaries into the output file. 
 		"""
-		para2vecModel = Doc2Vec(LineSentence("%s.p"%self.docsFile),\
-			 size=latent_space_size,dm =0, iter=20, hs=0, negative=5,\
-			 window=10, min_count=1, min_alpha=0.025, sample=1e-4, workers=self.cores)
 		
 		doc2vecFile = open("%s.p"%(self.docReprFile),"wb")
 		doc2vec_dict = {}
+
+		args = [self.doc2vecMIKOLOVExecutableDir, "-train","%s.txt"%self.docsFile,\
+		    "-output",self.doc2vecOut,\
+			"-cbow",str(0),"-size", str(latent_space_size), "-window",str(10),\
+			"-negative",str(5),"-hs",str(0),"-sample",str(1e-4) ,\
+			"-threads",str(self.cores),\
+			"-binary",str(1), "-iter",str(20),"-min_count",str(0),\
+			"-sentence-vectors", str(1)]
+
+		Logger.logr.info(args)
+		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		out, err = proc.communicate()
+
+		doc2vecModel = Doc2Vec.load_word2vec_format(self.doc2vecOut, binary=False)
 
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			 ["document"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]	
-				vec = para2vecModel.docvecs[label_doc(id_)]
+				vec = doc2vecModel[label_doc(id_)]
 				doc2vec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
-
-		Logger.logr.info("Total Number of Documents written=%i", len(doc2vec_dict))			
-		pickle.dump(doc2vec_dict, doc2vecFile)
-				
+		Logger.logr.info("Total Number of Documents written=%i", len(sen2vec_dict))			
+		pickle.dump(doc2vec_dict, doc2vecFile)			
 		doc2vecFile.close()
 		
 
