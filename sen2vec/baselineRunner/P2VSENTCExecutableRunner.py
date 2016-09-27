@@ -29,11 +29,11 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		BaselineRunner.__init__(self, *args, **kwargs)
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
 		self.sentReprFile = os.environ['P2VCEXECOUTFILE']
-		self.doc2vecOut = os.environ['P2VECdoc2vecOut']
-		self.trainTestFolder = os.environ['P2VCEXECTRTESTFOLDER']
+		self.doc2vecOut = os.environ['P2VECSENTDOC2VECOUT']
+		self.trainTestFolder = os.environ['TRTESTFOLDER']
 		self.cores = multiprocessing.cpu_count()
 		self.postgresConnection.connectDatabase()
-		self.sent2vecMIKOLOVExecutableDir= os.environ['SENT2VECEXECDIR']
+		self.sent2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
 		self.utFunction = Utility("Text Utility")
 	
 	def prepareData(self):
