@@ -165,7 +165,7 @@ class ReutersReader(DocumentReader):
 #		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
 #		iterUdateBaseline.prepareData()
 #		iterUdateBaseline.runTheBaseline()
-		pass
+		
 
 
 

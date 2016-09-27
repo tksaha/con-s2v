@@ -413,6 +413,7 @@ void InitNet() {
     }
     // Once done free word 
     free(word);
+    printf("Successfully Loaded the initial values for vectors from file\n");
   }
   else{
     for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {

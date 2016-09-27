@@ -94,3 +94,5 @@ class DocumentReader:
 		self.postgres_recorder.insertIntoTopTable(topic_names, categories)				
 		Logger.logr.info("[%i] Topic reading complete." %(len(topic_names)))
 		return topic_names
+
+	

@@ -27,23 +27,20 @@ class ClassificationEvaluation:
 		self.predicted_values = predicted_values
 		self.class_keys = sorted(class_labels)
 		self.class_names = [class_labels[key] for key in self.class_keys]
-		pass
+
 
 	"""
 	Protected Methods 
 	"""
 	def _getConfusionMatrix(self):
 		return mt.confusion_matrix(self.true_values, self.predicted_values, labels = self.class_keys)
-		pass
 		
 	def _getCohenKappaScore(self):
 		return mt.cohen_kappa_score(self.true_values, self.predicted_values, labels = self.class_keys)
-		pass
 		
 	def _getClassificationReport(self):
 		return mt.classification_report(self.true_values, self.predicted_values, labels = self.class_keys, target_names = self.class_names)
-		pass
 	
 	def _getAccuracyScore(self):
 		return mt.accuracy_score(self.true_values, self.predicted_values)
-		pass
+

@@ -47,16 +47,17 @@ class Node2VecWalk:
 		Repeatedly simulate random walks from each node.
 		"""
 		G = self.G
-		walks = []
+		#walks = []
 		nodes = list(G.nodes())
 		Logger.logr.info('Walk iteration:')
 		for walk_iter in range(num_walks):
 			#Logger.logr.info(str(walk_iter+1), '/', str(num_walks))
 			random.shuffle(nodes)
 			for node in nodes:
-				walks.append(self.node2vec_walk(walk_length=walk_length, start_node=node))
-
-		return walks
+				walk = self.node2vec_walk(walk_length=walk_length, start_node=node)
+				yield walk
+		
+		#return walks
 
 	def get_alias_edge(self, src, dst):
 		"""
