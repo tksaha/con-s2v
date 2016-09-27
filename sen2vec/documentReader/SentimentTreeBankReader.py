@@ -23,8 +23,8 @@ class SentimentTreeBank2WayReader(DocumentReader):
 		self.folderPath = os.environ['SENTTREE_PATH']
 
 	def readTopic(self):
-		topic_names = ['pos', 'neg','dev']
-		categories = ['pos', 'neg', 'dev']
+		topic_names = ['pos', 'neg','unsup']
+		categories = ['pos', 'neg', 'unsup']
 
 		self.postgres_recorder.insertIntoTopTable(topic_names, categories)				
 		Logger.logr.info("[%i] Topic reading complete." %(len(topic_names)))
@@ -88,7 +88,7 @@ class SentimentTreeBank2WayReader(DocumentReader):
 		elif sentiment_val >0.6:
 			return ('pos', 'pos')
 		else:
-			return ('neu', 'neu')
+			return ('unsup', 'unsup')
 
 	def readDocument(self, ld): 
 		"""
@@ -108,9 +108,7 @@ class SentimentTreeBank2WayReader(DocumentReader):
 		for line in open(allPhrasesFile, encoding='utf-8', errors='ignore'):
 				phrase, _ , phrase_id = line.strip().partition("|")
 				contains_in_train, contains_in_test, contains_in_dev, is_a_sentence = False, False, False, False
-				sentiment_val = phraseToSentimentDict[int(phrase_id)]
-				if sentiment_val >0.4 and sentiment_val<=0.6:
-					continue 
+				sentiment_val = phraseToSentimentDict[int(phrase_id)]			
 				topic, category = self.getTopicCategory(sentiment_val)
 				for sent_id, sentence in sentenceDict.items():
 					if phrase in sentence: 
@@ -124,35 +122,65 @@ class SentimentTreeBank2WayReader(DocumentReader):
 
 					if phrase==sentence:
 						is_a_sentence = True 
-					   
-
-				if contains_in_test==True and contains_in_train==False and\
+					
+				#  all neutrals are considered as part of training   
+				if sentiment_val >0.4 and sentiment_val<=0.6:
+					metadata = "SPLIT:%s"%('unsup')
+					istrain='MAYBE'
+				elif contains_in_test==True and contains_in_train==False and\
 					contains_in_dev==False and is_a_sentence==True:
 					metadata = "SPLIT:%s"%('test')
-					istrain ="NO"
-					self.postgres_recorder.insertIntoDocTable(phrase_id, "", \
-									phrase, "", metadata) 
-
+					istrain ="NO"				
 				elif contains_in_train ==True and contains_in_test==False and\
 					contains_in_dev == False:
 					metadata = "SPLIT:%s"%('train')
 					istrain='YES'
-					self.postgres_recorder.insertIntoDocTable(phrase_id, "", \
-									phrase, "", metadata)
 				else:
 					metadata = "SPLIT:%s"%('unsup')
 					istrain='MAYBE'
 					topic, category ='unsup', 'unsup'
-					self.postgres_recorder.insertIntoDocTable(phrase_id, "", \
-									phrase, "", metadata)
 
+				self.postgres_recorder.insertIntoDocTable(phrase_id, "", \
+									phrase, "", metadata) 
 				self.postgres_recorder.insertIntoDocTopTable(phrase_id, \
 									[topic], [category])
 				self._recordParagraphAndSentence(phrase_id, phrase,\
 					self.postgres_recorder, topic, istrain)
-		allPhrasesFile.close()
-
+	
 		Logger.logr.info("Document reading complete.")
 		return 1
 
+	def runBaselines(self):
+		"""
+		"""
+		latent_space_size = 300
+		Logger.logr.info("Starting Running Para2vec (Doc) Baseline")
+		# paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
+		# paraBaseline.prepareData()
+		# paraBaseline.runTheBaseline(latent_space_size)
 
+		# Logger.logr.info("Starting Running Node2vec Baseline")
+		# n2vBaseline = Node2VecRunner(self.dbstring)
+		# n2vBaseline.prepareData()
+
+		# paraBaseline.runEvaluationTask()
+		# paraBaseline.runClassificationTask()
+		
+		#n2vBaseline.runTheBaseline(latent_space_size)
+
+		#Logger.logr.info("Starting Running Iterative Update Method")
+		#iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
+		#iterUdateBaseline.prepareData()
+		#iterUdateBaseline.runTheBaseline()
+		
+		#docBaseLine = Paragraph2VecRunner(self.dbstring)
+		#docBaseLine.prepareData()
+		#docBaseLine.runTheBaseline(latent_space_size)
+		#docBaseLine.runEvaluationTask()
+		#docBaseLine.runClassificationTask()
+
+		docBaseLineCEXE = Paragraph2VecCEXERunner(self.dbstring)
+		docBaseLineCEXE.prepareData()
+		docBaseLineCEXE.runTheBaseline(latent_space_size)
+		docBaseLineCEXE.runEvaluationTask()
+		docBaseLineCEXE.runClassificationTask()

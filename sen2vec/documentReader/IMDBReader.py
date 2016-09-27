@@ -105,7 +105,7 @@ class IMDBReader(DocumentReader):
 		#docBaseLine.runClassificationTask()
 
 		docBaseLineCEXE = Paragraph2VecCEXERunner(self.dbstring)
-		#docBaseLineCEXE.prepareData()
+		docBaseLineCEXE.prepareData()
 		docBaseLineCEXE.runTheBaseline(latent_space_size)
 		docBaseLineCEXE.runEvaluationTask()
 		docBaseLineCEXE.runClassificationTask()

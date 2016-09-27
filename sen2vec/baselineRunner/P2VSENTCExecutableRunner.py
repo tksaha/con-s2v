@@ -22,7 +22,7 @@ from evaluation.classificationevaluaiton.ClassificationEvaluation import Classif
 label_sent = lambda id_: 'SENT_%s' %(id_)
 
 
-class P2VCExecutableRunner(BaselineRunner):
+class P2VSENTCExecutableRunner(BaselineRunner):
 	def __init__(self, *args, **kwargs):
 		"""
 		"""
@@ -111,52 +111,44 @@ class P2VCExecutableRunner(BaselineRunner):
 		sent2vecFile.close()
 		
 
-	def writeClassificationData(self,result, fileToWrite, d2vDict, topicIdDict):
+	def writeClassificationData(self,result, fileToWrite, s2vDict):
 		for row_id in range(0, len(result)):
 	 		id_ = result[row_id][0]
-	 		topic = topicIdDict[int(result[row_id][1])]
+	 		topic = result[row_id][1]
 
-	 		vec = d2vDict[id_] 
+	 		vec = s2vDict[id_] 
 	 		vec_str = ','.join(str(x) for x in vec)
-	 		fileToWrite.write("%s,%s,%s%s"%(id_,vec_str,topic,os.linesep))
+	 		fileToWrite.write("%s,%s,%s%s"%(id_,vec_str,topic, os.linesep))
 
 
 	def runEvaluationTask(self):
 		"""
-		Here from observation: unsup belongs to topic_id 3. 
+		Generate Summary sentences for each document. 
+		Write sentence id and corresponding metadata 
+		into a file. 
+		We should put isTrain=Maybe for the instances which 
+		we do not want to incorporate in training and testing. 
+		For example. validation set or unsup set
 		"""
-	
-		doc2vecFile = open("%s.p"%(self.docReprFile),"rb")
-		d2vDict = pickle.load (doc2vecFile)
+		method_list = [1, 2]
+		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
+		s2vDict = pickle.load (sent2vecFile)
 
-		trainFileToWrite = open("%sd2vtrain.csv"%(self.trainTestFolder), "w")
-		testFileToWrite = open("%sd2vtest.csv"%(self.trainTestFolder), "w")
+		for method_id in method_list:
+			trainFileToWrite = open("%ss2vtrain_%i.csv"%(self.trainTestFolder, method_id), "w")
+			testFileToWrite = open("%ss2vtest_%i.csv"%(self.trainTestFolder, method_id), "w")
 
-		topicIdDict = {}
-		for result in self.postgresConnection.memoryEfficientSelect(["id","name"], \
-			["topic"],[],[],[]):
-			for row_id in range(0,len(result)):
-				topicIdDict[int(result[row_id][0])] = result[row_id][1]
+			for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'YES'"],\
+			 	["sentence.topic","<>","'unsup'"] ], [], []):
+				self.writeClassificationData (result, trainFileToWrite, s2vDict)
 
-
-		for result in self.postgresConnection.memoryEfficientSelect(["document.id",\
-			"document_topic.topic_id", "metadata"],\
-			["document,document_topic"],[["document.id","=", "document_topic.document_id"],\
-			["topic_id","<>","3"], ["metadata","like","'SPLIT:train'"]],[],[] ):
-				self.writeClassificationData (result, trainFileToWrite, d2vDict, topicIdDict)
-		Logger.logr.info("Finished populating Training")
-
-		for result in self.postgresConnection.memoryEfficientSelect(["document.id",\
-			"document_topic.topic_id", "metadata"],\
-			["document,document_topic"],[["document.id","=", "document_topic.document_id"],\
-			["topic_id","<>","3"], ["metadata","like","'SPLIT:test'"]],[],[] ):
-				self.writeClassificationData (result, testFileToWrite, d2vDict, topicIdDict)
-		
-		Logger.logr.info("Finished Populating Test")
-		trainFileToWrite.flush()
-		testFileToWrite.flush() 
-
-
+			for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'NO'"] ], [], []):
+			 	self.writeClassificationData (result, testFileToWrite, s2vDict)
+			 	
 	
 	def getXY(self, data):
 		"""
@@ -176,39 +168,41 @@ class P2VCExecutableRunner(BaselineRunner):
 		scikit-learn. It will save the results 
 		into files.
 		"""
+		method_list = [1, 2]
 		
-		train = pd.read_csv("%sd2vtrain.csv"%(self.trainTestFolder), header=None)
-		test = pd.read_csv("%sd2vtest.csv"%(self.trainTestFolder), header=None)
-							
-		train_X, train_Y = self.getXY(train)
-		test_X, test_Y = self.getXY(test)
-		
-		logistic = linear_model.LogisticRegression()
-		logit = logistic.fit(train_X, train_Y)
-		
-		result = pd.DataFrame()
-		result['predicted_values'] = logit.predict(test_X)
-		result['true_values'] = test_Y
-		result.to_csv("%sd2vresult.csv"%(self.trainTestFolder), index=False)
-		
-		labels = set(result['true_values'])
-		class_labels = {}
-		for i, label in enumerate(labels):
-			class_labels[label] = label
+		for method_id in method_list:
+			train = pd.read_csv("%ss2vtrain_%i.csv"%(self.trainTestFolder, method_id), header=None)
+			test = pd.read_csv("%ss2vtest_%i.csv"%(self.trainTestFolder, method_id), header=None)
+									
+			train_X, train_Y = self.getXY(train)
+			test_X, test_Y = self.getXY(test)
 			
-		evaluaiton = ClassificationEvaluation(result['true_values'], result['predicted_values'], class_labels)
-		
-		evaluationResultFile = open("%sd2veval.txt"%(self.trainTestFolder), "w")
-		evaluationResultFile.write("%s%s%s" %("######Classification Report######\n", \
-					evaluaiton._getClassificationReport(), "\n\n"))
-		evaluationResultFile.write("%s%s%s" %("######Accuracy Score######\n", \
-					evaluaiton._getAccuracyScore(), "\n\n"))
-		evaluationResultFile.write("%s%s%s" %("######Confusion Matrix######\n", \
-					evaluaiton._getConfusionMatrix(), "\n\n"))
-		evaluationResultFile.write("%s%s%s" %("######Cohen's Kappa######\n", \
-					evaluaiton._getCohenKappaScore(), "\n\n"))
-					
-		Logger.logr.info("Evaluation Completed.")
+			logistic = linear_model.LogisticRegression()
+			logit = logistic.fit(train_X, train_Y)
+			
+			result = pd.DataFrame()
+			result['predicted_values'] = logit.predict(test_X)
+			result['true_values'] = test_Y
+			result.to_csv("%ss2vresult_%i.csv"%(self.trainTestFolder, method_id), index=False)
+			
+			labels = set(result['true_values'])
+			class_labels = {}
+			for i, label in enumerate(labels):
+				class_labels[label] = label
+				
+			evaluaiton = ClassificationEvaluation(result['true_values'], result['predicted_values'], class_labels)
+			
+			evaluationResultFile = open("%ss2veval_%i.txt"%(self.trainTestFolder, method_id), "w")
+			evaluationResultFile.write("%s%s%s" %("######Classification Report######\n", \
+						evaluaiton._getClassificationReport(), "\n\n"))
+			evaluationResultFile.write("%s%s%s" %("######Accuracy Score######\n", \
+						evaluaiton._getAccuracyScore(), "\n\n"))
+			evaluationResultFile.write("%s%s%s" %("######Confusion Matrix######\n", \
+						evaluaiton._getConfusionMatrix(), "\n\n"))
+			evaluationResultFile.write("%s%s%s" %("######Cohen's Kappa######\n", \
+						evaluaiton._getCohenKappaScore(), "\n\n"))
+						
+			Logger.logr.info("Evaluation Completed.")
 
 
 	def prepareStatisticsAndWrite(self):
