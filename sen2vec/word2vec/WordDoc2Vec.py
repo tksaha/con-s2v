@@ -8,7 +8,6 @@ import multiprocessing
 class WordDoc2Vec: 
 	def __init__(self, *args, **kwargs):
 		self.wordParamDict = {}
-		self.lineEXE = os.environ['LINEEXEFILE']
 		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
 		self.cores = multiprocessing.cpu_count()
 
@@ -46,9 +45,9 @@ class WordDoc2Vec:
 		return args 
 
 	def buildArgListforW2VWithInit(self, wPDict):
-		args = self.buildArgListforWord2Vec(self,wPDict)
-		args.append["-init"]
-		args.append[wPDict["init"]]
+		args = self.buildArgListforW2V(wPDict)
+		args.append("-init")
+		args.append(wPDict["init"])
 		return args
 
 

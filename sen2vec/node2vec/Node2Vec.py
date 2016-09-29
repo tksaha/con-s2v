@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os 
+import sys 
 import numpy as np
 import networkx as nx
 import random
@@ -22,7 +24,7 @@ class Node2Vec:
 		self.outputfile = kwargs['outputfile']
 		self.num_walks = kwargs['num_walks']
 		self.walk_length = kwargs['walk_length']
-		self.dataDir = os.environment['DATADIR']
+		self.dataDir = os.environ['TRTESTFOLDER']
 		self.p = kwargs['p']
 		self.q = kwargs['q']
 
@@ -35,18 +37,20 @@ class Node2Vec:
 		Logger.logr.info("Starting the Walk")
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
-		wPDict["cbow"] = 0 
-		wPDict["sentence-vectors"] = 0
-		wPDict["min-count"] = 0
+		wPDict["cbow"] = str(0) 
+		wPDict["sentence-vectors"] = str(0)
+		wPDict["min-count"] = str(0)
 		wPDict["train"] = walkInput
 		wPDict["output"] = self.outputfile
-		wPDict["size"]= 600
+		wPDict["size"]= str(self.dimension)
 		args = []
 		if initFromFile==True:
 			wPDict["init"] = initFile
-			args = wPDict.buildArgListforW2V(wPDict)
+			args = wordDoc2Vec.buildArgListforWithInit(wPDict)
 		else:
-			args = wPDict.buildArgListforW2VWithInit(wPDict)
+			args = wordDoc2Vec.buildArgListforW2V(wPDict)
+
+		Logger.logr.info(args)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = process.communicate()
 		model = Word2Vec.load_word2vec_format(self.outputfile, binary=False)
@@ -62,8 +66,14 @@ class Node2Vec:
 		Logger.logr.info("Calculating Transition Probability")
 		n2vWalk.preprocess_transition_probs()
 		Logger.logr.info("Simulating Walks")
-		walkInput = open("%s/node2vecwalk_%s.txt"%(self.DATADIR,str(initFromFile)))
+		walkInputFileName = "%s/node2vecwalk_%s.txt"%(self.dataDir,str(initFromFile))
+
+		walkInput = open(walkInputFileName, "w")
 		for walk in n2vWalk.simulate_walks(self.num_walks, self.walk_length):
-			walkInput.write("%s%s"%walk) 
+			Logger.logr.info(walk)
+			walkInput.write("%s%s"%(",".join(str(walk)),os.linesep)) 
+		walkInput.flush()
+		walkInput.close()
+
 		Logger.logr.info("Learning Embeddings")
-		return self.learnEmbeddings(walkInput, initFromFile, initFile)
+		return self.learnEmbeddings(walkInputFileName, initFromFile, initFile)

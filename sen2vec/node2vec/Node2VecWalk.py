@@ -47,11 +47,11 @@ class Node2VecWalk:
 		Repeatedly simulate random walks from each node.
 		"""
 		G = self.G
-		#walks = []
+		walks = []
 		nodes = list(G.nodes())
 		Logger.logr.info('Walk iteration:')
 		for walk_iter in range(num_walks):
-			#Logger.logr.info(str(walk_iter+1), '/', str(num_walks))
+			Logger.logr.info("%s %s %s" %(str(walk_iter+1), '/', str(num_walks)))
 			random.shuffle(nodes)
 			for node in nodes:
 				walk = self.node2vec_walk(walk_length=walk_length, start_node=node)
@@ -95,6 +95,7 @@ class Node2VecWalk:
 			norm_const = sum(unnormalized_probs)
 			normalized_probs =  [float(u_prob)/norm_const for u_prob in unnormalized_probs]
 			alias_nodes[node] = self.alias_setup(normalized_probs)
+			Logger.logr.info("calculating transition probability for %i" %node)
 
 		alias_edges = {}
 		triads = {}

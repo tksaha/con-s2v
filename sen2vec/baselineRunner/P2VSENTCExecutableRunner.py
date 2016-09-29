@@ -32,7 +32,6 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
 		self.sentReprFile = os.environ['P2VCEXECOUTFILE']
 		self.doc2vecOut = os.environ['P2VECSENTDOC2VECOUT']
-		self.trainTestFolder = os.environ['TRTESTFOLDER']
 		self.postgresConnection.connectDatabase()
 		self.utFunction = Utility("Text Utility")
 		self.latReprName = "p2vsent"

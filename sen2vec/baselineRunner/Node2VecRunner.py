@@ -15,8 +15,7 @@ import operator
 import multiprocessing 
 import numpy as np 
 from node2vec.Node2Vec import Node2Vec 
-from summaryGenerator.WordBasedGraphGenerator import WordBasedGraphGenerator
-from summaryGenerator.PageRankBasedSummarizer import PageRankBasedSummarizer
+
 
 
 class Node2VecRunner(BaselineRunner): 
@@ -24,14 +23,13 @@ class Node2VecRunner(BaselineRunner):
 	def __init__(self, *args, **kwargs):
 		BaselineRunner.__init__(self, *args, **kwargs)
 		self.n2vReprFile = os.environ["N2VOUTFILE"]
+		self.p2vReprFile = os.environ["P2VCEXECOUTFILE"]
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
-		self.intraThrSummary = float(os.environ["GTHRSUM"])
-		self.dumpingFactor = float(os.environ["DUMPFACTOR"])
-		self.topNSummary = float(os.environ["TOPNSUMMARY"])
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
+		self.latReprName = "n2vecsent"
 		self.s2vDict = {}
 		self.sentenceDict = {}
 
@@ -45,11 +43,17 @@ class Node2VecRunner(BaselineRunner):
 		Logger.logr.info ("Inserted %d nodes in the graph"\
 			 %(self.Graph.number_of_nodes()))
 
+	def getDocID(self, sentence_id):
+		for result in self.postgresConnection.memoryEfficientSelect(['doc_id'],\
+			['sentence'],[['id','=',str(sentence_id)]],[],[]):
+			return int(result[0][0])
+
 	def insertGraphEdges(self):
 		"""
 		Process sentences differently for inter and 
 		intra documents. 
 		"""
+		
 		for sentence_id in self.sentenceDict.keys():
 			for node_id in self.Graph.nodes():
 				if node_id != sentence_id:	
@@ -64,12 +68,13 @@ class Node2VecRunner(BaselineRunner):
 							self.Graph.add_edge(sentence_id, node_id, weight=sim)
 							
 
-	def prepareData(self):
+	def prepareData(self, pd):
 		"""
 		Loops over documents, then paragraphs, and finally over 
 		sentences. select(self, fields = [], tables = [], where = [], 
 		groupby = [], orderby = [])
 		"""
+		if pd <= 0: return 0
 		self.postgresConnection.connectDatabase()
 		self.insertAllNodes()
 
@@ -82,35 +87,75 @@ class Node2VecRunner(BaselineRunner):
 				document_id = doc_result[row_id][0]
 				Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
 				self.sentenceDict.clear()
-				for setence_result in self.postgresConnection.memoryEfficientSelect(\
+				Logger.logr.info("Number of sentence in sentence"\
+					 "dictionary is %i"%len(self.sentenceDict))
+				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
 					['id','content'],['sentence'],[["doc_id","=",document_id]],[],[]):
-					for inrow_id in range(0, len(inrow_id)):
+					for inrow_id in range(0, len(sentence_result)):
 						sentence_id = int(sentence_result[inrow_id][0])
 						sentence = sentence_result[inrow_id][1]
 						self.sentenceDict[sentence_id] = sentence
+				Logger.logr.info("Number of sentence in sentence"\
+					 "dictionary is %i"%len(self.sentenceDict))
 				self.insertGraphEdges() 
 					
 		nx.write_gpickle(self.Graph, self.graphFile)
 		Logger.logr.info("Total number of edges=%i"%self.Graph.number_of_edges())
+		self.Graph = nx.Graph() # Clear
+		
 
-		self.postgresConnection.disconnectDatabase()
-
-
-	def runTheBaseline(self, latent_space_size):
+	def runTheBaseline(self, rbase, latent_space_size):
 		"""
+		This will run for both case: one with initialization 
+		and another without initialization from para2vec
 		"""
+		if rbase <= 0: return 0
 		Logger.logr.info("Running Node2vec Internal")
-		node2vecInstance = Node2Vec (dimension=latent_space_size, window_size=10,\
+
+		nx_G = nx.read_gpickle(self.graphFile)
+		Logger.logr.info("Working a graph with %i edges"%nx_G.number_of_edges())
+		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
 			outputfile=self.n2vReprFile, num_walks=10, walk_length=10, p=4, q=1)
-		n2vec = node2vecInstance.get_representation(self.Graph)
-		return self.Graph
+		n2vecModel = node2vecInstance.getRepresentation(nx_G, False)
+		n2vec_dict = {}
+
+		for nodes in nx_G.nodes():
+			vec = n2vModel[nodes]
+			#Logger.logr.info("Reading a vector of length %s"%vec.shape)
+			n2vec_dict[nodes] = vec /  ( np.linalg.norm(vec) +  1e-6)
+
+		node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
+		pickle.dump(n2vec_dict, node2vecFile)	
 	
+
+	def generateSummary(self, gs):
+		if gs <= 0: return 0
+		node2vecFile = open("%s.p"%(self.n2vReprFile),"rb")
+		n2vDict = pickle.load (n2vReprFile)
+		self.populateSummary(3, n2vDict)
+		
+
 	def runEvaluationTask(self):
 		"""
+		Generate Summary sentences for each document. 
+		Write sentence id and corresponding metadata 
+		into a file. 
+		We should put isTrain=Maybe for the instances which 
+		we do not want to incorporate in training and testing. 
+		For example. validation set or unsup set
 		"""
+
+		node2vecFile = open("%s.p"%(self.n2vReprFile),"rb")
+		n2vDict = pickle.load (node2vecFile)
+
+		self.generateData(3, self.latReprName, n2vDict)
+		self.runClassificationTask(3, self.latReprName)
 		
 
-	def prepareStatisticsAndWrite(self):
+	def doHouseKeeping(self):
 		"""
+		Here, we destroy the database connection.
 		"""
-		
+		self.postgresConnection.disconnectDatabase()
+	
+	

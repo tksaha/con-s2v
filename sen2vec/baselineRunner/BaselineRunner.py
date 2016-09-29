@@ -27,6 +27,7 @@ class BaselineRunner:
 		self.topNSummary = float(os.environ["TOPNSUMMARY"])
 		self.intraThrSummary = float(os.environ["GTHRSUM"])
 		self.dumpingFactor = float(os.environ["DUMPFACTOR"])
+		self.trainTestFolder = os.environ['TRTESTFOLDER']
 		self.vecDict = {}
 		self.sentenceDict = {}
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Path to Reuters data
-#export REUTERS_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/reuters/reuter21578_temp
-export REUTERS_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/reuters/reuters21578
+export REUTERS_PATH=~/Documents/sen2vec/Data/reuter21578_temp
+#export REUTERS_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/reuters/reuters21578
 
 
 
@@ -34,7 +34,7 @@ export P2VECSENTDOC2VECOUT=~/Documents/sen2vec/Data/sentCEXE_repr
 
 
 
-export TRTESTFOLDER=~/Documents/sen2vec/Data/
+export TRTESTFOLDER=~/Documents/sen2vec/Data
 
 export N2VOUTFILE=~/Documents/sen2vec/Data/node_repr
 export GINTERTHR=0.8
