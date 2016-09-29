@@ -15,6 +15,8 @@ import numpy as np
 from db_connector.PostgresPythonConnector import PostgresPythonConnector
 from summaryGenerator.WordBasedGraphGenerator import WordBasedGraphGenerator
 from summaryGenerator.PageRankBasedSummarizer import PageRankBasedSummarizer
+from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
+
 
 class BaselineRunner:
 	def __init__(self, dbstring, **kwargs):
@@ -79,13 +81,12 @@ class BaselineRunner:
 		for sumSentID, value  in prSummary.getSummary(self.dumpingFactor):
 			if 	methodID == 1:
 				sumSentID = idMap [sumSentID]
+			if  position > len(self.sentenceDict) or  position > math.ceil(len(self.sentenceDict) * self.topNSummary):
+				Logger.logr.info("Dumped %i sentence as summary from %i sentence in total" %(position-1, len(self.sentenceDict)))
+				break
 
 			self.postgresConnection.insert ([doc_id, methodID, sumSentID, position], "summary",\
 			 ["doc_id", "method_id", "sentence_id", "position"])
-
-			if  position > len(self.sentenceDict) or  position > math.ceil(len(self.sentenceDict) * self.topNSummary):
-				Logger.logr.info("Dumped %i sentence as summary from %i sentence in total" %(position, len(self.sentenceDict)))
-				break
 			position = position +1 
 
 	def __summarizeAndWriteLatentSpaceBasedSummary(self, doc_id, methodID):
@@ -194,7 +195,7 @@ class BaselineRunner:
 		result['predicted_values'] = logit.predict(test_X)
 		result['true_values'] = test_Y
 		result.to_csv("%s/%sresult_%i.csv"%(self.trainTestFolder,\
-			latReprName, method_id), index=False)
+			latReprName, summaryMethodID), index=False)
 			
 		labels = set(result['true_values'])
 		class_labels = {}
@@ -204,7 +205,7 @@ class BaselineRunner:
 		evaluaiton = ClassificationEvaluation(result['true_values'], result['predicted_values'], class_labels)
 		
 		evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
-				latReprName, method_id), "w")
+				latReprName, summaryMethodID), "w")
 		evaluationResultFile.write("%s%s%s" %("######Classification Report######\n", \
 					evaluaiton._getClassificationReport(), "\n\n"))
 		evaluationResultFile.write("%s%s%s" %("######Accuracy Score######\n", \
