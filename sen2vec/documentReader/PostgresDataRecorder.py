@@ -26,7 +26,10 @@ class PostgresDataRecorder(DataRecorder):
 		self.postgres_connector.truncateTables(["topic", "document",\
 					"document_topic", "paragraph",\
 					"document_paragraph", "sentence",\
-					"paragraph_sentence", "summary"])
+					"paragraph_sentence"])
+
+	def truncateSummaryTable(self):
+		self.postgres_connector.truncateTables(["summary"])
 
 	def alterSequences(self):
 		self.postgres_connector.executeQuery("ALTER SEQUENCE paragraph_id_seq RESTART WITH 1")

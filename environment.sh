@@ -28,6 +28,9 @@ export P2VDOCOUT=~/Documents/sen2vec/Data/docs_repr_CEXE
 export P2VECRUNNERCEXEOUTFILE=~/Documents/sen2vec/Data/docs_repr_CEXE
 export DOC2VECEXECDIR=~/Documents/sen2vec/sen2vec/word2vec/word2vec
 
+export P2VCEXECSENTFILE=~/Documents/sen2vec/Data/sentsCEXE
+export P2VCEXECOUTFILE=~/Documents/sen2vec/Data/sentsCEXE_repr
+export P2VECSENTDOC2VECOUT=~/Documents/sen2vec/Data/sentCEXE_repr
 
 
 

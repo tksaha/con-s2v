@@ -3,6 +3,7 @@
 
 import os 
 import logging 
+import operator
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from bs4 import BeautifulSoup
@@ -10,6 +11,7 @@ from log_manager.log_config import Logger
 from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
 from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
+from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
 
 
 class ReutersReader(DocumentReader):
@@ -143,21 +145,29 @@ class ReutersReader(DocumentReader):
 		return 1
 	
 
-	def runBaselines(self):
+	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
 		latent_space_size = 300
 		Logger.logr.info("Starting Running Para2vec Baseline")
-		paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
-		paraBaseline.prepareData()
-		paraBaseline.runTheBaseline(latent_space_size)
 
-		Logger.logr.info("Starting Running Node2vec Baseline")
-		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.prepareData()
-
+		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		paraBaseline.prepareData(pd)
+		paraBaseline.runTheBaseline(rbase,latent_space_size)
+		if gs ==1: self.postgres_recorder.truncateSummaryTable()
+		paraBaseline.generateSummary(gs)
 		paraBaseline.runEvaluationTask()
-		paraBaseline.runClassificationTask()
+
+		# paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
+		# paraBaseline.prepareData()
+		# paraBaseline.runTheBaseline(latent_space_size)
+
+		# Logger.logr.info("Starting Running Node2vec Baseline")
+		# n2vBaseline = Node2VecRunner(self.dbstring)
+		# n2vBaseline.prepareData()
+
+		# paraBaseline.runEvaluationTask()
+		# paraBaseline.runClassificationTask()
 		
 #		n2vBaseline.runTheBaseline(latent_space_size)
 

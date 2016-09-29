@@ -3,6 +3,7 @@
 
 import os 
 import sys 
+import multiprocessing 
 
 class WordDoc2Vec: 
 	def __init__(self, *args, **kwargs):
@@ -14,28 +15,28 @@ class WordDoc2Vec:
 	def buildWordDoc2VecParamDict(self):
 		"""
 		"""
-		wordParamDict["train"] = ""
-		wordParamDict["init"] = ""
-		wordParamDict["output"] = ""
-		wordParamDict["cbow"] = str(1)
-		wordParamDict["size"] = str(300)
-		wordParamDict["window"] = str(10)
-		wordParamDict["negative"] = str(5)
-		wordParamDict["hs"] = str(0)
-		wordParamDict["sample"] = str(1e-4)
-		wordParamDict["threads"] = str(cores * 2)
-		wordParamDict["binary"] = str(0)
-		wordParamDict["iter"] = str(20)
-		wordParamDict["min-count"]= str(1)
-		wordParamDict["sentence-vectors"] = str(0)
-		if wordParamDict[cbow]== str(1):
-			wordParamDict['alpha'] = str(0.05)
+		self.wordParamDict["train"] = ""
+		self.wordParamDict["init"] = ""
+		self.wordParamDict["output"] = ""
+		self.wordParamDict["cbow"] = str(1)
+		self.wordParamDict["size"] = str(300)
+		self.wordParamDict["window"] = str(10)
+		self.wordParamDict["negative"] = str(5)
+		self.wordParamDict["hs"] = str(0)
+		self.wordParamDict["sample"] = str(1e-4)
+		self.wordParamDict["threads"] = str(self.cores * 2)
+		self.wordParamDict["binary"] = str(0)
+		self.wordParamDict["iter"] = str(20)
+		self.wordParamDict["min-count"]= str(1)
+		self.wordParamDict["sentence-vectors"] = str(0)
+		if self.wordParamDict["cbow"]== str(1):
+			self.wordParamDict["alpha"] = str(0.05)
 		else:
-			wordParamDict['alpha'] = str(0.025)
+			self.wordParamDict["alpha"] = str(0.025)
 		return self.wordParamDict
 
 	def buildArgListforW2V(self, wPDict):
-		args = [self.sent2vecMIKOLOVExecutableDir, "-train",wPDict["train"],\
+		args = [self.doc2vecMIKOLOVExecutableDir, "-train",wPDict["train"],\
 		    "-output",wPDict["output"],\
 			"-cbow",wPDict["cbow"],"-size",wPDict["size"], "-window",wPDict["window"],\
 			"-negative",wPDict["negative"],"-hs",wPDict["hs"],"-sample",wPDict["sample"],\

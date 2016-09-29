@@ -3,10 +3,18 @@
 
 import os 
 import sys 
+import math
 from abc import ABCMeta, abstractmethod
-import networx as nx 
+import networkx as nx 
+import pandas as pd
+from log_manager.log_config import Logger
+from sklearn.dummy import DummyClassifier
+from sklearn import linear_model
+import operator
+import numpy as np 
 from db_connector.PostgresPythonConnector import PostgresPythonConnector
-
+from summaryGenerator.WordBasedGraphGenerator import WordBasedGraphGenerator
+from summaryGenerator.PageRankBasedSummarizer import PageRankBasedSummarizer
 
 class BaselineRunner:
 	def __init__(self, dbstring, **kwargs):
@@ -38,6 +46,11 @@ class BaselineRunner:
 		"""
 		pass
 
+	@abstractmethod
+	def generateSummary(self):
+		"""
+		"""
+		pass 
 	@abstractmethod
 	def doHouseKeeping(self):
 		"""
@@ -75,14 +88,14 @@ class BaselineRunner:
 				break
 			position = position +1 
 
-	def __summarizeAndWriteLatentSpaceBasedSummary(self, doc_id):
+	def __summarizeAndWriteLatentSpaceBasedSummary(self, doc_id, methodID):
 		"""
 		insert(self, values = [], table = '', 
 		fields = [], returning = '')
 		Method id 1, 2 for the word based and paragraph2vec 
 		based summarizer.
 		"""
-		nx_G = self.constructSingleDocGraphP2V()
+		nx_G = self.__constructSingleDocGraphP2V()
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
 		self.__dumpSummmaryToTable(doc_id, prSummary, "", methodID)
 
@@ -95,7 +108,7 @@ class BaselineRunner:
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
 		self.__dumpSummmaryToTable(doc_id, prSummary, idMap, methodID)
 
-	def generateSummary(self, methodID, vecDict):
+	def populateSummary(self, methodID, vecDict):
 		"""
 		"""
 		self.vecDict = vecDict
@@ -104,16 +117,16 @@ class BaselineRunner:
 			for row_id in range(0,len(result)):
 				self.sentenceDict.clear()
 				id_ = result[row_id][0]
-				for setence_result in self.postgresConnection.memoryEfficientSelect(\
+				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
 					['id','content'],['sentence'],[["doc_id","=",id_]],[],[]):
-					for inrow_id in range(0, len(inrow_id)):
+					for inrow_id in range(0, len(sentence_result)):
 						sentence_id = int(sentence_result[inrow_id][0])
 						sentence = sentence_result[inrow_id][1]
 						self.sentenceDict[sentence_id] = sentence 
 				if methodID >1:
-					self.__summarizeAndWriteLatentSpaceBasedSummary(self, doc_id, methodID)
+					self.__summarizeAndWriteLatentSpaceBasedSummary(id_, methodID)
 				else:
-					self.__sumarizeAndWriteTFIDFBasedSummary(self, doc_id, methodID)
+					self.__sumarizeAndWriteTFIDFBasedSummary(id_ , methodID)
 
 ########################### Evaluation Data Generation code ##################
 
@@ -134,13 +147,13 @@ class BaselineRunner:
 
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
-			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'YES'"],\
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"],\
 			 	["sentence.topic","<>","'unsup'"] ], [], []):
 				self.writeClassificationData (result, trainFileToWrite, vecDict)
 
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
-			 	["summary.method_id", "=", method_id], ['sentence.istrain','=',"'NO'"] ], [], []):
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'NO'"] ], [], []):
 			 	self.writeClassificationData (result, testFileToWrite, vecDict)
 		
 ########################### Evaluation Report Code ###########################

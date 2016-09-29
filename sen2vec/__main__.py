@@ -42,12 +42,18 @@ def main():
 	argparser = ArgumentParserUtility('Sen2Vec')
 	argparser.add_argument_to_parser("dataset", "Please enter dataset "\
 		"to work on [reuter, news, imdb, stree2way]", True)
-	argparser.add_argument_to_parser("ld", "Load into Database [0, 1]", True)
+	argparser.add_argument_to_parser("ld", "Load into Database 0 or 1", True)
+	argparser.add_argument_to_parser("pd", "Prepare Data: 0 or 1", True)
+	argparser.add_argument_to_parser("rbase", "Run the baseline 0 or 1", True)
+	argparser.add_argument_to_parser("gs", "Generate Summary 0 or 1", True)
 	argparser.parse_argument()
 
 	
 	dataset = argparser.get_value_of_argument("dataset")
 	ld = argparser.get_value_of_argument("ld")
+	pd = argparser.get_value_of_argument("pd")
+	rbase = argparser.get_value_of_argument("rbase")
+	gs = argparser.get_value_of_argument("gs")
 
 	module = None
 
@@ -63,7 +69,7 @@ def main():
 	Logger.logr.info("Successfuly loaded the class %s", str(Klass))
 	
 	reader.readDocument(int(ld)) 
-	reader.runBaselines()
+	reader.runBaselines(int(pd), int(rbase), int(gs))
 
 if __name__ == "__main__":
    sys.exit(main())

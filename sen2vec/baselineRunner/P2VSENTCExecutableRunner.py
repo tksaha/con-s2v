@@ -9,9 +9,9 @@ from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from log_manager.log_config import Logger 
 import multiprocessing
-from baselineRunner.BaselineRunner import Paragraph2VecSentenceRunner
 from collections import namedtuple
 from utility.Utility import Utility
+from baselineRunner.BaselineRunner import BaselineRunner
 import subprocess 
 import pandas as pd
 from sklearn.dummy import DummyClassifier
@@ -36,14 +36,16 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		self.postgresConnection.connectDatabase()
 		self.utFunction = Utility("Text Utility")
 		self.latReprName = "p2vsent"
+
 	
-	def prepareData(self):
+	def prepareData(self, pd):
 		"""
 		Query Sentence Data. We dump sentences with their sentence 
 		ids. Pre-pad sentences with null word symbol if the number 
 		of words in a sentence 
 		is less than 9.
 		"""
+		if pd <= 0: return 0
 		sentfiletoWrite = open("%s.txt"%(self.sentsFile),"w")
 		for result in self.postgresConnection.memoryEfficientSelect(["id","content"],\
 			 ["sentence"], [], [], ["id"]):
@@ -61,12 +63,12 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		sentfiletoWrite.close()
 
 
-	def runTheBaseline(self, latent_space_size):
+	def runTheBaseline(self, rbase, latent_space_size):
 		"""
 		We run the para2vec Model and then store sen2vec as pickled 
 		dictionaries into the output file. 
 		"""
-		
+		if rbase <= 0: return 0
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
 		sent2vec_dict = {}
 
@@ -74,35 +76,48 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
 
-		wPDict["cbow"], wPDict["sentence-vectors"],wPDict["min-count"] = 0, 0, 0
-		wPDict["train"], wPDict["output"] = self.docsFile, self.doc2vecOut
-		wPDict["size"]= 300
+		wPDict["cbow"], wPDict["sentence-vectors"],wPDict["min-count"] = str(0), str(0), str(0)
+		wPDict["train"], wPDict["output"] = "%s.txt"%self.sentsFile, self.doc2vecOut
+		wPDict["size"], wPDict["sentence-vectors"] = str(300), str(1)
 		args = wordDoc2Vec.buildArgListforW2V(wPDict)
 		Logger.logr.info(args)
 		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = proc.communicate()
+
+
 		sent2vecModel = Doc2Vec.load_word2vec_format(self.doc2vecOut, binary=False)
 
-		wPDict["cbow"] = 1
-		Logger.logr.info(args)
+		wPDict["cbow"] = str(1)
+		wPDict["output"] = "%s_DBOW" % self.doc2vecOut
+		args = wordDoc2Vec.buildArgListforW2V(wPDict)
 		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		Logger.logr.info(args)
 		out, err = proc.communicate()
+		print (out) 
+		print (err)
 		sent2vecModelDBOW = Doc2Vec.load_word2vec_format("%s_DBOW"%self.doc2vecOut, binary=False)
 		
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]	
-				vec1 = sent2vecModel[label_doc(id_)]
-				vec2 = sent2vecModelDBOW[label_doc(id_)]
+				vec1 = sent2vecModel[label_sent(id_)]
+				vec2 = sent2vecModelDBOW[label_sent(id_)]
 				vec = np.hstack((vec1,vec2))
-				Logger.logr.info("Reading a vector of length %s"%vec.shape)
+				#Logger.logr.info("Reading a vector of length %s"%vec.shape)
 				sent2vec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
 		Logger.logr.info("Total Number of Sentences written=%i", len(sent2vec_dict))			
 		pickle.dump(sent2vec_dict, sent2vecFile)			
 		sent2vecFile.close()
-		
+	
+	def generateSummary(self, gs):
+		if gs <= 0: return 0
+		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
+		s2vDict = pickle.load (sent2vecFile)
+
+		self.populateSummary(1, s2vDict)
+		self.populateSummary(2, s2vDict)
 
 	def runEvaluationTask(self):
 		"""
@@ -117,8 +132,8 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
 		s2vDict = pickle.load (sent2vecFile)
 
-		self.generateData(self, 1, self.latReprName, s2vDict)
-		self.generateData(self, 2, self.latReprName, s2vDict)
+		self.generateData(1, self.latReprName, s2vDict)
+		self.generateData(2, self.latReprName, s2vDict)
 
 		self.runClassificationTask(1, self.latReprName) 
 		self.runClassificationTask(2, self.latReprName)
