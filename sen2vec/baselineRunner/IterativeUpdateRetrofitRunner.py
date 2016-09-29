@@ -23,42 +23,51 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		self.p2vFile = os.environ["P2VECSENTRUNNEROUTFILE"]
 		self.Graph = nx.Graph()
 		self.sen2Vec = {}
+		self.latReprName = "iterativeupdateunweighted"
+		self.methodID = 5 
 		
 	
 	def prepareData(self):
 		"""
 		"""
-		self.Graph = nx.read_gpickle(self.graphFile)
-		p2vfileToRead = open ("%s.p" %self.p2vFile, "rb")
-		while True: 
-			try:
-				sent_dict = pickle.load(p2vfileToRead)
-				id_ = sent_dict["id"]
-				vec = sent_dict["vec"]
-				vec = vec / np.linalg.norm(vec)
-				self.sen2Vec[id_] = vec 
-			except Exception as e:
-				Logger.logr.info(str(e))
-				break 
-
-		Logger.logr.info("Dictionary has %i objects" % len(self.sen2Vec))
-
+		pass 
 
 	def runTheBaseline(self):
 		"""
+		Write down the Iterative update vector
 		"""
-		retrofitter = IterativeUpdateRetrofitter(numIter=100, nx_Graph = self.Graph) 
+		self.Graph = nx.read_gpickle(self.graphFile)
+		p2vfileToRead = open ("%s.p" %self.p2vFile, "rb")
+		self.sen2Vec = pickle.load(p2vfileToRead)
+		Logger.logr.info("Dictionary has %i objects" % len(self.sen2Vec))
+		retrofitter = IterativeUpdateRetrofitter(numIter=10, nx_Graph = self.Graph) 
 		retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
 		Logger.logr.info("Retrofitted Dicitionary has %i objects" %len(retrofitted_dict))
 
+	def generateSummary(self, gs):
+		if gs <= 0: return 0
+		itupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"rb")
+		itupdatevDict = pickle.load (itupdatevecFile)
+		self.populateSummary(5, n2vDict)
+		
+
 	def runEvaluationTask(self):
 		"""
+		Generate Summary sentences for each document. 
+		Write sentence id and corresponding metadata 
+		into a file. 
+		We should put isTrain=Maybe for the instances which 
+		we do not want to incorporate in training and testing. 
+		For example. validation set or unsup set
 		"""
-		pass
+		itupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"rb")
+		itupdatevDict = pickle.load (itupdatevecFile)
+		self.generateData(self.methodID, self.latReprName, n2vDict)
+		self.runClassificationTask(self.methodID, self.latReprName)
+		
 
-	
-	def prepareStatisticsAndWrite(self):
+	def doHouseKeeping(self):
 		"""
+		Here, we destroy the database connection.
 		"""
-		pass
-
+		self.postgresConnection.disconnectDatabase()
