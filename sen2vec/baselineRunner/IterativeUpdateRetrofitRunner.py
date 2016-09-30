@@ -20,14 +20,15 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		BaselineRunner.__init__(self, *args, **kwargs)
 		self.retrofittedsen2vReprFile = os.environ["ITERUPDATESEN2VECFILE"]
 		self.graphFile = os.environ["GRAPHFILE"]
-		self.p2vFile = os.environ["P2VECSENTRUNNEROUTFILE"]
+		self.p2vFile = os.environ['P2VCEXECOUTFILE']
 		self.Graph = nx.Graph()
+		self.postgresConnection.connectDatabase()
 		self.sen2Vec = {}
 		self.latReprName = "iterativeupdateunweighted"
 		self.methodID = 5 
 		
 	
-	def prepareData(self):
+	def prepareData(self, pd):
 		"""
 		"""
 		pass 
@@ -44,11 +45,14 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
 		Logger.logr.info("Retrofitted Dicitionary has %i objects" %len(retrofitted_dict))
 
+		iterupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"wb")
+		pickle.dump(retrofitted_dict,iterupdatevecFile )
+
 	def generateSummary(self, gs):
 		if gs <= 0: return 0
 		itupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
-		self.populateSummary(5, n2vDict)
+		self.populateSummary(5, itupdatevDict)
 		
 
 	def runEvaluationTask(self):
@@ -62,8 +66,8 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		"""
 		itupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
-		self.generateData(self.methodID, self.latReprName, n2vDict)
-		self.runClassificationTask(self.methodID, self.latReprName)
+		self.generateData(2, self.latReprName, itupdatevDict)
+		self.runClassificationTask(2, self.latReprName)
 		
 
 	def doHouseKeeping(self):

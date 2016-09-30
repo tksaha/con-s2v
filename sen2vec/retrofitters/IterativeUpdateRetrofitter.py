@@ -7,6 +7,7 @@ import sys
 from log_manager.log_config import Logger 
 import networkx as nx 
 from copy import deepcopy
+import numpy as np 
 
 class IterativeUpdateRetrofitter:
     def __init__(self, *args, **kwargs):
@@ -14,8 +15,11 @@ class IterativeUpdateRetrofitter:
       self.nx_Graph = kwargs['nx_Graph']
 
     def retrofitWithIterUpdate(self, sen2vec):
+      """
+      Please also check whether it is normalized?
+      """
       newSen2Vecs = deepcopy(sen2vec)
-      allSentenceIds = set(newSen2Vecs.keys())
+      allSentenceIds = list(newSen2Vecs.keys())
 
       for iter_ in range(self.numIters):
         for sentenceId in allSentenceIds:
@@ -28,4 +32,6 @@ class IterativeUpdateRetrofitter:
             newVec += newSen2Vecs[neighborSentId]
 
           newSen2Vecs[sentenceId] = newVec/(2*numNeighbors)
+
+      Logger.logr.info("Norm of the vector = %f"%np.linalg.norm(newSen2Vecs[allSentenceIds[0]]))
       return newSen2Vecs
