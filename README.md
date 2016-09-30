@@ -95,6 +95,12 @@ optional arguments:
   -dataset DATASET, --dataset DATASET
                         Please enter dataset to work on [reuter, news]
   -ld LD, --ld LD       Load into Database [0, 1]
+  
+  -pd PD, --pd PD       Prepare Data [0, 1]
+  
+  -rbase RBASE, --rbase RBASE       Run the Baselines [0, 1]
+  
+  -gs GS, --gs GS       Generate Summary [0, 1]
 ```
 
 For example, you can run for the news dataset using the following command-
