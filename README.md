@@ -73,6 +73,13 @@ then run the following command-
 source environment.sh #Unix, os-x
 ```
 
+## Creating Executable for Word2Vec (Mikolov's Implementation)
+Please go to the word2vec code directory inside the project and 
+type the following command for creating executable:
+
+```
+make
+```
 
 ## Running the Project 
 Run sen2vec with -h argument to see all possible options:
