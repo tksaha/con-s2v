@@ -39,9 +39,11 @@ export TRTESTFOLDER=~/Documents/sen2vec/Data
 export N2VOUTFILE=~/Documents/sen2vec/Data/node_repr
 export GINTERTHR=0.8
 export GINTRATHR=0.5
+
 export GTHRSUM=0.1
 export DUMPFACTOR=0.85
 export TOPNSUMMARY=0.2
+
 export ITERUPDATESEN2VECFILE=~/Documents/sen2vec/Data/retrofitted_repr
 export GRAPHFILE=~/Documents/sen2vec/Data/graph_0.8_0.5
 

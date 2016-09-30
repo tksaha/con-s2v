@@ -3,7 +3,7 @@
 import os 
 import sys 
 import networkx as nx 
-
+from gensim.models import Word2Vec
 from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from log_manager.log_config import Logger 
@@ -30,6 +30,7 @@ class Node2VecRunner(BaselineRunner):
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
 		self.latReprName = "n2vecsent"
+		self.postgresConnection.connectDatabase()
 		self.s2vDict = {}
 		self.sentenceDict = {}
 
@@ -115,12 +116,18 @@ class Node2VecRunner(BaselineRunner):
 		nx_G = nx.read_gpickle(self.graphFile)
 		Logger.logr.info("Working a graph with %i edges"%nx_G.number_of_edges())
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			outputfile=self.n2vReprFile, num_walks=10, walk_length=10, p=4, q=1)
-		n2vecModel = node2vecInstance.getRepresentation(nx_G, False)
+			outputfile=self.n2vReprFile, num_walks=10, walk_length=50, p=4, q=1)
+		node2vecInstance.getRepresentation(nx_G, False)
+
+
+		n2vModel = Word2Vec.load_word2vec_format(self.n2vReprFile, binary=False)
+		Logger.logr.info("Finished Loading WordDoc2Vec Model")
+	
+		
 		n2vec_dict = {}
 
 		for nodes in nx_G.nodes():
-			vec = n2vModel[nodes]
+			vec = n2vModel[str(nodes)]
 			#Logger.logr.info("Reading a vector of length %s"%vec.shape)
 			n2vec_dict[nodes] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
@@ -131,7 +138,7 @@ class Node2VecRunner(BaselineRunner):
 	def generateSummary(self, gs):
 		if gs <= 0: return 0
 		node2vecFile = open("%s.p"%(self.n2vReprFile),"rb")
-		n2vDict = pickle.load (n2vReprFile)
+		n2vDict = pickle.load (node2vecFile)
 		self.populateSummary(3, n2vDict)
 		
 
@@ -148,8 +155,8 @@ class Node2VecRunner(BaselineRunner):
 		node2vecFile = open("%s.p"%(self.n2vReprFile),"rb")
 		n2vDict = pickle.load (node2vecFile)
 
-		self.generateData(3, self.latReprName, n2vDict)
-		self.runClassificationTask(3, self.latReprName)
+		self.generateData(2, self.latReprName, n2vDict)
+		self.runClassificationTask(2, self.latReprName)
 		
 
 	def doHouseKeeping(self):

@@ -32,7 +32,7 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		"""
 		pass 
 
-	def runTheBaseline(self):
+	def runTheBaseline(self, rbase):
 		"""
 		Write down the Iterative update vector
 		"""

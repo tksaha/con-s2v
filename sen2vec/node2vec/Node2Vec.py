@@ -34,7 +34,7 @@ class Node2Vec:
 		Learn embeddings by optimizing the Skipgram 
 		objective using SGD. [GENSIM]
 		"""
-		Logger.logr.info("Starting the Walk")
+		
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
 		wPDict["cbow"] = str(0) 
@@ -53,9 +53,6 @@ class Node2Vec:
 		Logger.logr.info(args)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = process.communicate()
-		model = Word2Vec.load_word2vec_format(self.outputfile, binary=False)
-		Logger.logr.info("Finished Loading WordDoc2Vec Model")
-		return model 
 		
 
 	def getRepresentation(self, nx_G, initFromFile=False, initFile=""):
@@ -71,7 +68,8 @@ class Node2Vec:
 		walkInput = open(walkInputFileName, "w")
 		for walk in n2vWalk.simulate_walks(self.num_walks, self.walk_length):
 			Logger.logr.info(walk)
-			walkInput.write("%s%s"%(",".join(str(walk)),os.linesep)) 
+
+			walkInput.write("%s%s"%(" ".join(list(map(str,walk))),os.linesep)) 
 		walkInput.flush()
 		walkInput.close()
 
