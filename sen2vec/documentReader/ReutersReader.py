@@ -133,11 +133,16 @@ class ReutersReader(DocumentReader):
 						metadata = None
 						continue 
 
-					self.postgres_recorder.insertIntoDocTable(document_id, title, \
-								doc_content, file_, metadata) 
 					topic = self._getTopic(document_id, doc)
-					istrain = 'YES' if doc['lewissplit'].lower() == 'train' else 'NO'				   
-					self.__recordDocumentTopic(document_id, doc)			
+					
+					if topic not in ['crude', 'grain', 'interest']:
+						continue
+						
+					self.postgres_recorder.insertIntoDocTable(document_id, title, \
+								doc_content, file_, metadata)
+						
+					istrain = 'YES' if doc['lewissplit'].lower() == 'train' else 'NO'
+					self.__recordDocumentTopic(document_id, doc)
 					self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder,topic, istrain)
 					
 					
@@ -149,15 +154,14 @@ class ReutersReader(DocumentReader):
 		"""
 		"""
 		latent_space_size = 300
+		
 		Logger.logr.info("Starting Running Para2vec Baseline")
-
 		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
 		paraBaseline.prepareData(pd)
 		paraBaseline.runTheBaseline(rbase,latent_space_size)
 		if gs ==1: self.postgres_recorder.truncateSummaryTable()
 		paraBaseline.generateSummary(gs)
 		paraBaseline.runEvaluationTask()
-
 		
 		Logger.logr.info("Starting Running Node2vec Baseline")
 		n2vBaseline = Node2VecRunner(self.dbstring)
@@ -172,16 +176,10 @@ class ReutersReader(DocumentReader):
 		iterrunner.generateSummary(gs)
 		iterrunner.runEvaluationTask()
 
-
-		# paraBaseline.runEvaluationTask()
-		# paraBaseline.runClassificationTask()
-		
-#		n2vBaseline.runTheBaseline(latent_space_size)
-
-#		Logger.logr.info("Starting Running Iterative Update Method")
-#		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
-#		iterUdateBaseline.prepareData()
-#		iterUdateBaseline.runTheBaseline()
+		Logger.logr.info("Starting Running Iterative Update Method")
+		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
+		iterUdateBaseline.prepareData()
+		iterUdateBaseline.runTheBaseline()
 		
 
 
