@@ -26,6 +26,7 @@ class Node2VecRunner(BaselineRunner):
 		self.p2vReprFile = os.environ["P2VCEXECOUTFILE"]
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
+		self.dataDir = os.environ['TRTESTFOLDER']
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
@@ -137,17 +138,20 @@ class Node2VecRunner(BaselineRunner):
 		############################# Working with Node2Vec Default ############################
 		reprFile = "%s_init"%self.n2vReprFile
 		initFile = "%s_raw"%self.p2vReprFile
+		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			outputfile=reprFile, num_walks=1, walk_length=50, p=4, q=1)
-		walkInput  = node2vecInstance.getWalkFile(nx_G)
+			outputfile=reprFile, num_walks=3, walk_length=200, p=4, q=1)
+
+		node2vecInstance.getWalkFile(nx_G, walkInputFileName)
 		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
-		nodevecInstance.learnEmbeddings(walkInput, True, initFile, reprFile)
-		dumpNode2Vec(nx_G, reprFile, node2vecFile)
+		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile)
+		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 
 		############################# Run Node2vec With Initialization from Sen2vec #############
 		node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
-		node2vecInstance.learnEmbeddings(walkInput, False, "", reprFile)
-		dumpNode2Vec(nx_G, reprFile, node2vecFile)
+		reprFile = self.n2vReprFile
+		node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile )
+		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 
 	
 
@@ -170,7 +174,6 @@ class Node2VecRunner(BaselineRunner):
 
 		node2vecFile = open("%s.p"%(self.n2vReprFile),"rb")
 		n2vDict = pickle.load (node2vecFile)
-
 		self.generateData(2, self.latReprName, n2vDict)
 		self.runClassificationTask(2, self.latReprName)
 

@@ -54,13 +54,13 @@ class Node2Vec:
 		print (out)
 		print (err)
 
-	def getWalkFile(self, nx_G, precalc=False):
+	def getWalkFile(self, nx_G, walkInputFileName, precalc=False):
 		"""
 		Pipeline for representational learning for all nodes in a graph.
 		"""
 		n2vWalk= Node2VecWalk(nx_G, False, self.p, self.q)
 		Logger.logr.info("Simulating Walks")
-		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
+		
 
 		walkInput = open(walkInputFileName, "w")
 		for walk in n2vWalk.simulate_walks(self.num_walks, self.walk_length, precalc):
@@ -69,6 +69,7 @@ class Node2Vec:
 
 		walkInput.flush()
 		walkInput.close()
-		return walkInput
+
+		return 
 
 		
