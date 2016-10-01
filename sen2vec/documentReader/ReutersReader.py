@@ -135,7 +135,7 @@ class ReutersReader(DocumentReader):
 
 					topic = self._getTopic(document_id, doc)
 					
-					if topic not in ['crude', 'grain', 'interest']:
+					if topic not in ['interest', 'ship']:
 						continue
 						
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
@@ -176,10 +176,6 @@ class ReutersReader(DocumentReader):
 		iterrunner.generateSummary(gs)
 		iterrunner.runEvaluationTask()
 
-		Logger.logr.info("Starting Running Iterative Update Method")
-		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
-		iterUdateBaseline.prepareData()
-		iterUdateBaseline.runTheBaseline()
 		
 
 

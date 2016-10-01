@@ -21,15 +21,13 @@ class Node2Vec:
 		"""
 		self.dimension = kwargs['dimension'] 
 		self.window_size = kwargs['window_size']
-		self.outputfile = kwargs['outputfile']
 		self.num_walks = kwargs['num_walks']
 		self.walk_length = kwargs['walk_length']
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.p = kwargs['p']
 		self.q = kwargs['q']
 
-
-	def learnEmbeddings(self, walkInput, initFromFile, initFile):
+	def learnEmbeddings(self, walkInput, initFromFile, initFile, outputfile):
 		"""
 		Learn embeddings by optimizing the Skipgram 
 		objective using SGD. [GENSIM]
@@ -41,37 +39,36 @@ class Node2Vec:
 		wPDict["sentence-vectors"] = str(0)
 		wPDict["min-count"] = str(0)
 		wPDict["train"] = walkInput
-		wPDict["output"] = self.outputfile
+		wPDict["output"] = outputfile
 		wPDict["size"]= str(self.dimension)
 		args = []
 		if initFromFile==True:
 			wPDict["init"] = initFile
-			args = wordDoc2Vec.buildArgListforWithInit(wPDict)
+			args = wordDoc2Vec.buildArgListforW2VWithInit(wPDict)
 		else:
 			args = wordDoc2Vec.buildArgListforW2V(wPDict)
 
 		Logger.logr.info(args)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = process.communicate()
-		
+		print (out)
+		print (err)
 
-	def getRepresentation(self, nx_G, initFromFile=False, initFile=""):
+	def getWalkFile(self, nx_G, precalc=False):
 		"""
 		Pipeline for representational learning for all nodes in a graph.
 		"""
 		n2vWalk= Node2VecWalk(nx_G, False, self.p, self.q)
-		Logger.logr.info("Calculating Transition Probability")
-		n2vWalk.preprocess_transition_probs()
 		Logger.logr.info("Simulating Walks")
-		walkInputFileName = "%s/node2vecwalk_%s.txt"%(self.dataDir,str(initFromFile))
+		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 
 		walkInput = open(walkInputFileName, "w")
-		for walk in n2vWalk.simulate_walks(self.num_walks, self.walk_length):
+		for walk in n2vWalk.simulate_walks(self.num_walks, self.walk_length, precalc):
 			Logger.logr.info(walk)
-
 			walkInput.write("%s%s"%(" ".join(list(map(str,walk))),os.linesep)) 
+
 		walkInput.flush()
 		walkInput.close()
+		return walkInput
 
-		Logger.logr.info("Learning Embeddings")
-		return self.learnEmbeddings(walkInputFileName, initFromFile, initFile)
+		

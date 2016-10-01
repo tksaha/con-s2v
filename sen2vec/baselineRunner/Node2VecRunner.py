@@ -54,7 +54,6 @@ class Node2VecRunner(BaselineRunner):
 		Process sentences differently for inter and 
 		intra documents. 
 		"""
-		
 		for sentence_id in self.sentenceDict.keys():
 			for node_id in self.Graph.nodes():
 				if node_id != sentence_id:	
@@ -105,34 +104,51 @@ class Node2VecRunner(BaselineRunner):
 		self.Graph = nx.Graph() # Clear
 		
 
-	def runTheBaseline(self, rbase, latent_space_size):
-		"""
-		This will run for both case: one with initialization 
-		and another without initialization from para2vec
-		"""
-		if rbase <= 0: return 0
-		Logger.logr.info("Running Node2vec Internal")
-
-		nx_G = nx.read_gpickle(self.graphFile)
-		Logger.logr.info("Working a graph with %i edges"%nx_G.number_of_edges())
-		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			outputfile=self.n2vReprFile, num_walks=10, walk_length=50, p=4, q=1)
-		node2vecInstance.getRepresentation(nx_G, False)
-
-
-		n2vModel = Word2Vec.load_word2vec_format(self.n2vReprFile, binary=False)
-		Logger.logr.info("Finished Loading WordDoc2Vec Model")
 	
-		
-		n2vec_dict = {}
 
+
+	def dumpNode2Vec(self, nx_G, reprFile, node2vecFile):
+
+		n2vModel = Word2Vec.load_word2vec_format(reprFile, binary=False)
+		Logger.logr.info("Finished Loading WordDoc2Vec Model")
+			
+		n2vec_dict = {}
 		for nodes in nx_G.nodes():
 			vec = n2vModel[str(nodes)]
 			#Logger.logr.info("Reading a vector of length %s"%vec.shape)
 			n2vec_dict[nodes] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
-		node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
 		pickle.dump(n2vec_dict, node2vecFile)	
+
+
+
+	def runTheBaseline(self, rbase, latent_space_size):
+		"""
+		This will run for both case: one with initialization 
+		and another without initialization from para2vec
+		"""
+
+		if rbase <= 0: return 0
+		Logger.logr.info("Running Node2vec Internal")
+
+		nx_G = nx.read_gpickle(self.graphFile)
+		Logger.logr.info("Working a graph with %i edges"%nx_G.number_of_edges())
+
+		############################# Working with Node2Vec Default ############################
+		reprFile = "%s_init"%self.n2vReprFile
+		initFile = "%s_raw"%self.p2vReprFile
+		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
+			outputfile=reprFile, num_walks=1, walk_length=50, p=4, q=1)
+		walkInput  = node2vecInstance.getWalkFile(nx_G)
+		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
+		nodevecInstance.learnEmbeddings(walkInput, True, initFile, reprFile)
+		dumpNode2Vec(nx_G, reprFile, node2vecFile)
+
+		############################# Run Node2vec With Initialization from Sen2vec #############
+		node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
+		node2vecInstance.learnEmbeddings(walkInput, False, "", reprFile)
+		dumpNode2Vec(nx_G, reprFile, node2vecFile)
+
 	
 
 	def generateSummary(self, gs):
@@ -157,6 +173,12 @@ class Node2VecRunner(BaselineRunner):
 
 		self.generateData(2, self.latReprName, n2vDict)
 		self.runClassificationTask(2, self.latReprName)
+
+
+		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"rb")
+		n2vDict = pickle.load (node2vecFile)
+		self.generateData(2, "%s_init"%self.latReprName, n2vDict)
+		self.runClassificationTask(2, "%s_init"%self.latReprName)
 		
 
 	def doHouseKeeping(self):

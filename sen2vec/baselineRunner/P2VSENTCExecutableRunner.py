@@ -61,6 +61,11 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 			sentfiletoWrite.flush()
 		sentfiletoWrite.close()
 
+	def convert_to_str(self, vec):
+		str_ = ""
+		for val in vec: 
+			str_ ="%s %0.3f"%(str_,val)
+		return str_
 
 	def runTheBaseline(self, rbase, latent_space_size):
 		"""
@@ -96,6 +101,14 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		print (err)
 		sent2vecModelDBOW = Doc2Vec.load_word2vec_format("%s_DBOW"%self.doc2vecOut, binary=False)
 		
+		nSent = 0
+		for result in self.postgresConnection.memoryEfficientSelect(["count(*)"],\
+			['sentence'], [], [], []):
+			nSent = int (result[0][0])
+		sent2vecFileRaw = open("%s_raw"%(self.sentReprFile),"w") 
+		sent2vecFileRaw.write("%s %s%s"%(str(nSent), str(latent_space_size*2), os.linesep))
+
+
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
@@ -104,6 +117,10 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 				vec2 = sent2vecModelDBOW[label_sent(id_)]
 				vec = np.hstack((vec1,vec2))
 				#Logger.logr.info("Reading a vector of length %s"%vec.shape)
+				sent2vecFileRaw.write("%s "%(str(id_)))	
+				vec_str = self.convert_to_str(vec)
+				#Logger.logr.info(vec_str)
+				sent2vecFileRaw.write("%s%s"%(vec_str, os.linesep))
 				sent2vec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
 		Logger.logr.info("Total Number of Sentences written=%i", len(sent2vec_dict))			

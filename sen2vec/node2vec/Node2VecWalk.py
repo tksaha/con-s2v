@@ -42,10 +42,39 @@ class Node2VecWalk:
 
 		return walk
 
-	def simulate_walks(self, num_walks, walk_length):
+	def node2vec_walk_no_precalc(self, walk_length, start_node):
+		"""
+		Simulate a random walk starting from start node.
+		"""
+		G = self.G
+		alias_nodes = self.alias_nodes
+		walk = [start_node]
+
+		while len(walk) < walk_length:
+			cur = walk[-1]
+			cur_nbrs = sorted(G.neighbors(cur))
+			if len(cur_nbrs) > 0:
+				if len(walk) == 1:
+					walk.append(cur_nbrs[self.alias_draw(alias_nodes[cur][0], alias_nodes[cur][1])])
+				else:
+					prev = walk[-2]
+					J, q = self.get_alias_edge(prev,cur)
+					next_ = cur_nbrs[self.alias_draw(J, q)]
+					walk.append(next_)
+			else:
+				break
+
+		return walk
+
+	def simulate_walks(self, num_walks, walk_length, precalc=True):
 		"""
 		Repeatedly simulate random walks from each node.
 		"""
+		if precalc ==True: 
+		   self.preprocess_transition_probs()
+		else: 
+		   self.preprocess_only_node_probs()
+
 		G = self.G
 		walks = []
 		nodes = list(G.nodes())
@@ -54,10 +83,14 @@ class Node2VecWalk:
 			Logger.logr.info("%s %s %s" %(str(walk_iter+1), '/', str(num_walks)))
 			random.shuffle(nodes)
 			for node in nodes:
-				walk = self.node2vec_walk(walk_length=walk_length, start_node=node)
+				if precalc == True:
+					walk = self.node2vec_walk(walk_length=walk_length, start_node=node)
+				else:
+					walk = self.node2vec_walk_no_precalc(walk_length=walk_length, start_node=node)
 				yield walk
 		
 		#return walks
+
 
 	def get_alias_edge(self, src, dst):
 		"""
@@ -80,6 +113,22 @@ class Node2VecWalk:
 		normalized_probs =  [float(u_prob)/norm_const for u_prob in unnormalized_probs]
 
 		return self.alias_setup(normalized_probs)
+
+	
+
+	def preprocess_only_node_probs(self):
+		G = self.G
+		is_directed = self.is_directed
+
+		alias_nodes = {}
+		for node in G.nodes():
+			unnormalized_probs = [G[node][nbr]['weight'] for nbr in sorted(G.neighbors(node))]
+			norm_const = sum(unnormalized_probs)
+			normalized_probs =  [float(u_prob)/norm_const for u_prob in unnormalized_probs]
+			alias_nodes[node] = self.alias_setup(normalized_probs)
+			Logger.logr.info("calculating transition probability for %i" %node)
+		self.alias_nodes = alias_nodes
+
 
 	def preprocess_transition_probs(self):
 		"""
