@@ -9,7 +9,7 @@ class WordDoc2Vec:
 	def __init__(self, *args, **kwargs):
 		self.wordParamDict = {}
 		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
-		self.retrofitOneExe = os.environ['RETONEEXE']
+		self.retrofitOneExe = os.environ['RETROFITONEEXE']
 		self.cores = multiprocessing.cpu_count()
 
 	def buildWordDoc2VecParamDict(self):
