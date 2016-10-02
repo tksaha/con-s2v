@@ -33,5 +33,9 @@ class IterativeUpdateRetrofitter:
 
           newSen2Vecs[sentenceId] = newVec/(2*numNeighbors)
 
+      for Id  in allSentenceIds:
+        vec = newSen2Vecs[Id] 
+        newSen2Vecs[Id] = vec / ( np.linalg.norm(vec) +  1e-6)
+
       Logger.logr.info("Norm of the vector = %f"%np.linalg.norm(newSen2Vecs[allSentenceIds[0]]))
       return newSen2Vecs
