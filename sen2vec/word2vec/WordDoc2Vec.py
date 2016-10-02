@@ -9,6 +9,7 @@ class WordDoc2Vec:
 	def __init__(self, *args, **kwargs):
 		self.wordParamDict = {}
 		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
+		self.retrofitOneExe = os.environ['RETONEEXE']
 		self.cores = multiprocessing.cpu_count()
 
 	def buildWordDoc2VecParamDict(self):
@@ -34,8 +35,13 @@ class WordDoc2Vec:
 			self.wordParamDict["alpha"] = str(0.025)
 		return self.wordParamDict
 
-	def buildArgListforW2V(self, wPDict):
-		args = [self.doc2vecMIKOLOVExecutableDir, "-train",wPDict["train"],\
+	def buildArgListforW2V(self, wPDict, retrofit=0):
+		if retrofit == 0:
+			exeFile = self.doc2vecMIKOLOVExecutableDir
+		else:
+			exeFile = self.retrofitOneExe
+
+		args = [exeFile, "-train",wPDict["train"],\
 		    "-output",wPDict["output"],\
 			"-cbow",wPDict["cbow"],"-size",wPDict["size"], "-window",wPDict["window"],\
 			"-negative",wPDict["negative"],"-hs",wPDict["hs"],"-sample",wPDict["sample"],\
@@ -44,8 +50,8 @@ class WordDoc2Vec:
 			"-sentence-vectors", wPDict["sentence-vectors"]]
 		return args 
 
-	def buildArgListforW2VWithInit(self, wPDict):
-		args = self.buildArgListforW2V(wPDict)
+	def buildArgListforW2VWithInit(self, wPDict, retrofit):
+		args = self.buildArgListforW2V(wPDict, retrofit)
 		args.append("-init")
 		args.append(wPDict["init"])
 		return args

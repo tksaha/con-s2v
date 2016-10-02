@@ -628,10 +628,9 @@ void *TrainModelThread(void *id) {
           for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * syn0[c + l1];
         }
         // Learn weights 
-        real alpha_u = 1;
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
         // Retrofit Modification
-        for (c = 0; c < layer1_size; c++) syn0[c + l1] += alpha_u * ( initembed[c + l1] - syn0[c + l1]);
+        for (c = 0; c < layer1_size; c++) syn0[c + l1] += alpha * ( initembed[c + l1] - syn0[c + l1]);
       }
     }
     sentence_position++;

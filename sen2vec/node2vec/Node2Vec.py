@@ -27,7 +27,7 @@ class Node2Vec:
 		self.p = kwargs['p']
 		self.q = kwargs['q']
 
-	def learnEmbeddings(self, walkInput, initFromFile, initFile, outputfile):
+	def learnEmbeddings(self, walkInput, initFromFile, initFile, outputfile, retrofit=0):
 		"""
 		Learn embeddings by optimizing the Skipgram 
 		objective using SGD. [GENSIM]
@@ -44,9 +44,9 @@ class Node2Vec:
 		args = []
 		if initFromFile==True:
 			wPDict["init"] = initFile
-			args = wordDoc2Vec.buildArgListforW2VWithInit(wPDict)
+			args = wordDoc2Vec.buildArgListforW2VWithInit(wPDict, retrofit)
 		else:
-			args = wordDoc2Vec.buildArgListforW2V(wPDict)
+			args = wordDoc2Vec.buildArgListforW2V(wPDict, retrofit)
 
 		Logger.logr.info(args)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

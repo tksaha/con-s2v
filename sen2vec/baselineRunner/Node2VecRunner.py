@@ -135,7 +135,7 @@ class Node2VecRunner(BaselineRunner):
 		nx_G = nx.read_gpickle(self.graphFile)
 		Logger.logr.info("Working a graph with %i edges"%nx_G.number_of_edges())
 
-		############################# Working with Node2Vec Default ############################
+		############################# Working with Node2Vec with initialization ############################
 		reprFile = "%s_init"%self.n2vReprFile
 		initFile = "%s_raw"%self.p2vReprFile
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
@@ -144,15 +144,20 @@ class Node2VecRunner(BaselineRunner):
 
 		node2vecInstance.getWalkFile(nx_G, walkInputFileName)
 		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
-		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile)
+		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, 0)
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 
-		############################# Run Node2vec With Initialization from Sen2vec #############
+		############################# Run Node2vec Default #############
 		node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
 		reprFile = self.n2vReprFile
-		node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile )
+		node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile, 0)
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 
+		############################# Run Node2vec Retrofit ############
+		reprFile = "%s_retrofit"%self.n2vReprFile
+		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, 0)
+		node2vecFile = open("%s_retrofit.p"%self.n2vReprFile)
+		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 	
 
 	def generateSummary(self, gs):
@@ -182,6 +187,11 @@ class Node2VecRunner(BaselineRunner):
 		n2vDict = pickle.load (node2vecFile)
 		self.generateData(2, "%s_init"%self.latReprName, n2vDict)
 		self.runClassificationTask(2, "%s_init"%self.latReprName)
+
+		node2vecFile = open("%s_retrofit.p"%(self.n2vReprFile),"rb")
+		n2vDict = pickle.load (node2vecFile)
+		self.generateData(2, "%s_retrofit"%self.latReprName, n2vDict)
+		self.runClassificationTask(2, "%s_retrofit"%self.latReprName)
 		
 
 	def doHouseKeeping(self):
