@@ -17,6 +17,8 @@ class IterativeUpdateRetrofitter:
     def retrofitWithIterUpdate(self, sen2vec):
       """
       Please also check whether it is normalized?
+      Alpha_i is equal to number of neighbors 
+      Beta_ij is equal to one 
       """
       newSen2Vecs = deepcopy(sen2vec)
       allSentenceIds = list(newSen2Vecs.keys())

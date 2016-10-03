@@ -5,7 +5,7 @@ import numpy as np
 import networkx as nx
 import random
 from log_manager.log_config import Logger 
-
+from cachetools import LRUCache
 
 class Node2VecWalk:
 	def __init__(self, nx_G, is_directed, p, q):
@@ -42,13 +42,14 @@ class Node2VecWalk:
 
 		return walk
 
-	def node2vec_walk_no_precalc(self, walk_length, start_node):
+	def node2vec_walk_no_precalc(self, walk_length, start_node, cache):
 		"""
 		Simulate a random walk starting from start node.
 		"""
 		G = self.G
 		alias_nodes = self.alias_nodes
 		walk = [start_node]
+		
 
 		while len(walk) < walk_length:
 			cur = walk[-1]
@@ -58,7 +59,15 @@ class Node2VecWalk:
 					walk.append(cur_nbrs[self.alias_draw(alias_nodes[cur][0], alias_nodes[cur][1])])
 				else:
 					prev = walk[-2]
-					J, q = self.get_alias_edge(prev,cur)
+					J, q = np.zeros(4), np.zeros(4)
+					try:
+						J, q = cache[(prev,cur)]
+						Logger.logr.info("Using from cache")
+					except:
+						J, q = self.get_alias_edge(prev,cur)
+						cache[(prev, cur)] = (J, q)
+						#Logger.logr.info("Updating cache")
+
 					next_ = cur_nbrs[self.alias_draw(J, q)]
 					walk.append(next_)
 			else:
@@ -69,6 +78,7 @@ class Node2VecWalk:
 	def simulate_walks(self, num_walks, walk_length, precalc=True):
 		"""
 		Repeatedly simulate random walks from each node.
+		64 * 2^10= 
 		"""
 		if precalc ==True: 
 		   self.preprocess_transition_probs()
@@ -79,6 +89,8 @@ class Node2VecWalk:
 		walks = []
 		nodes = list(G.nodes())
 		Logger.logr.info('Walk iteration:')
+		cache =  LRUCache(maxsize= (64 * 1024))
+
 		for walk_iter in range(num_walks):
 			Logger.logr.info("%s %s %s" %(str(walk_iter+1), '/', str(num_walks)))
 			random.shuffle(nodes)
@@ -86,7 +98,7 @@ class Node2VecWalk:
 				if precalc == True:
 					walk = self.node2vec_walk(walk_length=walk_length, start_node=node)
 				else:
-					walk = self.node2vec_walk_no_precalc(walk_length=walk_length, start_node=node)
+					walk = self.node2vec_walk_no_precalc(walk_length=walk_length, start_node=node, cache=cache)
 				yield walk
 		
 		#return walks

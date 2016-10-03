@@ -5,6 +5,7 @@ import os
 import sys 
 from abc import ABCMeta, abstractmethod
 from retrofitters.IterativeUpdateRetrofitter import IterativeUpdateRetrofitter
+from retrofitters.WeightedIterativeUpdateRetrofitter import WeightedIterativeUpdateRetrofitter
 from baselineRunner.BaselineRunner import BaselineRunner
 import networkx as nx 
 import pickle 
@@ -24,7 +25,7 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		self.Graph = nx.Graph()
 		self.postgresConnection.connectDatabase()
 		self.sen2Vec = {}
-		self.latReprName = "iterativeupdateunweighted"
+		self.latReprName = "iterativeupdate"
 		self.methodID = 5 
 		
 	
@@ -41,12 +42,19 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		p2vfileToRead = open ("%s.p" %self.p2vFile, "rb")
 		self.sen2Vec = pickle.load(p2vfileToRead)
 		Logger.logr.info("Dictionary has %i objects" % len(self.sen2Vec))
+
+
 		retrofitter = IterativeUpdateRetrofitter(numIter=10, nx_Graph = self.Graph) 
 		retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
 		Logger.logr.info("Retrofitted Dicitionary has %i objects" %len(retrofitted_dict))
 
 		iterupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"wb")
 		pickle.dump(retrofitted_dict,iterupdatevecFile )
+
+		wretrofitter = WeightedIterativeUpdateRetrofitter(numIter=10, nx_Graph = self.Graph)
+		retrofitted_dict = wretrofitter.retrofitWithIterUpdate(self.sen2Vec, alpha =-1)
+		iterupdatevecFile = open("%s_weighted.p"%(self.retrofittedsen2vReprFile),"wb")
+		pickle.dump(retrofitted_dict, iterupdatevecFile)
 
 	def generateSummary(self, gs):
 		if gs <= 0: return 0
@@ -66,9 +74,15 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		"""
 		itupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
-		self.generateData(2, self.latReprName, itupdatevDict)
-		self.runClassificationTask(2, self.latReprName)
+		reprName = "%s_unweighted"%self.latReprName
+		self.generateData(2, reprName, itupdatevDict)
+		self.runClassificationTask(2, reprName)
 		
+		itupdatevecFile = open("%s_weighted.p"%(self.retrofittedsen2vReprFile),"rb")
+		itupdatevDict = pickle.load (itupdatevecFile)
+		reprName = "%s_weighted"%self.latReprName
+		self.generateData(2, reprName, itupdatevDict)
+		self.runClassificationTask(2, reprName)
 
 	def doHouseKeeping(self):
 		"""

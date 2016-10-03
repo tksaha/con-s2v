@@ -14,9 +14,12 @@ class WeightedIterativeUpdateRetrofitter:
       self.numIters = kwargs['numIter']
       self.nx_Graph = kwargs['nx_Graph']
 
-    def retrofitWithIterUpdate(self, sen2vec, alpha):
+    def retrofitWithIterUpdate(self, sen2vec, alpha=-1):
       """
-      Please also check whether it is normalized?
+      If alpha is initialized to negative, then we assume 
+      the value is not initialized and initialized it 
+      with the summation of weight. In all other case, 
+      we use user configuration.
       """
       newSen2Vecs = deepcopy(sen2vec)
       allSentenceIds = list(newSen2Vecs.keys())
@@ -27,11 +30,18 @@ class WeightedIterativeUpdateRetrofitter:
           numNeighbors = len(sentNeighbors)
           if numNeighbors == 0:
             continue
-          newVec = alpha * sen2vec[sentenceId]
+          
           total_weight = 0.0
+
+          newVec = 0 * sen2vec[sentenceId]
           for neighborSentId in sentNeighbors:
-            newVec += nx_Graph[sentenceId][neighborSentId]['weight'] * newSen2Vecs[neighborSentId]
-            total_weight = total_weight + nx_Graph[sentenceId][neighborSentId]['weight']
+            newVec += self.nx_Graph[sentenceId][neighborSentId]['weight'] * newSen2Vecs[neighborSentId]
+            total_weight = total_weight + self.nx_Graph[sentenceId][neighborSentId]['weight']
+
+          if  alpha < 0:
+              alpha = total_weight
+
+          newVec += alpha * sen2vec[sentenceId]
 
           newSen2Vecs[sentenceId] = newVec/(alpha + total_weight)
 
