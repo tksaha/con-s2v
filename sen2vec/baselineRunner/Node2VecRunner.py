@@ -140,7 +140,7 @@ class Node2VecRunner(BaselineRunner):
 		initFile = "%s_raw"%self.p2vReprFile
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			outputfile=reprFile, num_walks=3, walk_length=200, p=4, q=1)
+			outputfile=reprFile, num_walks=1, walk_length=80, p=4, q=1)
 
 		node2vecInstance.getWalkFile(nx_G, walkInputFileName)
 		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
@@ -155,7 +155,7 @@ class Node2VecRunner(BaselineRunner):
 
 		############################# Run Node2vec Retrofit ############
 		reprFile = "%s_retrofit"%self.n2vReprFile
-		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, 0)
+		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, 1)
 		node2vecFile = open("%s_retrofit.p"%self.n2vReprFile)
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 	
