@@ -156,7 +156,7 @@ class Node2VecRunner(BaselineRunner):
 		############################# Run Node2vec Retrofit ############
 		reprFile = "%s_retrofit"%self.n2vReprFile
 		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, 1)
-		node2vecFile = open("%s_retrofit.p"%self.n2vReprFile)
+		node2vecFile = open("%s_retrofit.p"%self.n2vReprFile, "wb")
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 	
 
