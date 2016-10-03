@@ -107,6 +107,6 @@ optional arguments:
 For example, you can run for the news dataset using the following command-
 
 ```
-python sen2vec -dataset news -ld 1
+python sen2vec -dataset news -ld 1 -pd 1 -rbase 1 -gs 1
 ```
 
