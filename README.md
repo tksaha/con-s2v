@@ -4,6 +4,7 @@
 
 ## Requirements
 * [Anaconda with Python 3.5](https://www.continuum.io/downloads)
+* [ROUGE-1.5.5](http://www.berouge.com/Pages/DownloadROUGE.aspx)
 
 ## Python Environment setup and Update
 
