@@ -13,6 +13,8 @@ from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
 
+from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
+
 
 class ReutersReader(DocumentReader):
 	""" 
@@ -135,7 +137,7 @@ class ReutersReader(DocumentReader):
 
 					topic = self._getTopic(document_id, doc)
 					
-					if topic not in ['interest', 'ship']:
+					if topic not in ['crude', 'grain', 'interest']: #, 'trade', 'money-fx'
 						continue
 						
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
@@ -153,28 +155,31 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		latent_space_size = 300
-		
-		Logger.logr.info("Starting Running Para2vec Baseline")
-		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-		paraBaseline.prepareData(pd)
-		paraBaseline.runTheBaseline(rbase,latent_space_size)
-		if gs ==1: self.postgres_recorder.truncateSummaryTable()
-		paraBaseline.generateSummary(gs)
-		paraBaseline.runEvaluationTask()
-		
-		Logger.logr.info("Starting Running Node2vec Baseline")
-		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.prepareData(pd)
-		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-		n2vBaseline.generateSummary(gs)
-		n2vBaseline.runEvaluationTask()
+#		latent_space_size = 300
+#		
+#		Logger.logr.info("Starting Running Para2vec Baseline")
+#		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+#		paraBaseline.prepareData(pd)
+#		paraBaseline.runTheBaseline(rbase,latent_space_size)
+#		if gs ==1: self.postgres_recorder.truncateSummaryTable()
+#		paraBaseline.generateSummary(gs)
+#		paraBaseline.runEvaluationTask()
+#		
+#		Logger.logr.info("Starting Running Node2vec Baseline")
+#		n2vBaseline = Node2VecRunner(self.dbstring)
+#		n2vBaseline.prepareData(pd)
+#		n2vBaseline.runTheBaseline(rbase, latent_space_size)
+#		n2vBaseline.generateSummary(gs)
+#		n2vBaseline.runEvaluationTask()
 
-		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-		iterrunner.prepareData(pd)
-		iterrunner.runTheBaseline(rbase)
-		iterrunner.generateSummary(gs)
-		iterrunner.runEvaluationTask()
+#		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+#		iterrunner.prepareData(pd)
+#		iterrunner.runTheBaseline(rbase)
+#		iterrunner.generateSummary(gs)
+#		iterrunner.runEvaluationTask()
+
+		evaluation = RankingEvaluation(['n2v', 'p2v'])
+		print (evaluation._getRankingEvaluation())
 
 		
 
