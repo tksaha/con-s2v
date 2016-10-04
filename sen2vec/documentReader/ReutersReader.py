@@ -137,7 +137,8 @@ class ReutersReader(DocumentReader):
 
 					topic = self._getTopic(document_id, doc)
 					
-					if topic not in ['crude', 'grain', 'interest']: #, 'trade', 'money-fx'
+
+					if topic in ['wheat', 'corn', 'other']:
 						continue
 						
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
