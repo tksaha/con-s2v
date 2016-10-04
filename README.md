@@ -4,6 +4,7 @@
 
 ## Requirements
 * [Anaconda with Python 3.5](https://www.continuum.io/downloads)
+* [ROUGE-1.5.5](http://www.berouge.com/Pages/DownloadROUGE.aspx)
 
 ## Python Environment setup and Update
 
@@ -106,6 +107,6 @@ optional arguments:
 For example, you can run for the news dataset using the following command-
 
 ```
-python sen2vec -dataset news -ld 1
+python sen2vec -dataset news -ld 1 -pd 1 -rbase 1 -gs 1
 ```
 
