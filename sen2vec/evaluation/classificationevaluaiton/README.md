@@ -18,5 +18,5 @@
 ## Persons working on Evaluation
 
 ```
-Nitesh V. Chawla
+
 ```
