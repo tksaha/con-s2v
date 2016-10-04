@@ -48,3 +48,8 @@ export TOPNSUMMARY=0.2
 export ITERUPDATESEN2VECFILE=~/Documents/sen2vec/Data/retrofitted_repr
 export GRAPHFILE=~/Documents/sen2vec/Data/graph_0.8_0.5
 
+export ROUGE=~/rouge-1.5.5/ROUGE-1.5.5.pl
+export ROUGE_EVAL_HOME=~/rouge-1.5.5/data
+export SUMMARYFOLDER=~/Research/sen2vec/Data/Summary/
+export MODELSUMMARYFOLDER=~/Research/sen2vec/Data/Summary/model
+export SYSTEMSUMMARYFOLDER=~/Research/sen2vec/Data/Summary/system
