@@ -30,6 +30,21 @@ can update the .yml file using the following command:
 conda env export > sen2vec_environment.yml
 ```
 
+## ROUGE Environment setup
+Please go to the ROUGE directory and run the following command to check whether 
+the provided perl script will work or not:
+```
+./ROUGE-1.5.5.pl 
+```
+
+If it shows the options for running the script, then you are fine. However, if it shows 
+you haven't have XML::DOM installed then please type following command to install 
+it: 
+
+```
+cpan XML::DOM
+```
+Here, CPAN stands for Comprehensive Perl Archive Network. 
 
 ## Database Creation and update 
 
