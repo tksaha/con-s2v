@@ -16,6 +16,7 @@ import multiprocessing
 import numpy as np 
 from node2vec.Node2Vec import Node2Vec 
 from cachetools import LFUCache
+from heapq import heappush, heappop, heapreplace
 
 
 
@@ -28,6 +29,7 @@ class Node2VecRunner(BaselineRunner):
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
 		self.dataDir = os.environ['TRTESTFOLDER']
+		self.kneighbors = int(os.environ['KNEIGHBOR'])
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
@@ -56,6 +58,8 @@ class Node2VecRunner(BaselineRunner):
 		Process sentences differently for inter and 
 		intra documents. 
 		"""
+		heap = []
+		heap_size = 0 
 		for sentence_id in self.sentenceDict.keys():
 			for node_id in self.Graph.nodes():
 				if node_id != sentence_id:	
@@ -64,10 +68,31 @@ class Node2VecRunner(BaselineRunner):
 					sim = np.inner(doc_vec_1, doc_vec_2)
 					if node_id in self.sentenceDict.keys(): 
 						if sim >= self.intraThr:
-							self.Graph.add_edge(sentence_id, node_id, weight=sim)	
+							
+							if heap_size > self.kneighbors:
+								if sim > heap[0][0]:
+									heapreplace(heap, (sim, node_id))
+							else:
+								heappush(heap, (sim,node_id))
+								heap_size +=1
 					else:
 						if sim >= self.interThr:
-							self.Graph.add_edge(sentence_id, node_id, weight=sim)
+							if heap_size > self.kneighbors:
+								if sim > heap[0][0]:
+									heapreplace(heap, (sim, node_id))
+							else:
+								heappush(heap, (sim, node_id))
+								heap_size +=1
+
+		total_edge_loaded = 0
+		while heap: 
+			sim, node_id = heappop(heap)
+			self.Graph.add_edge(sentence_id, node_id, weight=sim)
+			total_edge_loaded +=1
+
+		Logger.logr.info("Total edge loaded for a node =%i"%total_edge_loaded)
+		#self.Graph.add_edge(sentence_id, node_id, weight=sim)		
+		#self.Graph.add_edge(sentence_id, node_id, weight=sim)
 							
 
 	def prepareData(self, pd):
