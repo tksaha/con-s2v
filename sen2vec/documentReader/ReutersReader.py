@@ -138,8 +138,8 @@ class ReutersReader(DocumentReader):
 					topic = self._getTopic(document_id, doc)
 					
 
-					if topic in ['wheat', 'corn', 'other']:
-						continue
+					# if topic in ['wheat', 'corn', 'other']:
+					# 	continue
 						
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
 								doc_content, file_, metadata)
@@ -157,30 +157,30 @@ class ReutersReader(DocumentReader):
 		"""
 		"""
 		latent_space_size = 300
-#		
-#		Logger.logr.info("Starting Running Para2vec Baseline")
-#		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-#		paraBaseline.prepareData(pd)
-#		paraBaseline.runTheBaseline(rbase,latent_space_size)
-#		if gs ==1: self.postgres_recorder.truncateSummaryTable()
-#		paraBaseline.generateSummary(gs)
-#		paraBaseline.runEvaluationTask()
-#		
-#		Logger.logr.info("Starting Running Node2vec Baseline")
+	
+		Logger.logr.info("Starting Running Para2vec Baseline")
+		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		paraBaseline.prepareData(pd)
+		paraBaseline.runTheBaseline(rbase,latent_space_size)
+		if gs ==1: self.postgres_recorder.truncateSummaryTable()
+		paraBaseline.generateSummary(gs)
+		paraBaseline.runEvaluationTask()
+
+		Logger.logr.info("Starting Running Node2vec Baseline")	
 		n2vBaseline = Node2VecRunner(self.dbstring)
-#		n2vBaseline.prepareData(pd)
+		n2vBaseline.prepareData(pd)
 		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-#		n2vBaseline.generateSummary(gs)
+		n2vBaseline.generateSummary(gs)
 		n2vBaseline.runEvaluationTask()
 
-#		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-#		iterrunner.prepareData(pd)
-#		iterrunner.runTheBaseline(rbase)
-#		iterrunner.generateSummary(gs)
-#		iterrunner.runEvaluationTask()
+		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+		iterrunner.prepareData(pd)
+		iterrunner.runTheBaseline(rbase)
+		iterrunner.generateSummary(gs)
+		iterrunner.runEvaluationTask()
 
-		# evaluation = RankingEvaluation(['n2v', 'p2v'])
-		# print (evaluation._getRankingEvaluation())
+# 		# evaluation = RankingEvaluation(['n2v', 'p2v'])
+# 		# print (evaluation._getRankingEvaluation())
 
 		
 

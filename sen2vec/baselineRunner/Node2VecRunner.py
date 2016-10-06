@@ -58,17 +58,17 @@ class Node2VecRunner(BaselineRunner):
 		Process sentences differently for inter and 
 		intra documents. 
 		"""
-		heap = []
-		heap_size = 0 
 		for sentence_id in self.sentenceDict.keys():
+			heap = []
+			heap_size = 0 
 			for node_id in self.Graph.nodes():
 				if node_id != sentence_id:	
 					doc_vec_1 = self.s2vDict[node_id]
 					doc_vec_2 = self.s2vDict[sentence_id]
 					sim = np.inner(doc_vec_1, doc_vec_2)
+
 					if node_id in self.sentenceDict.keys(): 
 						if sim >= self.intraThr:
-							
 							if heap_size > self.kneighbors:
 								if sim > heap[0][0]:
 									heapreplace(heap, (sim, node_id))
@@ -83,16 +83,13 @@ class Node2VecRunner(BaselineRunner):
 							else:
 								heappush(heap, (sim, node_id))
 								heap_size +=1
+			total_edge_loaded = 0
+			while heap: 
+				sim, node_id = heappop(heap)
+				self.Graph.add_edge(sentence_id, node_id, weight=sim)
+				total_edge_loaded +=1
+			Logger.logr.info("Total edge loaded for node =%i is %i"%(sentence_id, total_edge_loaded))
 
-		total_edge_loaded = 0
-		while heap: 
-			sim, node_id = heappop(heap)
-			self.Graph.add_edge(sentence_id, node_id, weight=sim)
-			total_edge_loaded +=1
-
-		Logger.logr.info("Total edge loaded for a node =%i"%total_edge_loaded)
-		#self.Graph.add_edge(sentence_id, node_id, weight=sim)		
-		#self.Graph.add_edge(sentence_id, node_id, weight=sim)
 							
 
 	def prepareData(self, pd):
