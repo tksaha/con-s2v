@@ -486,6 +486,8 @@ void *TrainModelThread(void *id) {
   long long a, b, d, cw, word, last_word, sentence_length = 0, sentence_position = 0;
   long long word_count = 0, last_word_count = 0, sen[MAX_SENTENCE_LENGTH + 1];
   long long l1, l2, c, target, label, local_iter = iter;
+  long long l1n, nbrid; 
+  real diff; 
   unsigned long long next_random = (long long)id;
   real f, g;
   clock_t now;
@@ -662,10 +664,30 @@ void *TrainModelThread(void *id) {
           for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
           for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * syn0[c + l1];
         }
-        // Learn weights 
+        // Learn embedding
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
-        // Retrofit Modification
-        for (c = 0; c < layer1_size; c++) syn0[c + l1] += alpha * ( initembed[c + l1] - syn0[c + l1]);
+        // Retrofit Modification with neighbors
+
+        //for (c = 0; c < layer1_size; c++)
+        //{
+        //  syn0[c + l1] += alpha * ( initembed[c + l1] - syn0[c + l1]);
+        //}
+
+        for (c = 0; c < layer1_size; c++)
+        {
+          l1n = last_word * max_neighbors
+          diff = 0.0 
+          for (nbr=0; nbr < max_neighbors; nbr++)
+          {
+            nbrid = neighbors[l1n+nbr]
+            diff += (syn0[c+ nbrid * layer1_size] - syn0[c+l1])
+          }
+          if (initfromFile[0]!=0)
+          {
+            diff += (initembed[c+l1] - syn0[c+l1])
+          }
+          syn0[c + l1] += alpha * diff 
+        }
       }
     }
     sentence_position++;
