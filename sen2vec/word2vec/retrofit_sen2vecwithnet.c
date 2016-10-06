@@ -39,6 +39,7 @@ char save_vocab_file[MAX_STRING], read_vocab_file[MAX_STRING];
 char initfromFile[MAX_STRING];
 char neighborFile[MAX_STRING];
 struct vocab_word *vocab;
+long long  max_neighbors;
 int binary = 0, cbow = 1, debug_mode = 2, window = 5, min_count = 5, num_threads = 12, min_reduce = 1;
 int *vocab_hash;
 long long vocab_max_size = 1000, vocab_size = 0, layer1_size = 100, sentence_vectors = 0;
@@ -396,7 +397,7 @@ void InitNet() {
   if (neighborFile[0]!=0)
   {
     char *word; int b; 
-    long long index1, index2, it, nnodes, max_neighbors; 
+    long long index1, index2, it, nnodes;
     word = (char*)malloc(MAX_STRING* sizeof(char));
     FILE *finit = fopen(neighborFile, "rb");
 
@@ -486,7 +487,7 @@ void *TrainModelThread(void *id) {
   long long a, b, d, cw, word, last_word, sentence_length = 0, sentence_position = 0;
   long long word_count = 0, last_word_count = 0, sen[MAX_SENTENCE_LENGTH + 1];
   long long l1, l2, c, target, label, local_iter = iter;
-  long long l1n, nbrid; 
+  long long l1n, nbrid, nbr; 
   real diff; 
   unsigned long long next_random = (long long)id;
   real f, g;
@@ -675,18 +676,18 @@ void *TrainModelThread(void *id) {
 
         for (c = 0; c < layer1_size; c++)
         {
-          l1n = last_word * max_neighbors
-          diff = 0.0 
+          l1n = last_word * max_neighbors;
+          diff = 0.0 ;
           for (nbr=0; nbr < max_neighbors; nbr++)
           {
-            nbrid = neighbors[l1n+nbr]
-            diff += (syn0[c+ nbrid * layer1_size] - syn0[c+l1])
+            nbrid = neighbors[l1n+nbr];
+            diff += (syn0[c+ nbrid * layer1_size] - syn0[c+l1]);
           }
           if (initfromFile[0]!=0)
           {
-            diff += (initembed[c+l1] - syn0[c+l1])
+            diff += (initembed[c+l1] - syn0[c+l1]);
           }
-          syn0[c + l1] += alpha * diff 
+          syn0[c + l1] += alpha * diff ;
         }
       }
     }
