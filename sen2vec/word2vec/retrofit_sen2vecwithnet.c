@@ -416,6 +416,7 @@ void InitNet() {
         if (strcmp(word,"-1")==0)
         {
           neighbors[b + index1* max_neighbors] = -1; 
+          continue; 
         }
         index2 = SearchVocab(word);
         neighbors[b + index1*max_neighbors] = index2;
@@ -681,6 +682,7 @@ void *TrainModelThread(void *id) {
           for (nbr=0; nbr < max_neighbors; nbr++)
           {
             nbrid = neighbors[l1n+nbr];
+            if (nbrid == -1) continue ; 
             diff += (syn0[c+ nbrid * layer1_size] - syn0[c+l1]);
           }
           if (initfromFile[0]!=0)
