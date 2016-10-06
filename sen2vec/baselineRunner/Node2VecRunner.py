@@ -69,7 +69,7 @@ class Node2VecRunner(BaselineRunner):
 
 					if node_id in self.sentenceDict.keys(): 
 						if sim >= self.intraThr:
-							if heap_size > self.kneighbors:
+							if heap_size >= self.kneighbors:
 								if sim > heap[0][0]:
 									heapreplace(heap, (sim, node_id))
 							else:
@@ -77,7 +77,7 @@ class Node2VecRunner(BaselineRunner):
 								heap_size +=1
 					else:
 						if sim >= self.interThr:
-							if heap_size > self.kneighbors:
+							if heap_size >= self.kneighbors:
 								if sim > heap[0][0]:
 									heapreplace(heap, (sim, node_id))
 							else:
@@ -127,6 +127,24 @@ class Node2VecRunner(BaselineRunner):
 		Logger.logr.info("Total number of edges=%i"%self.Graph.number_of_edges())
 		self.Graph = nx.Graph() # Clear
 		
+		neighborFile = open("%s_neighbor.txt"%self.graphFile, 'w')
+		max_neighbor = 0
+		min_neighbor = 500000
+		for node in self.Graph.nodes():
+			neighbors = self.Graph.neighbors[node]
+			Logger.logr.info("Printing %i neighbors" %neighbors)
+			if max_neighbor < len(neighbors):
+				max_neighbor = len(neighbors)
+			if min_neighbor > len(neighbors):
+				min_neighbor = len(neighbors)
+			neighborFile.write("%i "%node)
+			for neighbor in neighbors:
+				neighborFile.write("%i "%neighbor)
+			neighborFile.write(os.linesep)
+
+		neighborFile.flush()
+		neighborFile.close()
+
 
 	
 

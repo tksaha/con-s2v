@@ -37,6 +37,7 @@ struct vocab_word {
 char train_file[MAX_STRING], output_file[MAX_STRING];
 char save_vocab_file[MAX_STRING], read_vocab_file[MAX_STRING];
 char initfromFile[MAX_STRING];
+char neighborFile[MAX_STRING];
 struct vocab_word *vocab;
 int binary = 0, cbow = 1, debug_mode = 2, window = 5, min_count = 5, num_threads = 12, min_reduce = 1;
 int *vocab_hash;
@@ -46,7 +47,7 @@ real alpha = 0.025, starting_alpha, sample = 1e-3;
 
 // All synapses and exponential table
 // Initembedding for retrofitting
-real *syn0, *syn1, *syn1neg, *initembed, *expTable; 
+real *syn0, *syn1, *syn1neg, *initembed, *expTable, *neighbors; 
 clock_t start;
 
 int hs = 0, negative = 5;
@@ -392,10 +393,43 @@ void InitNet() {
   if (initembed == NULL){printf("Memory allocation failed\n"); exit(1);}
 
   // Tanay's Modification 
+  if (neighborFile[0]!=0)
+  {
+    char *word; int b; 
+    long long index1, index2, it, nnodes, max_neighbors; 
+    word = (char*)malloc(MAX_STRING* sizeof(char));
+    FILE *finit = fopen(neighborFile, "rb");
+
+    fscanf(finit, "%lld %lld", &nnodes, &max_neighbors);
+    a = posix_memalign((void **)&neighbors, 128, (long long)vocab_size * max_neighbors *sizeof(long long));
+    if (neighbors == NULL){printf("Memory allocation failed\n"); exit(1);}
+    
+
+    for (it=0; it<nnodes; it++)
+    {
+      fscanf(finit,"%s",word);
+      index1 = SearchVocab(word);
+      for (b=0; b<max_neighbors; b++)
+      {
+        fscanf(finit,"%s",word);
+        if (strcmp(word,"-1")==0)
+        {
+          neighbors[b + index1* max_neighbors] = -1; 
+        }
+        index2 = SearchVocab(word);
+        neighbors[b + index1*max_neighbors] = index2;
+      }
+    }
+
+    fclose(finit);
+    free(word);
+  }
+
   if (initfromFile[0]!=0)
   {    
-    long long nwords, latdim, it;int b; 
+    long long nwords, latdim, it; int b; 
     double temp; char *word; 
+    long long index; 
     word = (char*)malloc(MAX_STRING* sizeof(char));
    
     FILE *finit = fopen(initfromFile, "rb");
@@ -409,16 +443,17 @@ void InitNet() {
     for (it=0; it<nwords; it++)
     {
       fscanf(finit,"%s",word);
-      int index = SearchVocab(word);
+      index = SearchVocab(word);
       for (b=0; b<latdim; b++)
       {
         fscanf(finit,"%lf",&temp);
         syn0[b + index*layer1_size] = temp; 
-        initembed[b + index*layer1_size] =temp; 
+        initembed[b + index*layer1_size] = temp; 
       }
     }
     // Once done free word 
     free(word);
+    fclose(finit);
     printf("Successfully Loaded the initial values for vectors from file\n");
   }
   else{
@@ -746,7 +781,11 @@ int main(int argc, char **argv) {
     printf("\t-window <int>\n");
     printf("\t\tSet max skip length between words; default is 5\n");
     printf("\t-init\n");
-    printf("\t\tWhether it will be initialized from a file?\n");
+    printf("\t\tUsed to input initial embedding\n");
+    printf("\t-neighbor\n");
+    printf("\t\tUsed to input neighbor of words\n");
+    printf("\t\t-max-neighbor\n");
+    printf("\t\tUsed to input maximum number of neighbors a particular vertex can have\n");
     printf("\t-sample <float>\n");
     printf("\t\tSet threshold for occurrence of words. Those that appear with higher frequency in the training data\n");
     printf("\t\twill be randomly down-sampled; default is 1e-3, useful range is (0, 1e-5)\n");
@@ -797,6 +836,7 @@ int main(int argc, char **argv) {
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
   if ((i = ArgPos((char *)"-window", argc, argv)) > 0) window = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-init", argc, argv)) > 0) strcpy(initfromFile, argv[i + 1]);
+  if ((i = ArgPos((char *)"-neighbor", argc, argv))>0) strcpy(neighborFile, argv[i+1]);
   if ((i = ArgPos((char *)"-sample", argc, argv)) > 0) sample = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-hs", argc, argv)) > 0) hs = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-negative", argc, argv)) > 0) negative = atoi(argv[i + 1]);
