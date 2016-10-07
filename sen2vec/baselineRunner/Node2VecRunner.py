@@ -125,7 +125,6 @@ class Node2VecRunner(BaselineRunner):
 					
 		nx.write_gpickle(self.Graph, self.graphFile)
 		Logger.logr.info("Total number of edges=%i"%self.Graph.number_of_edges())
-		self.Graph = nx.Graph() # Clear
 		
 		neighborFile = open("%s_neighbor.txt"%self.graphFile, 'w')
 		max_neighbor = 0
@@ -145,8 +144,8 @@ class Node2VecRunner(BaselineRunner):
 		neighborFile.flush()
 		neighborFile.close()
 
-
-	
+		self.Graph = nx.Graph() # Clear the graph
+		
 
 
 	def dumpNode2Vec(self, nx_G, reprFile, node2vecFile):
@@ -181,7 +180,7 @@ class Node2VecRunner(BaselineRunner):
 		initFile = "%s_raw"%self.p2vReprFile
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			outputfile=reprFile, num_walks=10, walk_length=80, p=0.4, q=0.5)
+			outputfile=reprFile, num_walks=1, walk_length=10, p=0.4, q=0.5)
 
 		node2vecInstance.getWalkFile(nx_G, walkInputFileName)
 		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
