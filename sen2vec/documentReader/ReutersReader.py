@@ -138,8 +138,8 @@ class ReutersReader(DocumentReader):
 					topic = self._getTopic(document_id, doc)
 					
 
-					# if topic in ['wheat', 'corn', 'other']:
-					# 	continue
+					if topic in ['wheat', 'corn', 'other']:
+					 	continue
 						
 					self.postgres_recorder.insertIntoDocTable(document_id, title, \
 								doc_content, file_, metadata)

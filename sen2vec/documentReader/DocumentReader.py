@@ -9,6 +9,7 @@ from log_manager.log_config import Logger
 import nltk
 from nltk.tokenize import sent_tokenize
 from utility.Utility import Utility
+import gensim
 
 class DocumentReader:
 	"""
@@ -36,7 +37,6 @@ class DocumentReader:
 
 	def _splitIntoSentences(self, paragraph):
 		"""
-
 		"""
 		return sent_tokenize(paragraph)
 
@@ -64,13 +64,13 @@ class DocumentReader:
 			sentences = self._splitIntoSentences(paragraph)
 			for sentence_position, sentence in enumerate(sentences):
 				sentence_ = self.utFunction.normalizeText(sentence, 0)
-				if len(sentence_) < 4 and skip_short == True:
-					Logger.logr.info("Skipping sentence=%s because normalization gives: %s"\
-						 %(sentence, ' '.join(sentence_)))
+				if len(sentence_) <=2:
+					continue 
+				elif len(sentence_) < 4 and skip_short == True:
 					continue
-				else:
-					Logger.logr.info("Keeping sentence=%s because normalization gives: %s"\
-						 %(sentence, ' '.join(sentence_)))
+
+				sentence = sentence.replace("\x03","")
+				sentence = sentence.replace("\x02","")
 				sentence_id = recorder.insertIntoSenTable(sentence,\
 					 topic, istrain, document_id, paragraph_id)
 				recorder.insertIntoParSenTable(paragraph_id, sentence_id,\
@@ -82,6 +82,7 @@ class DocumentReader:
 		"""	
 		with open(file, encoding='utf-8', errors='ignore') as f:
 			return f.read()
+
 
 
 	def _getTopics(self, rootDir):

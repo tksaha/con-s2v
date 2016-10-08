@@ -125,25 +125,6 @@ class Node2VecRunner(BaselineRunner):
 					
 		nx.write_gpickle(self.Graph, self.graphFile)
 		Logger.logr.info("Total number of edges=%i"%self.Graph.number_of_edges())
-		
-		neighborFile = open("%s_neighbor.txt"%self.graphFile, 'w')
-		max_neighbor = 0
-		min_neighbor = 500000
-		for node in self.Graph.nodes():
-			neighbors = self.Graph.neighbors[node]
-			Logger.logr.info("Printing %i neighbors" %neighbors)
-			if max_neighbor < len(neighbors):
-				max_neighbor = len(neighbors)
-			if min_neighbor > len(neighbors):
-				min_neighbor = len(neighbors)
-			neighborFile.write("%i "%node)
-			for neighbor in neighbors:
-				neighborFile.write("%i "%neighbor)
-			neighborFile.write(os.linesep)
-
-		neighborFile.flush()
-		neighborFile.close()
-
 		self.Graph = nx.Graph() # Clear the graph
 		
 

@@ -16,7 +16,6 @@ class IterativeUpdateRetrofitter:
 
     def retrofitWithIterUpdate(self, sen2vec):
       """
-      Please also check whether it is normalized?
       Alpha_i is equal to number of neighbors 
       Beta_ij is equal to one 
       """

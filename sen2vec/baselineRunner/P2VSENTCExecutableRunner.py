@@ -52,11 +52,10 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 				id_ = result[row_id][0]
 				content = gensim.utils.to_unicode(result[row_id][1].strip())
 				content = self.utFunction.normalizeText(content, remove_stopwords=0)
-
-				if len(content) < 9:
-					n_nulls = 9 - len(content)
-					for n in range(0,n_nulls):
-						content.insert(0,"null")
+				# if len(content) < 9:
+				# 	n_nulls = 9 - len(content)
+				# 	for n in range(0,n_nulls):
+				# 		content.insert(0,"null")
 				sentfiletoWrite.write("%s %s%s"%(label_sent(id_),' '.join(content), os.linesep))
 			sentfiletoWrite.flush()
 		sentfiletoWrite.close()
