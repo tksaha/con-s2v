@@ -41,7 +41,7 @@ def main():
 	"""
 	argparser = ArgumentParserUtility('Sen2Vec')
 	argparser.add_argument_to_parser("dataset", "Please enter dataset "\
-		"to work on [reuter, news, imdb, stree2way]", True)
+		"to work on [reuter, news, imdb, stree2way, duc]", True)
 	argparser.add_argument_to_parser("ld", "Load into Database 0 or 1", True)
 	argparser.add_argument_to_parser("pd", "Prepare Data: 0 or 1", True)
 	argparser.add_argument_to_parser("rbase", "Run the baseline 0 or 1", True)
