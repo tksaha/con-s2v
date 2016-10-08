@@ -28,9 +28,9 @@ from log_manager.log_config import Logger
 
 module_dict ={"reuter": "documentReader.ReutersReader", "news": "documentReader.NewsGroupReader",
 		"imdb": "documentReader.IMDBReader","rt": "documentReader.RTReader",
-		"stree2way":"documentReader.SentimentTreeBankReader" }
+		"stree2way":"documentReader.SentimentTreeBankReader", "duc": "documentReader.DUCReader" }
 class_dict = {"reuter": "ReutersReader", "news": "NewsGroupReader","imdb": "IMDBReader",
-		"rt": "RTReader", "stree2way": "SentimentTreeBank2WayReader"}
+		"rt": "RTReader", "stree2way": "SentimentTreeBank2WayReader", "duc": "DUCReader"}
 
 def main():
 	"""

@@ -7,10 +7,12 @@ from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from log_manager.log_config import Logger
 import re
-from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner
-from baselineRunner.Node2VecRunner  import Node2VecRunner
+from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
+from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
+
+from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
 
 class NewsGroupReader(DocumentReader):
 	""" 
@@ -102,6 +104,8 @@ class NewsGroupReader(DocumentReader):
 		for first_level_folder in os.listdir(self.folderPath):
 			if not(DocumentReader._folderISHidden(self, first_level_folder)):
 				for topic in topic_names:					
+#					if topic not in ['rec.sport.baseball', 'talk.politics.guns', 'comp.graphics']:
+#						continue
 					for file_ in os.listdir("%s%s%s%s%s" %(self.folderPath, "/", \
 											first_level_folder, "/", topic)):
 						doc_content = self._getTextFromFile("%s%s%s%s%s%s%s" \
@@ -132,8 +136,8 @@ class NewsGroupReader(DocumentReader):
 		"""
 		"""
 		latent_space_size = 300
+	
 		Logger.logr.info("Starting Running Para2vec Baseline")
-
 		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
 		paraBaseline.prepareData(pd)
 		paraBaseline.runTheBaseline(rbase,latent_space_size)
@@ -141,30 +145,21 @@ class NewsGroupReader(DocumentReader):
 		paraBaseline.generateSummary(gs)
 		paraBaseline.runEvaluationTask()
 
-		
-#		Logger.logr.info("Starting Running Node2vec Baseline")
-#		n2vBaseline = Node2VecRunner(self.dbstring)
-#		n2vBaseline.prepareData(pd)
-#		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-#		n2vBaseline.generateSummary(gs)
-#		n2vBaseline.runEvaluationTask()
+		Logger.logr.info("Starting Running Node2vec Baseline")	
+		n2vBaseline = Node2VecRunner(self.dbstring)
+		n2vBaseline.prepareData(pd)
+		n2vBaseline.runTheBaseline(rbase, latent_space_size)
+		n2vBaseline.generateSummary(gs)
+		n2vBaseline.runEvaluationTask()
 
-#		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-#		iterrunner.prepareData(pd)
-#		iterrunner.runTheBaseline(rbase)
-#		iterrunner.generateSummary(gs)
-#		iterrunner.runEvaluationTask()
+		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+		iterrunner.prepareData(pd)
+		iterrunner.runTheBaseline(rbase)
+		iterrunner.generateSummary(gs)
+		iterrunner.runEvaluationTask()
 
-
-		# paraBaseline.runEvaluationTask()
-		# paraBaseline.runClassificationTask()
-		
-#		n2vBaseline.runTheBaseline(latent_space_size)
-
-#		Logger.logr.info("Starting Running Iterative Update Method")
-#		iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
-#		iterUdateBaseline.prepareData()
-#		iterUdateBaseline.runTheBaseline()
+# 		# evaluation = RankingEvaluation(['n2v', 'p2v'])
+# 		# print (evaluation._getRankingEvaluation())
 		
 
 

@@ -42,5 +42,9 @@ class DataRecorder:
 	@abstractmethod
 	def insertIntoPar_SenTable(self):
 		pass
+	
+	@abstractmethod
+	def insertIntoGoldSumTable(self):
+		pass
 
 	# Put Interface for other Tables 

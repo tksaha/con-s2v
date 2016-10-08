@@ -26,7 +26,7 @@ class PostgresDataRecorder(DataRecorder):
 		self.postgres_connector.truncateTables(["topic", "document",\
 					"document_topic", "paragraph",\
 					"document_paragraph", "sentence",\
-					"paragraph_sentence"])
+					"paragraph_sentence", "gold_summary"])
 
 	def truncateSummaryTable(self):
 		self.postgres_connector.truncateTables(["summary"])
@@ -47,6 +47,11 @@ class PostgresDataRecorder(DataRecorder):
 		"""
 		"""
 		self.postgres_connector.insert([id, title, content, filename, metadata], "document", ["id", "title", "content", "filename", "metadata"])
+	
+	def insertIntoGoldSumTable(self, filename, summary, method_id, metadata):
+		"""
+		"""
+		self.postgres_connector.insert([filename, summary, method_id, metadata], "gold_summary", ["filename", "summary", "method_id", "metadata"])
 		
 	def insertIntoParTable(self, content):
 		"""
