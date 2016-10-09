@@ -48,7 +48,8 @@ real alpha = 0.025, starting_alpha, sample = 1e-3;
 
 // All synapses and exponential table
 // Initembedding for retrofitting
-real *syn0, *syn1, *syn1neg, *initembed, *expTable, *neighbors; 
+real *syn0, *syn1, *syn1neg, *initembed, *expTable; 
+long long *neighbors; 
 clock_t start;
 
 int hs = 0, negative = 5;
@@ -327,9 +328,11 @@ void LearnVocabFromTrainFile() {
   if (debug_mode > 0) {
     printf("Vocab size: %lld\n", vocab_size);
     printf("Words in train file: %lld\n", train_words);
+    printf("Finished Learning vocab from File\n");
   }
   file_size = ftell(fin);
   fclose(fin);
+
 }
 
 void SaveVocab() {
@@ -370,6 +373,7 @@ void ReadVocab() {
   fseek(fin, 0, SEEK_END);
   file_size = ftell(fin);
   fclose(fin);
+  printf("Finished reading vocabulary");
 }
 
 void InitNet() {
@@ -389,10 +393,8 @@ void InitNet() {
     for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++)
      syn1neg[a * layer1_size + b] = 0;
   }
-  // Initial Embedding for retrofitting 
-  a = posix_memalign((void **)&initembed, 128, (long long)vocab_size * layer1_size *sizeof(real));
-  if (initembed == NULL){printf("Memory allocation failed\n"); exit(1);}
 
+  
   // Tanay's Modification 
   if (neighborFile[0]!=0)
   {
@@ -402,23 +404,39 @@ void InitNet() {
     FILE *finit = fopen(neighborFile, "rb");
 
     fscanf(finit, "%lld %lld", &nnodes, &max_neighbors);
+    printf("nnodes = %lld  max_neighbors= %lld\n", nnodes, max_neighbors);
     a = posix_memalign((void **)&neighbors, 128, (long long)vocab_size * max_neighbors *sizeof(long long));
     if (neighbors == NULL){printf("Memory allocation failed\n"); exit(1);}
     
+    for (a = 0; a < vocab_size; a++){
+     for (b = 0; b < max_neighbors; b++){
+       neighbors[a * max_neighbors + b] = -1;
+      }
+    }
 
     for (it=0; it<nnodes; it++)
     {
       fscanf(finit,"%s",word);
       index1 = SearchVocab(word);
+
+      if (index1 == -1) {
+        printf("Vocabulary does not exist \n");
+        exit(1);
+      }
       for (b=0; b<max_neighbors; b++)
       {
         fscanf(finit,"%s",word);
+
         if (strcmp(word,"-1")==0)
         {
           neighbors[b + index1* max_neighbors] = -1; 
           continue; 
         }
         index2 = SearchVocab(word);
+        if (index2 == -1) {
+          printf("Vocabulary does not exist \n");
+          exit(1);
+        }
         neighbors[b + index1*max_neighbors] = index2;
       }
     }
@@ -433,6 +451,12 @@ void InitNet() {
     double temp; char *word; 
     long long index; 
     word = (char*)malloc(MAX_STRING* sizeof(char));
+    // Initial Embedding for retrofitting 
+    a = posix_memalign((void **)&initembed, 128, (long long)vocab_size * layer1_size *sizeof(real));
+    if (initembed == NULL){printf("Memory allocation failed\n"); exit(1);}
+
+    for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++)
+     initembed[a * layer1_size + b] = 0;
    
     FILE *finit = fopen(initfromFile, "rb");
     fscanf(finit, "%lld %lld", &nwords, &latdim);
@@ -445,7 +469,8 @@ void InitNet() {
     for (it=0; it<nwords; it++)
     {
       fscanf(finit,"%s",word);
-      index = SearchVocab(word);
+      index = SearchVocab(word); 
+      
       for (b=0; b<latdim; b++)
       {
         fscanf(finit,"%lf",&temp);
@@ -465,8 +490,8 @@ void InitNet() {
     }
   }
 // End of Tanay's Modification 
-
   CreateBinaryTree();
+  printf("End of loading neighbors\n");
 }
 
 void DestroyNet() {
@@ -482,9 +507,11 @@ void DestroyNet() {
   if (initembed != NULL){
     free(initembed);
   }
+  printf(" Destroying neighbors\n");
   if (neighbors != NULL){
     free(neighbors);
   }
+  printf("Done Destroying neighbors\n");
 }
 
 void *TrainModelThread(void *id) {
@@ -499,6 +526,9 @@ void *TrainModelThread(void *id) {
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
   real *neu1e = (real *)calloc(layer1_size, sizeof(real));
   FILE *fi = fopen(train_file, "rb");
+
+  printf("Num threads =%d\n", num_threads);
+
   fseek(fi, file_size / (long long)num_threads * (long long)id, SEEK_SET);
   while (1) {
     if (word_count - last_word_count > 10000) {
@@ -672,16 +702,11 @@ void *TrainModelThread(void *id) {
         // Learn embedding
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
         // Retrofit Modification with neighbors
-
-        //for (c = 0; c < layer1_size; c++)
-        //{
-        //  syn0[c + l1] += alpha * ( initembed[c + l1] - syn0[c + l1]);
-        //}
-
         for (c = 0; c < layer1_size; c++)
         {
           l1n = last_word * max_neighbors;
           diff = 0.0 ;
+          
           for (nbr=0; nbr < max_neighbors; nbr++)
           {
             nbrid = neighbors[l1n+nbr];
@@ -694,6 +719,7 @@ void *TrainModelThread(void *id) {
           }
           syn0[c + l1] += alpha * diff ;
         }
+        
       }
     }
     sentence_position++;
@@ -716,9 +742,13 @@ void TrainModel() {
   starting_alpha = alpha;
   if (read_vocab_file[0] != 0) ReadVocab(); else LearnVocabFromTrainFile();
   if (save_vocab_file[0] != 0) SaveVocab();
-  if (output_file[0] == 0) return;
+
+  if (output_file[0] == 0) {printf("Please provide an output file"); return;}
+
   InitNet();
+
   if (negative > 0) InitUnigramTable();
+
   start = clock();
   for (a = 0; a < num_threads; a++) pthread_create(&pt[a], NULL, TrainModelThread, (void *)a);
   for (a = 0; a < num_threads; a++) pthread_join(pt[a], NULL);
@@ -846,7 +876,7 @@ int main(int argc, char **argv) {
     printf("\t\twith full sentence context instead of just the window. Use 1 to turn on.\n");
     printf("\t\tMaximum 30 * 0.7 = 21M words in the vocabulary. If you want more words to be in the vocabulary please change the hash size\n");
     printf("\nExamples:\n");
-    printf("./word2vec -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3\n\n");
+    printf("./retrofit_with_net -train data.txt -output vec.txt -init initfile -neighbor neighborfile -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3\n\n");
     return 0;
   }
   output_file[0] = 0;

@@ -13,6 +13,7 @@ class RandomWalkIterativeUpdateRetrofitter:
     def __init__(self, *args, **kwargs):
       self.dataDir = os.environ['TRTESTFOLDER']
       self.walkFileName = "%s/node2vecwalk.txt"%(self.dataDir)
+      self.numIters = kwargs['numIter']
 
     def retrofitWithIterUpdate(self, sen2vec):
       """
@@ -22,23 +23,24 @@ class RandomWalkIterativeUpdateRetrofitter:
       newSen2Vecs = deepcopy(sen2vec)
       allSentenceIds = list(newSen2Vecs.keys())
 
-      for line in open(self.walkFileName):
-        walk = line.strip().split(" ")
-        numNeighbors =  len(walk) - 1
-        Logger.logr.info("Number of neighbors is %i"%numNeighbors)
+      for iter_ in range(self.numIters):
+        for line in open(self.walkFileName):
+          walk = line.strip().split(" ")
+          numNeighbors =  len(walk) - 1
+        
+          if numNeighbors == 0:
+             continue 
 
-        sentenceId = int(walk[0])
-        newVec = numNeighbors * sen2vec[sentenceId]
-        for neighborSentId in walk[1:]:
-            newVec += newSen2Vecs[int(neighborSentId)]
-
-        newSen2Vecs[sentenceId] = newVec/(2*numNeighbors)
-
+          sentenceId = int(walk[0])
+          
+          newVec = numNeighbors * sen2vec[sentenceId]
+          for neighborSentId in walk[1:]:
+              neighbor = int(neighborSentId)
+              newVec += newSen2Vecs[neighbor]
+          newSen2Vecs[sentenceId] = newVec/(2*numNeighbors)
 
       for Id  in allSentenceIds:
-        vec = newSen2Vecs[Id] 
+        vec = newSen2Vecs[Id]    
         newSen2Vecs[Id] = vec / ( np.linalg.norm(vec) +  1e-6)
-        Logger.logr.info("Norm of the vector = %f"%np.linalg.norm(newSen2Vecs[Id]))
 
-     
       return newSen2Vecs
