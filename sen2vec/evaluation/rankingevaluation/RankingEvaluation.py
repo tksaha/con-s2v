@@ -80,7 +80,7 @@ class RankingEvaluation:
 		cmd = self.rouge + " -c 95 -2 -1 -U -r 1000 -n 4 -w 1.2 -a " + self.summary_dir+"/"+config_file_name
 		output = subprocess.check_output(cmd, shell=True)
 		with open('%s%s%s' %(self.summary_dir, "/", config_file_name.replace('config', 'output')), 'w') as f:
-			f.write(output)
+			f.write(output.decode("utf-8"))
 
 	def __prepareSystemSummaryFiles(self):
 		for system in self.systems:
@@ -122,7 +122,7 @@ class RankingEvaluation:
 		for model in self.models:
 			filenames = []
 			for result in self.postgresConnection.memoryEfficientSelect(\
-							['filename'],['gold_summary'],[['method_id', '=', model]],[],[]):
+							['distinct(filename)'],['gold_summary'],[['method_id', '=', model]],[],[]):
 				for row_id in range(0,len(result)):
 					filenames += [result[row_id][0]]
 
