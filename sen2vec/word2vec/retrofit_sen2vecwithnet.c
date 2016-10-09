@@ -482,6 +482,9 @@ void DestroyNet() {
   if (initembed != NULL){
     free(initembed);
   }
+  if (neighbors != NULL){
+    free(neighbors);
+  }
 }
 
 void *TrainModelThread(void *id) {
