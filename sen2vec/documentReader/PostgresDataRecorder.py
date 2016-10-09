@@ -53,6 +53,18 @@ class PostgresDataRecorder(DataRecorder):
 		"""
 		self.postgres_connector.insert([filename, summary, method_id, metadata], "gold_summary", ["filename", "summary", "method_id", "metadata"])
 		
+	def insertIntoSumTable(self, document_id, method_id, sentence_id, position):
+		"""
+		"""
+		self.postgres_connector.insert([document_id, method_id, sentence_id, position], \
+		"summary", ["doc_id", "method_id", "sentence_id", "position"])
+	
+	def selectFirstSentBaselineId(self, document_id):
+		"""
+		"""
+		for result in self.postgres_connector.memoryEfficientSelect(["id"], ["sentence"], [["doc_id", "=", document_id]], [], ['id']):
+			return result[0][0]
+	
 	def insertIntoParTable(self, content):
 		"""
 		"""
