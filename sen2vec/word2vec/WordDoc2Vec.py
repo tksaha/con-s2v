@@ -10,6 +10,7 @@ class WordDoc2Vec:
 		self.wordParamDict = {}
 		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
 		self.retrofitOneExe = os.environ['RETROFITONEEXE']
+		self.regularizeSen2Vec = os.environ['REGSEN2VECEXE']
 		self.cores = multiprocessing.cpu_count()
 
 	def buildWordDoc2VecParamDict(self):
@@ -38,8 +39,10 @@ class WordDoc2Vec:
 	def buildArgListforW2V(self, wPDict, retrofit=0):
 		if retrofit == 0:
 			exeFile = self.doc2vecMIKOLOVExecutableDir
-		else:
+		elif retrofit==1:
 			exeFile = self.retrofitOneExe
+		elif retrofit ==2:
+			exeFile = self.regularizeSen2Vec
 
 		args = [exeFile, "-train",wPDict["train"],\
 		    "-output",wPDict["output"],\
@@ -55,6 +58,15 @@ class WordDoc2Vec:
 		args.append("-init")
 		args.append(wPDict["init"])
 		return args
+
+	def buildArgListforW2VWithNeighbors(self, wPDict, retrofit, neighborFile):
+		args = self.buildArgListforW2V(wPDict, retrofit)
+		args.append("-neighbors")
+		args.append(wPDict["neighbor"])
+		args.append("-reg-nbr")
+		args.append(wPDict["reg-nbr"])
+		return args 
+
 
 
 

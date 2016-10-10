@@ -158,13 +158,13 @@ class ReutersReader(DocumentReader):
 		"""
 		latent_space_size = 300
 	
-		Logger.logr.info("Starting Running Para2vec Baseline")
-		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-		paraBaseline.prepareData(pd)
-		paraBaseline.runTheBaseline(rbase,latent_space_size)
-		if gs ==1: self.postgres_recorder.truncateSummaryTable()
-		paraBaseline.generateSummary(gs)
-		paraBaseline.runEvaluationTask()
+		# Logger.logr.info("Starting Running Para2vec Baseline")
+		# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		# paraBaseline.prepareData(pd)
+		# paraBaseline.runTheBaseline(rbase,latent_space_size)
+		# if gs ==1: self.postgres_recorder.truncateSummaryTable()
+		# paraBaseline.generateSummary(gs)
+		# paraBaseline.runEvaluationTask()
 
 		Logger.logr.info("Starting Running Node2vec Baseline")	
 		n2vBaseline = Node2VecRunner(self.dbstring)
