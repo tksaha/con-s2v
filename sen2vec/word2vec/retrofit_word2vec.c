@@ -422,7 +422,7 @@ void InitNet() {
       {
         fscanf(finit,"%lf",&temp);
         syn0[b + index*layer1_size] = temp; 
-        initembed[b + index*layer1_size] =temp; 
+        initembed[b + index*layer1_size] = temp; 
       }
     }
     // Once done free word 
@@ -638,7 +638,7 @@ void *TrainModelThread(void *id) {
         // Learn weights 
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
         // Retrofit Modification
-        for (c = 0; c < layer1_size; c++) syn0[c + l1] += alpha * ( initembed[c + l1] - syn0[c + l1]);
+        for (c = 0; c < layer1_size; c++) syn0[c + l1] += alpha * (initembed[c + l1] - syn0[c + l1]);
       }
     }
     sentence_position++;
