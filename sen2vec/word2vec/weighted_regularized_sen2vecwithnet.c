@@ -428,7 +428,9 @@ void InitNet() {
       fscanf(finit,"%s",word);
       index1 = SearchVocab(word);
 
-      if (index1 == -1) {
+      if (debug_mode > 2) printf("word = %s, index=%lld \n",word, index1);
+
+      if (index1 < 0) {
         printf("Vocabulary does not exist \n");
         exit(1);
       }
@@ -436,18 +438,21 @@ void InitNet() {
       {
         fscanf(finit,"%s",word);
         fscanf(finit,"%lf",&weight);
+        if (debug_mode > 2) printf("word=%s weight= %lf\n",word,weight);
 
         if (strcmp(word,"-1")==0)
         {
           continue; 
         }
         index2 = SearchVocab(word);
-        if (index2 == -1) {
+        if (index2 < 0) {
           printf("Vocabulary does not exist \n");
           exit(1);
         }
         neighbors[b + index1*max_neighbors].nbr_id = index2;
-        neighbors[b + index1*max_neighbors].weight = weight;
+        neighbors[b + index1*max_neighbors].weight = weight; 
+        if (debug_mode > 2) printf("index1 =%lld, index2=%lld, weight=%lf\n",index1, index2, weight);
+
       }
     }
 
@@ -470,6 +475,8 @@ void InitNet() {
    
     FILE *finit = fopen(initfromFile, "rb");
     fscanf(finit, "%lld %lld", &nwords, &latdim);
+    if (debug_mode > 2) printf("[init] nwords=%lld, latdim=%lld\n",nwords, latdim);
+
     if (latdim != layer1_size)
     {
       printf("Dimension does not match\n");
@@ -480,12 +487,19 @@ void InitNet() {
     {
       fscanf(finit,"%s",word);
       index = SearchVocab(word); 
+      if (index < 0){
+        printf("[Init] Vocabulary does not exist\n");
+        exit(1);
+      }
       
       for (b=0; b<latdim; b++)
       {
         fscanf(finit,"%lf",&temp);
         syn0[b + index*layer1_size] = temp; 
         initembed[b + index*layer1_size] = temp; 
+        if (debug_mode > 2) {
+          printf("[Init] weight received for index =%lld is %lf\n",index,temp);
+        }
       }
     }
     // Once done free word 
@@ -517,11 +531,13 @@ void DestroyNet() {
   if (initembed != NULL){
     free(initembed);
   }
-  printf(" Destroying neighbors\n");
+
+  if (debug_mode > 2) printf("Destroying neighbors\n");
+
   if (neighbors != NULL){
     free(neighbors);
   }
-  printf("Done Destroying neighbors\n");
+  if (debug_mode > 2) printf("Done Destroying neighbors\n");
 }
 
 void *TrainModelThread(void *id) {
@@ -712,25 +728,30 @@ void *TrainModelThread(void *id) {
         // Learn embedding
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
         // Retrofit Modification with neighbors
-        for (c = 0; c < layer1_size; c++)
-        {
-          l1n = last_word * max_neighbors;
-          diff = 0.0 ;
-          
-          for (nbr=0; nbr < max_neighbors; nbr++)
-          {
-            nbrid = neighbors[l1n+nbr].nbr_id;
-            nbrwgt = neighbors[l1n+nbr].weight; 
 
-            if (nbrid == -1) continue ; 
-            diff += nbrwgt * (syn0[c+ nbrid * layer1_size] - syn0[c+l1]);
-          }
-          // We should give weight to initial update 
-          if (initfromFile[0]!=0)
+        if (neighborFile[0]!=0)
+        {
+          for (c = 0; c < layer1_size; c++)
           {
-            diff += (initembed[c+l1] - syn0[c+l1]);
+            l1n = last_word * max_neighbors;
+            diff = 0.0 ;
+            
+            for (nbr=0; nbr < max_neighbors; nbr++)
+            {
+              nbrid = neighbors[l1n+nbr].nbr_id;
+              nbrwgt = neighbors[l1n+nbr].weight; 
+
+              if (nbrid == -1) break; 
+              if (debug_mode > 2) printf("Updating neighbors for %lld with %lld, weight=%lf\n",last_word,nbrid, nbrwgt);
+              diff += nbrwgt * (syn0[c+ nbrid * layer1_size] - syn0[c+l1]);
+            }
+            // We should give weight to initial update 
+            if (initfromFile[0]!=0)
+            {
+              diff += (initembed[c+l1] - syn0[c+l1]);
+            }
+            syn0[c + l1] += alpha * diff ;
           }
-          syn0[c + l1] += alpha * diff ;
         }
         
       }
