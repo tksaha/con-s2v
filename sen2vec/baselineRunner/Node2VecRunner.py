@@ -161,7 +161,7 @@ class Node2VecRunner(BaselineRunner):
 		initFile = "%s_raw"%self.p2vReprFile
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			outputfile=reprFile, num_walks=1, walk_length=10, p=0.4, q=0.5)
+			outputfile=reprFile, num_walks=2, walk_length=5, p=0.4, q=0.5)
 
 		node2vecInstance.getWalkFile(nx_G, walkInputFileName)
 		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
@@ -181,11 +181,11 @@ class Node2VecRunner(BaselineRunner):
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 	
 
-	def generateSummary(self, gs):
+	def generateSummary(self, gs, methodId, filePrefix):
 		if gs <= 0: return 0
-		node2vecFile = open("%s.p"%(self.n2vReprFile),"rb")
+		node2vecFile = open("%s%s.p"%(self.n2vReprFile, filePrefix),"rb")
 		n2vDict = pickle.load (node2vecFile)
-		self.populateSummary(3, n2vDict)
+		self.populateSummary(methodId, n2vDict)
 		
 
 	def runEvaluationTask(self):
@@ -200,19 +200,19 @@ class Node2VecRunner(BaselineRunner):
 
 		node2vecFile = open("%s.p"%(self.n2vReprFile),"rb")
 		n2vDict = pickle.load (node2vecFile)
-		self.generateData(2, self.latReprName, n2vDict)
-		self.runClassificationTask(2, self.latReprName)
+		self.generateData(3, self.latReprName, n2vDict)
+		self.runClassificationTask(3, self.latReprName)
 
 
 		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"rb")
 		n2vDict = pickle.load (node2vecFile)
-		self.generateData(2, "%s_init"%self.latReprName, n2vDict)
-		self.runClassificationTask(2, "%s_init"%self.latReprName)
+		self.generateData(4, "%s_init"%self.latReprName, n2vDict)
+		self.runClassificationTask(4, "%s_init"%self.latReprName)
 
 		node2vecFile = open("%s_retrofit.p"%(self.n2vReprFile),"rb")
 		n2vDict = pickle.load (node2vecFile)
-		self.generateData(2, "%s_retrofit"%self.latReprName, n2vDict)
-		self.runClassificationTask(2, "%s_retrofit"%self.latReprName)
+		self.generateData(5, "%s_retrofit"%self.latReprName, n2vDict)
+		self.runClassificationTask(5, "%s_retrofit"%self.latReprName)
 		
 
 	def doHouseKeeping(self):

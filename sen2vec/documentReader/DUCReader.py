@@ -189,34 +189,36 @@ class DUCReader(DocumentReader):
 		
 		document_id = 0
 		document_id = self._readDUC2001(document_id)
-		document_id = self._readDUC2002(document_id)
+#		document_id = self._readDUC2002(document_id)
 #		document_id = self._readDUC2003(document_id)
 		
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-#		latent_space_size = 300
-#	
-#		Logger.logr.info("Starting Running Para2vec Baseline")
-#		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-#		paraBaseline.prepareData(pd)
-#		paraBaseline.runTheBaseline(rbase,latent_space_size)
-##		if gs ==1: self.postgres_recorder.truncateSummaryTable()
-#		paraBaseline.generateSummary(gs)
-		#paraBaseline.runEvaluationTask()
+		latent_space_size = 300
+	
+		Logger.logr.info("Starting Running Para2vec Baseline")
+		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		paraBaseline.prepareData(pd)
+		paraBaseline.runTheBaseline(rbase,latent_space_size)
+		paraBaseline.generateSummary(gs)
+#		paraBaseline.runEvaluationTask()
 
-#		Logger.logr.info("Starting Running Node2vec Baseline")	
-#		n2vBaseline = Node2VecRunner(self.dbstring)
-#		n2vBaseline.prepareData(pd)
-#		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-#		n2vBaseline.generateSummary(gs)
+		Logger.logr.info("Starting Running Node2vec Baseline")	
+		n2vBaseline = Node2VecRunner(self.dbstring)
+		n2vBaseline.prepareData(pd)
+		n2vBaseline.runTheBaseline(rbase, latent_space_size)
+		n2vBaseline.generateSummary(gs, 3, "")
+		n2vBaseline.generateSummary(gs, 4, "_init")
+		n2vBaseline.generateSummary(gs, 5, "_retrofit")
 #		n2vBaseline.runEvaluationTask()
 
-#		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-#		iterrunner.prepareData(pd)
-#		iterrunner.runTheBaseline(rbase)
-#		iterrunner.generateSummary(gs)
+		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+		iterrunner.prepareData(pd)
+		iterrunner.runTheBaseline(rbase)
+		iterrunner.generateSummary(gs, 6, "_unweighted")
+		iterrunner.generateSummary(gs, 7, "_weighted")
 #		iterrunner.runEvaluationTask()
 
-		evaluation = RankingEvaluation(models = [20], systems = [1, 2, 21])
+		evaluation = RankingEvaluation(models = [20], systems = [1, 2, 3, 4, 5, 6, 7, 21])
 		evaluation._getRankingEvaluation()

@@ -48,7 +48,7 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
 		Logger.logr.info("Retrofitted Dicitionary has %i objects" %len(retrofitted_dict))
 
-		iterupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"wb")
+		iterupdatevecFile = open("%s_unweighted.p"%(self.retrofittedsen2vReprFile),"wb")
 		pickle.dump(retrofitted_dict,iterupdatevecFile )
 
 		wretrofitter = WeightedIterativeUpdateRetrofitter(numIter=10, nx_Graph = self.Graph)
@@ -56,11 +56,11 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		iterupdatevecFile = open("%s_weighted.p"%(self.retrofittedsen2vReprFile),"wb")
 		pickle.dump(retrofitted_dict, iterupdatevecFile)
 
-	def generateSummary(self, gs):
+	def generateSummary(self, gs, methodId, filePrefix):
 		if gs <= 0: return 0
-		itupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"rb")
+		itupdatevecFile = open("%s%s.p"%(self.retrofittedsen2vReprFile, filePrefix),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
-		self.populateSummary(5, itupdatevDict)
+		self.populateSummary(methodId, itupdatevDict)
 		
 
 	def runEvaluationTask(self):
@@ -72,17 +72,17 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		we do not want to incorporate in training and testing. 
 		For example. validation set or unsup set
 		"""
-		itupdatevecFile = open("%s.p"%(self.retrofittedsen2vReprFile),"rb")
+		itupdatevecFile = open("%s_unweighted.p"%(self.retrofittedsen2vReprFile),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
 		reprName = "%s_unweighted"%self.latReprName
-		self.generateData(2, reprName, itupdatevDict)
-		self.runClassificationTask(2, reprName)
+		self.generateData(6, reprName, itupdatevDict)
+		self.runClassificationTask(6, reprName)
 		
 		itupdatevecFile = open("%s_weighted.p"%(self.retrofittedsen2vReprFile),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
 		reprName = "%s_weighted"%self.latReprName
-		self.generateData(2, reprName, itupdatevDict)
-		self.runClassificationTask(2, reprName)
+		self.generateData(7, reprName, itupdatevDict)
+		self.runClassificationTask(7, reprName)
 
 	def doHouseKeeping(self):
 		"""
