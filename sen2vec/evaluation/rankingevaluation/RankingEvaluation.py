@@ -28,7 +28,10 @@ class RankingEvaluation:
 	MODELSUMMARYFOLDER=............/sen2vec/Data/Summary/model #path to model generated summary folder
 	SYSTEMSUMMARYFOLDER=.........../sen2vec/Data/Summary/system #path to system generated summary folder
 	"""
-	def __init__(self, models, systems):
+	def __init__(self, topics, models, systems):
+		self.topics = topics
+		self.topics = ["'%s'" %topic for topic in self.topics]
+		self.topics = ', '.join(self.topics)
 		self.models = models
 		self.systems = systems
 		self.rouge = os.environ["ROUGE"]
@@ -86,7 +89,7 @@ class RankingEvaluation:
 		for system in self.systems:
 			document_ids = []
 			for result in self.postgresConnection.memoryEfficientSelect(\
-							['distinct(doc_id)'],['summary'],[['method_id', '=', system]],[],[]):
+							['distinct(doc_id)'],['summary', 'document_topic', 'topic'],[['method_id', '=', system], ['summary.doc_id', '=', 'document_topic.document_id'], ['document_topic.topic_id', '=', 'topic.id'], ['topic.name', 'in', '(%s)' %self.topics]],[],[]):
 				for row_id in range(0,len(result)):
 					document_ids += [result[row_id][0]]
 			
@@ -122,7 +125,7 @@ class RankingEvaluation:
 		for model in self.models:
 			filenames = []
 			for result in self.postgresConnection.memoryEfficientSelect(\
-							['distinct(filename)'],['gold_summary'],[['method_id', '=', model]],[],[]):
+							['distinct(gold_summary.filename)'],['gold_summary', 'document', 'document_topic', 'topic'],[['method_id', '=', model], ['gold_summary.filename', '=', 'document.filename'], ['document.id', '=', 'document_topic.document_id'],  ['document_topic.topic_id', '=', 'topic.id'], ['topic.name', 'in', '(%s)' %self.topics]],[],[]):
 				for row_id in range(0,len(result)):
 					filenames += [result[row_id][0]]
 

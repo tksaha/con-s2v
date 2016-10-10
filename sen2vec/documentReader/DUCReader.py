@@ -180,6 +180,98 @@ class DUCReader(DocumentReader):
 							method_id, metadata)
 		return document_id
 		
+	def _readDUC2004(self, document_id):
+		"""
+		It loads the DUC 2004 documents into
+		the database
+		"""
+		topic = "2004"
+		cur_path = "%s/%s" %(self.folderPath, "DUC2004")
+		summaries = []
+		documents = []
+		for root, directories, files in os.walk(cur_path):
+			for file_ in files:
+				if file_ in ['50', '100', '200', '400']:
+					pass
+				elif file_ in ['perdocs']:
+					summaries += [os.path.join(root, file_)]
+				else:
+					documents += [os.path.join(root, file_)]
+		
+		Logger.logr.info("Recording DUC 2004 Documents.")
+		document_id = self.recordDocuments(documents, document_id, topic)
+
+		return document_id
+		
+	def _readDUC2005(self, document_id):
+		"""
+		It loads the DUC 2005 documents into
+		the database
+		"""
+		topic = "2005"
+		cur_path = "%s/%s" %(self.folderPath, "DUC2005")
+		summaries = []
+		documents = []
+		for root, directories, files in os.walk(cur_path):
+			for file_ in files:
+				if file_ in ['50', '100', '200', '400']:
+					pass
+				elif file_ in ['perdocs']:
+					summaries += [os.path.join(root, file_)]
+				else:
+					documents += [os.path.join(root, file_)]
+		
+		Logger.logr.info("Recording DUC 2005 Documents.")
+		document_id = self.recordDocuments(documents, document_id, topic)
+
+		return document_id
+		
+	def _readDUC2006(self, document_id):
+		"""
+		It loads the DUC 2006 documents into
+		the database
+		"""
+		topic = "2006"
+		cur_path = "%s/%s" %(self.folderPath, "DUC2006")
+		summaries = []
+		documents = []
+		for root, directories, files in os.walk(cur_path):
+			for file_ in files:
+				if file_ in ['50', '100', '200', '400']:
+					pass
+				elif file_ in ['perdocs']:
+					summaries += [os.path.join(root, file_)]
+				else:
+					documents += [os.path.join(root, file_)]
+		
+		Logger.logr.info("Recording DUC 2006 Documents.")
+		document_id = self.recordDocuments(documents, document_id, topic)
+
+		return document_id
+		
+	def _readDUC2007(self, document_id):
+		"""
+		It loads the DUC 2007 documents into
+		the database
+		"""
+		topic = "2007"
+		cur_path = "%s/%s" %(self.folderPath, "DUC2007")
+		summaries = []
+		documents = []
+		for root, directories, files in os.walk(cur_path):
+			for file_ in files:
+				if file_ in ['50', '100', '200', '400']:
+					pass
+				elif file_ in ['perdocs']:
+					summaries += [os.path.join(root, file_)]
+				else:
+					documents += [os.path.join(root, file_)]
+		
+		Logger.logr.info("Recording DUC 2007 Documents.")
+		document_id = self.recordDocuments(documents, document_id, topic)
+
+		return document_id
+	
 	def readDocument(self, ld):	
 		if ld <= 0: return 0 
 		self.postgres_recorder.trucateTables()
@@ -189,7 +281,7 @@ class DUCReader(DocumentReader):
 		
 		document_id = 0
 		document_id = self._readDUC2001(document_id)
-#		document_id = self._readDUC2002(document_id)
+		document_id = self._readDUC2002(document_id)
 #		document_id = self._readDUC2003(document_id)
 		
 	def runBaselines(self, pd, rbase, gs):
@@ -220,5 +312,5 @@ class DUCReader(DocumentReader):
 		iterrunner.generateSummary(gs, 7, "_weighted")
 #		iterrunner.runEvaluationTask()
 
-		evaluation = RankingEvaluation(models = [20], systems = [1, 2, 3, 4, 5, 6, 7, 21])
+		evaluation = RankingEvaluation(topics = ['2001', '2002'], models = [20], systems = [1, 2, 3, 4, 5, 6, 7, 21])
 		evaluation._getRankingEvaluation()
