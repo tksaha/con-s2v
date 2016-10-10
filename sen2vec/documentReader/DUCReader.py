@@ -78,7 +78,7 @@ class DUCReader(DocumentReader):
 			self.recordFirstSentenceBaselineSummary(document_id) #Recording First Sentence as a Baseline Summary
 		return document_id
 		
-	def recordSummaries(self, summaries):
+	def recordSummariesA(self, summaries):
 		for summary in summaries:
 			doc_content = self._getTextFromFile("%s" %(summary))
 			soup = BeautifulSoup(doc_content, "html.parser")
@@ -95,6 +95,19 @@ class DUCReader(DocumentReader):
 				self.postgres_recorder.insertIntoGoldSumTable(filename, doc_content, \
 							method_id, metadata)
 
+	def recordSummariesB(self, summaries):
+		for summary in summaries:
+			doc_content = self._getTextFromFile("%s" %(summary))
+			filename = '.'.join(summary.split(os.path.sep)[-1].split('.')[5:7])
+			method_id = 20 #DUC = 20
+			summarizer = summary.split(os.path.sep)[-1].split('.')[4]
+			metadata = "SUMMARIZER:%s" %(summarizer)
+			if "%s%s" %(filename, summarizer) in self.processed_summaries:
+				continue
+			self.processed_summaries += ["%s%s" %(filename, summarizer)]
+			self.postgres_recorder.insertIntoGoldSumTable(filename, doc_content, \
+							method_id, metadata)
+	
 	def _readDUC2001(self, document_id):
 		"""
 		It loads the DUC 2001 documents into
@@ -117,7 +130,7 @@ class DUCReader(DocumentReader):
 		document_id = self.recordDocuments(documents, document_id, topic)
 		
 		Logger.logr.info("Recording DUC 2001 Summaries.")
-		self.recordSummaries(summaries)
+		self.recordSummariesA(summaries)
 		
 		return document_id
 	
@@ -142,7 +155,7 @@ class DUCReader(DocumentReader):
 			summaries += [os.path.join(root, file_) for file_ in files if file_.endswith('perdocs')]
 		
 		Logger.logr.info("Recording DUC 2002 Summaries.")
-		self.recordSummaries(summaries)
+		self.recordSummariesA(summaries)
 		
 		return document_id
 		
@@ -167,17 +180,8 @@ class DUCReader(DocumentReader):
 			summaries += [os.path.join(root, file_) for file_ in files if file_.split('.')[1] == 'P']
 		
 		Logger.logr.info("Recording DUC 2003 Summaries.")
-		for summary in summaries:
-			doc_content = self._getTextFromFile("%s" %(summary))
-			filename = '.'.join(summary.split(os.path.sep)[-1].split('.')[5:7])
-			method_id = 20 #DUC = 20
-			summarizer = summary.split(os.path.sep)[-1].split('.')[4]
-			metadata = "SUMMARIZER:%s" %(summarizer)
-			if "%s%s" %(filename, summarizer) in self.processed_summaries:
-				continue
-			self.processed_summaries += ["%s%s" %(filename, summarizer)]
-			self.postgres_recorder.insertIntoGoldSumTable(filename, doc_content, \
-							method_id, metadata)
+		self.recordSummariesB(summaries)
+		
 		return document_id
 		
 	def _readDUC2004(self, document_id):
@@ -186,7 +190,7 @@ class DUCReader(DocumentReader):
 		the database
 		"""
 		topic = "2004"
-		cur_path = "%s/%s" %(self.folderPath, "DUC2004")
+		cur_path = "%s/%s/%s" %(self.folderPath, "DUC2004", "duc2004_testdata")
 		summaries = []
 		documents = []
 		for root, directories, files in os.walk(cur_path):
@@ -200,6 +204,14 @@ class DUCReader(DocumentReader):
 		
 		Logger.logr.info("Recording DUC 2004 Documents.")
 		document_id = self.recordDocuments(documents, document_id, topic)
+		
+		cur_path = "%s/%s/%s/%s/%s" %(self.folderPath, "DUC2004", "duc2004_results", "ROUGE", "eval")
+		summaries = []
+		for root, directories, files in os.walk(cur_path):
+			summaries += [os.path.join(root, file_) for file_ in files if file_.split('.')[1] == 'P']
+		
+		Logger.logr.info("Recording DUC 2004 Summaries.")
+		self.recordSummariesA(summaries)
 
 		return document_id
 		
@@ -282,35 +294,39 @@ class DUCReader(DocumentReader):
 		document_id = 0
 		document_id = self._readDUC2001(document_id)
 		document_id = self._readDUC2002(document_id)
-#		document_id = self._readDUC2003(document_id)
+		document_id = self._readDUC2003(document_id)
+		document_id = self._readDUC2004(document_id)
+		document_id = self._readDUC2005(document_id)
+		document_id = self._readDUC2006(document_id)
+		document_id = self._readDUC2007(document_id)
 		
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
 		latent_space_size = 300
-	
-		Logger.logr.info("Starting Running Para2vec Baseline")
-		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-		paraBaseline.prepareData(pd)
-		paraBaseline.runTheBaseline(rbase,latent_space_size)
-		paraBaseline.generateSummary(gs)
-#		paraBaseline.runEvaluationTask()
+#	
+#		Logger.logr.info("Starting Running Para2vec Baseline")
+#		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+#		paraBaseline.prepareData(pd)
+#		paraBaseline.runTheBaseline(rbase,latent_space_size)
+#		paraBaseline.generateSummary(gs)
+##		paraBaseline.runEvaluationTask()
 
-		Logger.logr.info("Starting Running Node2vec Baseline")	
-		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.prepareData(pd)
-		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-		n2vBaseline.generateSummary(gs, 3, "")
-		n2vBaseline.generateSummary(gs, 4, "_init")
-		n2vBaseline.generateSummary(gs, 5, "_retrofit")
-#		n2vBaseline.runEvaluationTask()
+#		Logger.logr.info("Starting Running Node2vec Baseline")	
+#		n2vBaseline = Node2VecRunner(self.dbstring)
+#		n2vBaseline.prepareData(pd)
+#		n2vBaseline.runTheBaseline(rbase, latent_space_size)
+#		n2vBaseline.generateSummary(gs, 3, "")
+#		n2vBaseline.generateSummary(gs, 4, "_init")
+#		n2vBaseline.generateSummary(gs, 5, "_retrofit")
+##		n2vBaseline.runEvaluationTask()
 
-		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-		iterrunner.prepareData(pd)
-		iterrunner.runTheBaseline(rbase)
-		iterrunner.generateSummary(gs, 6, "_unweighted")
-		iterrunner.generateSummary(gs, 7, "_weighted")
-#		iterrunner.runEvaluationTask()
+#		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+#		iterrunner.prepareData(pd)
+#		iterrunner.runTheBaseline(rbase)
+#		iterrunner.generateSummary(gs, 6, "_unweighted")
+#		iterrunner.generateSummary(gs, 7, "_weighted")
+##		iterrunner.runEvaluationTask()
 
-		evaluation = RankingEvaluation(topics = ['2001', '2002'], models = [20], systems = [1, 2, 3, 4, 5, 6, 7, 21])
-		evaluation._getRankingEvaluation()
+#		evaluation = RankingEvaluation(topics = ['2001', '2002'], models = [20], systems = [1, 2, 3, 4, 5, 6, 7, 21])
+#		evaluation._getRankingEvaluation()
