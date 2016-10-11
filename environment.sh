@@ -57,3 +57,6 @@ export SYSTEMSUMMARYFOLDER=~/Documents/sen2vec/Data/Summary/system
 
 export DUC_DBSTRING=duc,postgres,postgres,localhost,5432
 export DUC_PATH=~/Documents/sen2vec/Data/DUC_merged
+
+export REGSEN2VECREPRFILE=~/Documents/sen2vec/Data/reg_sent
+export REGSEN2VECEXE=~/Documents/sen2vec/sen2vec/word2vec/reg_sen2vec_net
