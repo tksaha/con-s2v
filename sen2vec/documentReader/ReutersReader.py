@@ -12,6 +12,7 @@ from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRun
 from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
+from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
 
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 
@@ -166,22 +167,27 @@ class ReutersReader(DocumentReader):
 		# paraBaseline.generateSummary(gs)
 		# paraBaseline.runEvaluationTask()
 
-		Logger.logr.info("Starting Running Node2vec Baseline")	
+		# Logger.logr.info("Starting Running Node2vec Baseline")	
 		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.prepareData(pd)
+		# n2vBaseline.prepareData(pd)
 		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-		n2vBaseline.generateSummary(gs)
+		# n2vBaseline.generateSummary(gs)
 		n2vBaseline.runEvaluationTask()
 
-		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-		iterrunner.prepareData(pd)
-		iterrunner.runTheBaseline(rbase)
-		iterrunner.generateSummary(gs)
-		iterrunner.runEvaluationTask()
+		# iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+		# iterrunner.prepareData(pd)
+		# iterrunner.runTheBaseline(rbase)
+		# iterrunner.generateSummary(gs)
+		# iterrunner.runEvaluationTask()
 
 # 		# evaluation = RankingEvaluation(['n2v', 'p2v'])
 # 		# print (evaluation._getRankingEvaluation())
 
+		# regs2v = RegularizedSen2VecRunner(self.dbstring)
+		# regs2v.prepareData(pd)
+		# regs2v.runTheBaseline(rbase, latent_space_size)
+		# #regs2v.generateSummary(gs)
+		# regs2v.runEvaluationTask()
 		
 
 

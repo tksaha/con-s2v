@@ -42,7 +42,7 @@ int binary = 0, cbow = 1, debug_mode = 2, window = 5, min_count = 5, num_threads
 int *vocab_hash;
 long long vocab_max_size = 1000, vocab_size = 0, layer1_size = 100, sentence_vectors = 0;
 long long train_words = 0, word_count_actual = 0, iter = 5, file_size = 0, classes = 0;
-real alpha = 0.025, starting_alpha, sample = 1e-3;
+real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0;
 
 // All synapses and exponential table
 // Initembedding for retrofitting
@@ -420,8 +420,7 @@ void InitNet() {
       int index = SearchVocab(word);
       for (b=0; b<latdim; b++)
       {
-        fscanf(finit,"%lf",&temp);
-        syn0[b + index*layer1_size] = temp; 
+        fscanf(finit,"%lf",&temp); 
         initembed[b + index*layer1_size] = temp; 
       }
     }
@@ -429,13 +428,15 @@ void InitNet() {
     free(word);
     printf("Successfully Loaded the initial values for vectors from file\n");
   }
-  else{
-    for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
+
+  // Randomly initialize the embedding
+  for (a = 0; a < vocab_size; a++) {
+    for (b = 0; b < layer1_size; b++) {
       next_random = next_random * (unsigned long long)25214903917 + 11;
       syn0[a * layer1_size + b] = (((next_random & 0xFFFF) / (real)65536) - 0.5) / layer1_size;
     }
   }
-// End of Tanay's Modification 
+  // End of Tanay's Modification 
 
   CreateBinaryTree();
 }
@@ -638,7 +639,7 @@ void *TrainModelThread(void *id) {
         // Learn weights 
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
         // Retrofit Modification
-        for (c = 0; c < layer1_size; c++) syn0[c + l1] += alpha * (initembed[c + l1] - syn0[c + l1]);
+        for (c = 0; c < layer1_size; c++) syn0[c + l1] += alpha * beta * (initembed[c + l1] - syn0[c + l1]);
       }
     }
     sentence_position++;
@@ -768,8 +769,15 @@ int main(int argc, char **argv) {
     printf("\t\tRun more training iterations (default 5)\n");
     printf("\t-min-count <int>\n");
     printf("\t\tThis will discard words that appear less than <int> times; default is 5\n");
+
+
     printf("\t-alpha <float>\n");
     printf("\t\tSet the starting learning rate; default is 0.025 for skip-gram and 0.05 for CBOW\n");
+
+    printf("\t-beta <float>\n");
+    printf("\t\tSet the relative strength of closeness to the initially provided embedding\n");
+
+
     printf("\t-classes <int>\n");
     printf("\t\tOutput word classes rather than word vectors; default number of classes is 0 (vectors are written)\n");
     printf("\t-debug <int>\n");
@@ -802,6 +810,8 @@ int main(int argc, char **argv) {
   if ((i = ArgPos((char *)"-cbow", argc, argv)) > 0) cbow = atoi(argv[i + 1]);
   if (cbow) alpha = 0.05;
   if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
+  if ((i = ArgPos((char *)"-beta", argc, argv)) > 0) beta = atof(argv[i + 1]); 
+
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
   if ((i = ArgPos((char *)"-window", argc, argv)) > 0) window = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-init", argc, argv)) > 0) strcpy(initfromFile, argv[i + 1]);

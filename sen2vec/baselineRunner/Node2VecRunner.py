@@ -161,22 +161,22 @@ class Node2VecRunner(BaselineRunner):
 		initFile = "%s_raw"%self.p2vReprFile
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			outputfile=reprFile, num_walks=2, walk_length=5, p=0.4, q=0.5)
+			outputfile=reprFile, num_walks=10, walk_length=5, p=0.4, q=0.5)
 
 		node2vecInstance.getWalkFile(nx_G, walkInputFileName)
 		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
-		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, 0)
+		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=0, beta=0)
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 
 		############################# Run Node2vec Default #############
 		node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
 		reprFile = self.n2vReprFile
-		node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile, 0)
+		node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile, retrofit=0, beta=0)
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 
 		############################# Run Node2vec Retrofit ############
 		reprFile = "%s_retrofit"%self.n2vReprFile
-		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, 1)
+		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=1, beta=0.6)
 		node2vecFile = open("%s_retrofit.p"%self.n2vReprFile, "wb")
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile)
 	
@@ -198,21 +198,22 @@ class Node2VecRunner(BaselineRunner):
 		For example. validation set or unsup set
 		"""
 
+		summaryMethodID = 2
 		node2vecFile = open("%s.p"%(self.n2vReprFile),"rb")
 		n2vDict = pickle.load (node2vecFile)
-		self.generateData(3, self.latReprName, n2vDict)
-		self.runClassificationTask(3, self.latReprName)
+		self.generateData(summaryMethodID, self.latReprName, n2vDict)
+		self.runClassificationTask(summaryMethodID, self.latReprName)
 
 
 		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"rb")
 		n2vDict = pickle.load (node2vecFile)
-		self.generateData(4, "%s_init"%self.latReprName, n2vDict)
-		self.runClassificationTask(4, "%s_init"%self.latReprName)
+		self.generateData(summaryMethodID, "%s_init"%self.latReprName, n2vDict)
+		self.runClassificationTask(summaryMethodID, "%s_init"%self.latReprName)
 
 		node2vecFile = open("%s_retrofit.p"%(self.n2vReprFile),"rb")
 		n2vDict = pickle.load (node2vecFile)
-		self.generateData(5, "%s_retrofit"%self.latReprName, n2vDict)
-		self.runClassificationTask(5, "%s_retrofit"%self.latReprName)
+		self.generateData(summaryMethodID, "%s_retrofit"%self.latReprName, n2vDict)
+		self.runClassificationTask(summaryMethodID, "%s_retrofit"%self.latReprName)
 		
 
 	def doHouseKeeping(self):

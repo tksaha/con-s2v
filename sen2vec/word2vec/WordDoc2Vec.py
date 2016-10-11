@@ -57,12 +57,15 @@ class WordDoc2Vec:
 		args = self.buildArgListforW2V(wPDict, retrofit)
 		args.append("-init")
 		args.append(wPDict["init"])
+		if retrofit == 1:
+			args.append("-beta")
+			args.append(wPDict["beta"])
 		return args
 
-	def buildArgListforW2VWithNeighbors(self, wPDict, retrofit, neighborFile):
+	def buildArgListforW2VWithNeighbors(self, wPDict, retrofit):
 		args = self.buildArgListforW2V(wPDict, retrofit)
-		args.append("-neighbors")
-		args.append(wPDict["neighbor"])
+		args.append("-neighbor")
+		args.append(wPDict["neighborFile"])
 		args.append("-reg-nbr")
 		args.append(wPDict["reg-nbr"])
 		return args 

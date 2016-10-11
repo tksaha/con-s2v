@@ -79,23 +79,26 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		we do not want to incorporate in training and testing. 
 		For example. validation set or unsup set
 		"""
+
+		summaryMethodID = 2 
+
 		itupdatevecFile = open("%s_unweighted.p"%(self.retrofittedsen2vReprFile),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
 		reprName = "%s_unweighted"%self.latReprName
-		self.generateData(6, reprName, itupdatevDict)
-		self.runClassificationTask(6, reprName)
+		self.generateData(summaryMethodID, reprName, itupdatevDict)
+		self.runClassificationTask(summaryMethodID, reprName)
 		
 		itupdatevecFile = open("%s_weighted.p"%(self.retrofittedsen2vReprFile),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
 		reprName = "%s_weighted"%self.latReprName
-		self.generateData(7, reprName, itupdatevDict)
-		self.runClassificationTask(7, reprName)
+		self.generateData(summaryMethodID, reprName, itupdatevDict)
+		self.runClassificationTask(summaryMethodID, reprName)
 
 		rand_itervecFile = open("%s_randomwalk.p"%(self.retrofittedsen2vReprFile),"rb")
 		rand_itupdatevDict = pickle.load(rand_itervecFile) 
 		reprName = "%s_randomwalk"%self.latReprName
-		self.generateData(2, reprName, rand_itupdatevDict)
-		self.runClassificationTask(2, reprName)
+		self.generateData(summaryMethodID, reprName, rand_itupdatevDict)
+		self.runClassificationTask(summaryMethodID, reprName)
 
 	def doHouseKeeping(self):
 		"""

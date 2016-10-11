@@ -10,6 +10,7 @@ import pickle
 import math 
 import operator 
 import multiprocessing 
+import subprocess 
 import numpy as np 
 from word2vec.WordDoc2Vec import WordDoc2Vec
 
@@ -22,12 +23,13 @@ class RegularizedSen2VecRunner(BaselineRunner):
 
 	def __init__(self, *args, **kwargs):
 		BaselineRunner.__init__(self, *args, **kwargs)
+		self.regsen2vReprFile = os.environ["REGSEN2VECREPRFILE"]
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
-		self.latReprName = "regularized_sen2vec"
+		self.latReprName = "reg_s2v"
 		self.postgresConnection.connectDatabase()
 	
 	def __getMaxNeighbors(self):
@@ -48,11 +50,17 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		for nodes in self.Graph.nodes():
 			file_to_write.write("%s "%label_sent(str(nodes)))
 			nbrs = self.Graph.neighbors(nodes)
+			nbr_count = 0
 			for nbr in nbrs:
 				if weighted:
 					file_to_write.write("%s %s "%(label_sent(str(nbr)),self.Graph[nodes][nbr]['weight']))
 				else:
 					file_to_write.write("%s %s "%(label_sent(str(nbr)),"1.0"))
+				nbr_count = nbr_count +1 
+
+			if nbr_count < max_neighbor:
+				for  x in range(nbr_count, max_neighbor):
+					file_to_write.write("%s %s " %("-1","0.0"))
 
 			file_to_write.write("%s"%os.linesep)
 
@@ -70,11 +78,11 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		be 1.0. 
 		"""
 		if pd <= 0: return 0 
-		self.Graph = nx.read_gpickle(self.GRAPHFILE)
+		self.Graph = nx.read_gpickle(self.graphFile)
 		max_neighbor = self.__getMaxNeighbors()
 
-		neighbor_file_w = open("%s/neighbor_w.txt"%self.dataDir, "w")
-		neighbor_file_unw = open("%s/neighbor_unw.txt"%self.dataDir, "w")
+		neighbor_file_w = open("%s_neighbor_w.txt"%(self.regsen2vReprFile), "w")
+		neighbor_file_unw = open("%s_neighbor_unw.txt"%(self.regsen2vReprFile), "w")
 
 		self.__write_neighbors (max_neighbor, neighbor_file_w, weighted=True)
 		self.__write_neighbors (max_neighbor, neighbor_file_unw, weighted=False)
@@ -104,15 +112,16 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		wPDict["cbow"] = str(0) 
 		wPDict["sentence-vectors"] = str(1)
 		wPDict["min-count"] = str(0)
-		wPDict["train"] = self.sentsFile
+		wPDict["train"] = "%s.txt"%self.sentsFile
 		
 		wPDict["size"]= str(latent_space_size * 2)
 		args = []
 
 ######################### Working for Weighted Neighbor File ##################	
-		neighborFile = 	"%s/neighbor_w.txt"%self.dataDir
-		wPDict["output"] = "%s/neighbor_w_repr"%self.dataDir
-		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(self, wPDict, 2, neighborFile)
+		neighborFile = 	"%s_neighbor_w.txt"%(self.regsen2vReprFile)
+		wPDict["output"] = "%s_neighbor_w"%(self.regsen2vReprFile)
+		wPDict["neighborFile"], wPDict["reg-nbr"] = neighborFile, str(1)
+		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = process.communicate()
 		self.__printLogs(args, out, err)
@@ -120,9 +129,11 @@ class RegularizedSen2VecRunner(BaselineRunner):
 
 		
 ######################### Working for UnWeighted Neighbor File ###################
-		neighborFile = "%s/neighbor_unw.txt"%self.dataDir
-		wPDict["output"] = "%s/neighbor_unw_repr"%self.dataDir
-		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(self, wPDict, 2, neighborFile)
+		
+		neighborFile = 	"%s_neighbor_unw.txt"%(self.regsen2vReprFile)
+		wPDict["output"] = "%s_neighbor_unw"%(self.regsen2vReprFile)
+		wPDict["neighborFile"], wPDict["reg-nbr"] = neighborFile, str(1)
+		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
 		Logger.logr.info(args)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = process.communicate()
@@ -130,14 +141,29 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		self.__dumpVecs(wPDict["output"], "%s.p"%wPDict["output"])
 
 
-	def generateSummary(self, gs):
+	def generateSummary(self, gs, methodId, filePrefix):
 		if gs <= 0: return 0
-		
+		regsentvecFile = open("%s%s.p"%(self.regsen2vReprFile, filePrefix),"rb")
+		regsentvDict = pickle.load (regsentvecFile)
+		self.populateSummary(methodId, itupdatevDict)
 		
 
 	def runEvaluationTask(self):
+		summaryMethodID = 2 
 
+		regvecFile = open("%s_neighbor_w.p"%(self.regsen2vReprFile),"rb")
+		regvDict = pickle.load (regvecFile)
+		reprName = "%s_neighbor_w"%self.latReprName
+		self.generateData(summaryMethodID, reprName, regvDict)
+		self.runClassificationTask(summaryMethodID, reprName)
+		
 
+		regvecFile = open("%s_neighbor_unw.p"%(self.regsen2vReprFile),"rb")
+		regvDict = pickle.load (regvecFile)
+		reprName = "%s_neighbor_unw"%self.latReprName
+		self.generateData(summaryMethodID, reprName, regvDict)
+		self.runClassificationTask(summaryMethodID, reprName)
+		
 		
 	def doHouseKeeping(self):
 		"""
