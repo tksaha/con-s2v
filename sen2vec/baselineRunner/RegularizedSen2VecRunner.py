@@ -94,13 +94,13 @@ class RegularizedSen2VecRunner(BaselineRunner):
 			
 		vec_dict = {}
 		for nodes in self.Graph.nodes():
+			print  (label_sent(str(nodes)))
 			vec = vModel[label_sent(str(nodes))]
-			vec_dict[nodes] = vec /  ( np.linalg.norm(vec) +  1e-6)
+			vec_dict[int(nodes)] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
 		pickle.dump(vec_dict, vecFile)
 
-	def __printLogs (self, args, out, err):
-		Logger.logr.info(args)
+	def __printLogs (self, out, err):
 		Logger.logr.info(out)
 		Logger.logr.info(err) 
 
@@ -122,10 +122,11 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		wPDict["output"] = "%s_neighbor_w"%(self.regsen2vReprFile)
 		wPDict["neighborFile"], wPDict["reg-nbr"] = neighborFile, str(1)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
+		Logger.logr.info(args)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = process.communicate()
-		self.__printLogs(args, out, err)
-		self.__dumpVecs(wPDict["output"], "%s.p"%wPDict["output"])
+		self.__printLogs(out, err)
+		self.__dumpVecs(wPDict["output"], open("%s.p"%wPDict["output"], "wb"))
 
 		
 ######################### Working for UnWeighted Neighbor File ###################
@@ -137,8 +138,8 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		Logger.logr.info(args)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = process.communicate()
-		self.__printLogs(args, out, err)
-		self.__dumpVecs(wPDict["output"], "%s.p"%wPDict["output"])
+		self.__printLogs(out, err)
+		self.__dumpVecs(wPDict["output"], open("%s.p"%wPDict["output"], "wb"))
 
 
 	def generateSummary(self, gs, methodId, filePrefix):
@@ -150,7 +151,9 @@ class RegularizedSen2VecRunner(BaselineRunner):
 
 	def runEvaluationTask(self):
 		summaryMethodID = 2 
+		self.Graph = nx.read_gpickle(self.graphFile)
 
+		self.__dumpVecs("%s_neighbor_w"%(self.regsen2vReprFile), open("%s_neighbor_w.p"%(self.regsen2vReprFile), "wb"))
 		regvecFile = open("%s_neighbor_w.p"%(self.regsen2vReprFile),"rb")
 		regvDict = pickle.load (regvecFile)
 		reprName = "%s_neighbor_w"%self.latReprName
@@ -158,11 +161,11 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		self.runClassificationTask(summaryMethodID, reprName)
 		
 
-		regvecFile = open("%s_neighbor_unw.p"%(self.regsen2vReprFile),"rb")
-		regvDict = pickle.load (regvecFile)
-		reprName = "%s_neighbor_unw"%self.latReprName
-		self.generateData(summaryMethodID, reprName, regvDict)
-		self.runClassificationTask(summaryMethodID, reprName)
+		# regvecFile = open("%s_neighbor_unw.p"%(self.regsen2vReprFile),"rb")
+		# regvDict = pickle.load (regvecFile)
+		# reprName = "%s_neighbor_unw"%self.latReprName
+		# self.generateData(summaryMethodID, reprName, regvDict)
+		# self.runClassificationTask(summaryMethodID, reprName)
 		
 		
 	def doHouseKeeping(self):

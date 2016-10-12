@@ -11,11 +11,7 @@ from log_manager.log_config import Logger
 import multiprocessing
 from collections import namedtuple
 from utility.Utility import Utility
-from baselineRunner.BaselineRunner import BaselineRunner
 import subprocess 
-import pandas as pd
-from sklearn.dummy import DummyClassifier
-from sklearn import linear_model
 from word2vec.WordDoc2Vec import WordDoc2Vec
 from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
 
@@ -72,34 +68,27 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		dictionaries into the output file. 
 		"""
 		if rbase <= 0: return 0
-		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
-		sent2vec_dict = {}
-
 
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
 
+		# Run Distributed Memory Version
 		wPDict["cbow"], wPDict["sentence-vectors"],wPDict["min-count"] = str(0), str(0), str(0)
 		wPDict["train"], wPDict["output"] = "%s.txt"%self.sentsFile, self.doc2vecOut
 		wPDict["size"], wPDict["sentence-vectors"] = str(300), str(1)
 		args = wordDoc2Vec.buildArgListforW2V(wPDict)
-		Logger.logr.info(args)
-		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		out, err = proc.communicate()
-
-
+		self._runProcess(args)
 		sent2vecModel = Doc2Vec.load_word2vec_format(self.doc2vecOut, binary=False)
 
+
+		# Run Distributed Bag of Words Version 
 		wPDict["cbow"] = str(1)
 		wPDict["output"] = "%s_DBOW" % self.doc2vecOut
 		args = wordDoc2Vec.buildArgListforW2V(wPDict)
-		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		Logger.logr.info(args)
-		out, err = proc.communicate()
-		print (out) 
-		print (err)
+		self._runProcess(args)
 		sent2vecModelDBOW = Doc2Vec.load_word2vec_format("%s_DBOW"%self.doc2vecOut, binary=False)
 		
+
 		nSent = 0
 		for result in self.postgresConnection.memoryEfficientSelect(["count(*)"],\
 			['sentence'], [], [], []):
@@ -108,6 +97,9 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		sent2vecFileRaw.write("%s %s%s"%(str(nSent), str(latent_space_size*2), os.linesep))
 
 
+		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
+		sent2vec_dict = {}
+		
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
@@ -131,7 +123,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
 		s2vDict = pickle.load (sent2vecFile)
 
-		self.populateSummary(1, s2vDict)
+		self.populateSummary(1, {})
 		self.populateSummary(2, s2vDict)
 
 	def runEvaluationTask(self):

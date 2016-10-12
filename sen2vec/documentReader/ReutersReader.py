@@ -168,11 +168,11 @@ class ReutersReader(DocumentReader):
 		# paraBaseline.runEvaluationTask()
 
 		# Logger.logr.info("Starting Running Node2vec Baseline")	
-		n2vBaseline = Node2VecRunner(self.dbstring)
+		#n2vBaseline = Node2VecRunner(self.dbstring)
 		# n2vBaseline.prepareData(pd)
-		n2vBaseline.runTheBaseline(rbase, latent_space_size)
+		#n2vBaseline.runTheBaseline(rbase, latent_space_size)
 		# n2vBaseline.generateSummary(gs)
-		n2vBaseline.runEvaluationTask()
+		#n2vBaseline.runEvaluationTask()
 
 		# iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
 		# iterrunner.prepareData(pd)
@@ -183,14 +183,11 @@ class ReutersReader(DocumentReader):
 # 		# evaluation = RankingEvaluation(['n2v', 'p2v'])
 # 		# print (evaluation._getRankingEvaluation())
 
-		# regs2v = RegularizedSen2VecRunner(self.dbstring)
-		# regs2v.prepareData(pd)
-		# regs2v.runTheBaseline(rbase, latent_space_size)
-		# #regs2v.generateSummary(gs)
-		# regs2v.runEvaluationTask()
-		
-
-
+		regs2v = RegularizedSen2VecRunner(self.dbstring)
+		#regs2v.prepareData(pd)
+		#regs2v.runTheBaseline(rbase, latent_space_size)
+		#regs2v.generateSummary(gs)
+		regs2v.runEvaluationTask()
 
 
 

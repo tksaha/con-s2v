@@ -34,10 +34,6 @@ struct vocab_word {
   char *word, *code, codelen;
 };
 
-struct neighbor_info{
-  long long nbr_id; 
-  real weight; 
-};
 
 char train_file[MAX_STRING], output_file[MAX_STRING];
 char save_vocab_file[MAX_STRING], read_vocab_file[MAX_STRING];
@@ -50,12 +46,14 @@ int regularize_by_nbr_emb = 0, regularize_by_init_embed = 0;
 int *vocab_hash;
 long long vocab_max_size = 1000, vocab_size = 0, layer1_size = 100, sentence_vectors = 0;
 long long train_words = 0, word_count_actual = 0, iter = 5, file_size = 0, classes = 0;
-real alpha = 0.025, starting_alpha, sample = 1e-3;
+real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0;
 
 // All synapses and exponential table
 // Initembedding for retrofitting
 real *syn0, *syn1, *syn1neg, *initembed, *expTable; 
-struct neighbor_info *neighbors; 
+long long  *nbrs;
+real  *nbr_weights;  
+
 clock_t start;
 
 int hs = 0, negative = 5;
@@ -412,15 +410,18 @@ void InitNet() {
 
     fscanf(finit, "%lld %lld", &nnodes, &max_neighbors);
     printf("nnodes = %lld  max_neighbors= %lld\n", nnodes, max_neighbors);
-    a = posix_memalign((void **)&neighbors, 128, (long long)vocab_size * max_neighbors *sizeof(struct neighbor_info));
-    if (neighbors == NULL){printf("Memory allocation failed\n"); exit(1);}
+    a = posix_memalign((void **)&nbrs, 128, (long long)vocab_size * max_neighbors *sizeof(long long));
+    if (nbrs == NULL){printf("Memory allocation failed\n"); exit(1);}
+    a = posix_memalign((void **)&nbr_weights, 128, (long long)vocab_size * max_neighbors *sizeof(real));
+    if (nbr_weights == NULL){printf("Memory allocation failed\n"); exit(1);}
+
     
     for (a = 0; a < vocab_size; a++)
     {
       for (b = 0; b < max_neighbors; b++)
       {
-        neighbors[a * max_neighbors + b].nbr_id = -1;
-        neighbors[a * max_neighbors + b].weight = 0.0;
+        nbrs[a * max_neighbors + b] = -1;
+        nbr_weights[a * max_neighbors + b] = 0.0;
       }
     }
 
@@ -452,8 +453,8 @@ void InitNet() {
 
         if (index1 >= 0 && index2 >= 0)
         {
-          neighbors[b + index1*max_neighbors].nbr_id = index2;
-          neighbors[b + index1*max_neighbors].weight = weight; 
+          nbrs[b + index1*max_neighbors] = index2;
+          nbr_weights[b + index1*max_neighbors] = weight; 
         }
         if (debug_mode > 3) printf("[nbr] index1 =%lld, index2=%lld, weight=%lf\n",index1, index2, weight);
 
@@ -464,73 +465,15 @@ void InitNet() {
     free(word);
   }
 
-  if (initfromFile[0]!=0)
-  {    
-    long long nwords, latdim, it; int b; 
-    double temp; char *word; 
-    long long index; 
-    word = (char*)malloc(MAX_STRING* sizeof(char));
-    // Initial Embedding for reguralization based on initial embedding
-    if (regularize_by_init_embed ==1)
-    {
-      a = posix_memalign((void **)&initembed, 128, (long long)vocab_size * layer1_size *sizeof(real));
-      if (initembed == NULL){printf("[init] Memory allocation failed\n"); exit(1);}
-
-      for (a = 0; a < vocab_size; a++){
-        for (b = 0; b < layer1_size; b++)
-        {
-          initembed[a * layer1_size + b] = 0;
-        }
-      } 
-    }
-   
-    FILE *finit = fopen(initfromFile, "rb");
-    fscanf(finit, "%lld %lld", &nwords, &latdim);
-    if (debug_mode > 2) printf("[init] nwords=%lld, latdim=%lld\n",nwords, latdim);
-
-    if (latdim != layer1_size)
-    {
-      printf("[init] Dimension does not match\n");
-      exit(1);
-    }
-
-    for (it=0; it<nwords; it++)
-    {
-      fscanf(finit,"%s",word);
-      index = SearchVocab(word); 
-      if (index < 0){
-        printf("[Init] Vocabulary does not exist\n");
-      }
-      
-      for (b=0; b<latdim; b++)
-      {
-        fscanf(finit,"%lf",&temp);
-
-        if (index >= 0)
-        {
-          syn0[b + index*layer1_size] = temp; 
-          if (regularize_by_init_embed ==1) initembed[b + index*layer1_size] = temp; 
-        }
-        if (debug_mode > 2) {
-          printf("[Init] weight received for index =%lld is %lf\n",index,temp);
-        }
-      }
-    }
-    // Once done free word 
-    free(word);
-    fclose(finit);
-    printf("Successfully Loaded the initial values for vectors from file\n");
-  }
-  else{
-    for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
+  for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
       next_random = next_random * (unsigned long long)25214903917 + 11;
       syn0[a * layer1_size + b] = (((next_random & 0xFFFF) / (real)65536) - 0.5) / layer1_size;
-    }
   }
-// End of Tanay's Modification 
   CreateBinaryTree();
   printf("End of loading neighbors\n");
 }
+
+
 
 void DestroyNet() {
   if (syn0 != NULL) {
@@ -542,11 +485,12 @@ void DestroyNet() {
   if (syn1neg != NULL) {
     free(syn1neg);
   }
-  if (initembed != NULL){
-    free(initembed);
+  if (nbrs != NULL){
+    free(nbrs);
   }
-  if (neighbors != NULL){
-    free(neighbors);
+  if (nbr_weights!=NULL)
+  {
+    free(nbr_weights);
   }
 }
 
@@ -744,15 +688,15 @@ void *TrainModelThread(void *id) {
           diff = 0.0 ;
           for (nbr=0; nbr < max_neighbors; nbr++)
           {
-            nbrid = neighbors[l1n + nbr].nbr_id;
-            nbrwgt = neighbors[l1n + nbr].weight; 
+            nbrid = nbrs[l1n + nbr];
+            nbrwgt = nbr_weights[l1n + nbr]; 
 
             if (nbrid < 0) break; 
             
             lnbr = nbrid * layer1_size;
             diff += nbrwgt * (syn0[c + lnbr] - syn0[c+l1]);
           }
-          syn0[c+l1] += alpha * diff; 
+          if (nbr > 0) syn0[c+l1] += alpha * (1.0/nbr) * diff ;    
         }
       }
     }
@@ -873,17 +817,9 @@ int main(int argc, char **argv) {
     printf("\t-window <int>\n");
     printf("\t\tSet max skip length between words; default is 5\n");
 
-
-    printf("\t-init\n");
-    printf("\t\tUsed to input initial embedding\n");
     printf("\t-neighbor\n");
     printf("\t\tUsed to input neighbor of words\n");
-    printf("\t-reg-init\n");
-    printf("\t\tUsed to regularize based on initial embedding\n");
-    printf("\t-reg-nbr\n");
-    printf("\t\tUsed to regularize based on neighbor embedding\n");
-
-    
+   
 
     printf("\t-sample <float>\n");
     printf("\t\tSet threshold for occurrence of words. Those that appear with higher frequency in the training data\n");
@@ -898,8 +834,15 @@ int main(int argc, char **argv) {
     printf("\t\tRun more training iterations (default 5)\n");
     printf("\t-min-count <int>\n");
     printf("\t\tThis will discard words that appear less than <int> times; default is 5\n");
+
+
     printf("\t-alpha <float>\n");
     printf("\t\tSet the starting learning rate; default is 0.025 for skip-gram and 0.05 for CBOW\n");
+
+    printf("\t-beta <float>\n");
+    printf("\t\tSet relative importance\n");
+
+
     printf("\t-classes <int>\n");
     printf("\t\tOutput word classes rather than word vectors; default number of classes is 0 (vectors are written)\n");
     printf("\t-debug <int>\n");
@@ -917,7 +860,7 @@ int main(int argc, char **argv) {
     printf("\t\twith full sentence context instead of just the window. Use 1 to turn on.\n");
     printf("\t\tMaximum 30 * 0.7 = 21M words in the vocabulary. If you want more words to be in the vocabulary please change the hash size\n");
     printf("\nExamples:\n");
-    printf("./reg_sen2vec_net -train data.txt -output vec.txt -init initfile -neighbor neighborfile -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3\n\n");
+    //printf("./reg_sen2vec_net -train data.txt -output vec.txt  -neighbor neighborfile -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3\n\n");
     return 0;
   }
   output_file[0] = 0;
@@ -934,13 +877,13 @@ int main(int argc, char **argv) {
   if (cbow) alpha = 0.05;
 
   if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
+  if ((i = ArgPos((char *)"-beta", argc, argv)) > 0) beta = atof(argv[i + 1]);
+
+
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
   if ((i = ArgPos((char *)"-window", argc, argv)) > 0) window = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-init", argc, argv)) > 0) strcpy(initfromFile, argv[i + 1]);
   if ((i = ArgPos((char *)"-neighbor", argc, argv))>0) strcpy(neighborFile, argv[i+1]);
-
-  if ((i = ArgPos((char *)"-reg-init", argc, argv))>0) regularize_by_init_embed = atoi(argv[i+1]);
-  if ((i = ArgPos((char *)"-reg-nbr", argc, argv))>0) regularize_by_nbr_emb = atoi(argv[i+1]);
 
   if ((i = ArgPos((char *)"-sample", argc, argv)) > 0) sample = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-hs", argc, argv)) > 0) hs = atoi(argv[i + 1]);
