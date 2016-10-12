@@ -40,9 +40,9 @@ class PageRankBasedSummarizer(Summarizer):
 
 	def __getDiverseSummary(self, dumpingfactor, lambda_val):
 		"""
-		Generate Diverse Summary. It does 
-		not take sentences if two sentences 
-		matche above a certain percentage. 
+		Generate Diverse Summary. It dumps summary 
+		sentences based on an optimization function which 
+	    trades off between ranking and diversity. 
 		S is the set of examples already sampled. 
 		Rank is returned by page rank. 
 		Cos is cosine similarity 
