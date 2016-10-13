@@ -20,6 +20,8 @@ class IterativeUpdateRetrofitter:
       Beta_ij is equal to one 
       """
       newSen2Vecs = deepcopy(sen2vec)
+      normalized_newSen2Vecs = deepcopy(sen2vec)
+
       allSentenceIds = list(newSen2Vecs.keys())
 
       for iter_ in range(self.numIters):
@@ -36,7 +38,8 @@ class IterativeUpdateRetrofitter:
 
       for Id  in allSentenceIds:
         vec = newSen2Vecs[Id] 
-        newSen2Vecs[Id] = vec / ( np.linalg.norm(vec) +  1e-6)
+        normalized_newSen2Vecs[Id] = vec / ( np.linalg.norm(vec) +  1e-6)
 
-      Logger.logr.info("Norm of the vector = %f"%np.linalg.norm(newSen2Vecs[allSentenceIds[0]]))
-      return newSen2Vecs
+      #Logger.logr.info("Norm of the vector = %f"%np.linalg.norm(newSen2Vecs[allSentenceIds[0]]))
+
+      return newSen2Vecs, normalized_newSen2Vecs

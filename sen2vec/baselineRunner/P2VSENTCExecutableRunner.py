@@ -11,15 +11,10 @@ from log_manager.log_config import Logger
 import multiprocessing
 from collections import namedtuple
 from utility.Utility import Utility
-from baselineRunner.BaselineRunner import BaselineRunner
-import subprocess 
-import pandas as pd
-from sklearn.dummy import DummyClassifier
-from sklearn import linear_model
 from word2vec.WordDoc2Vec import WordDoc2Vec
 from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
-
-
+from summaryGenerator.SummaryGenerator import SummaryGenerator
+from baselineRunner.BaselineRunner import BaselineRunner
 
 label_sent = lambda id_: 'SENT_%s' %(id_)
 
@@ -72,40 +67,41 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		dictionaries into the output file. 
 		"""
 		if rbase <= 0: return 0
-		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
-		sent2vec_dict = {}
-
 
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
 
+		# Run Distributed Memory Version
 		wPDict["cbow"], wPDict["sentence-vectors"],wPDict["min-count"] = str(0), str(0), str(0)
 		wPDict["train"], wPDict["output"] = "%s.txt"%self.sentsFile, self.doc2vecOut
 		wPDict["size"], wPDict["sentence-vectors"] = str(300), str(1)
 		args = wordDoc2Vec.buildArgListforW2V(wPDict)
-		Logger.logr.info(args)
-		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		out, err = proc.communicate()
-
-
+		self._runProcess(args)
 		sent2vecModel = Doc2Vec.load_word2vec_format(self.doc2vecOut, binary=False)
 
+
+		# Run Distributed Bag of Words Version 
 		wPDict["cbow"] = str(1)
 		wPDict["output"] = "%s_DBOW" % self.doc2vecOut
 		args = wordDoc2Vec.buildArgListforW2V(wPDict)
-		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		Logger.logr.info(args)
-		out, err = proc.communicate()
-		print (out) 
-		print (err)
+		self._runProcess(args)
 		sent2vecModelDBOW = Doc2Vec.load_word2vec_format("%s_DBOW"%self.doc2vecOut, binary=False)
 		
+
 		nSent = 0
 		for result in self.postgresConnection.memoryEfficientSelect(["count(*)"],\
 			['sentence'], [], [], []):
 			nSent = int (result[0][0])
 		sent2vecFileRaw = open("%s_raw"%(self.sentReprFile),"w") 
 		sent2vecFileRaw.write("%s %s%s"%(str(nSent), str(latent_space_size*2), os.linesep))
+
+
+		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
+		sent2vec_dict = {}
+
+
+		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"wb")
+		sent2vec_raw_dict = {}
 
 
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
@@ -115,24 +111,34 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 				vec1 = sent2vecModel[label_sent(id_)]
 				vec2 = sent2vecModelDBOW[label_sent(id_)]
 				vec = np.hstack((vec1,vec2))
+				sent2vec_raw_dict[id_] = vec 
 				#Logger.logr.info("Reading a vector of length %s"%vec.shape)
 				sent2vecFileRaw.write("%s "%(str(id_)))	
 				vec_str = self.convert_to_str(vec)
 				#Logger.logr.info(vec_str)
 				sent2vecFileRaw.write("%s%s"%(vec_str, os.linesep))
 				sent2vec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
+				
 
 		Logger.logr.info("Total Number of Sentences written=%i", len(sent2vec_dict))			
-		pickle.dump(sent2vec_dict, sent2vecFile)			
+		pickle.dump(sent2vec_dict, sent2vecFile)	
+		pickle.dump(sent2vec_raw_dict, sent2vecFile_raw)	
+
+		sent2vecFile_raw.close()	
 		sent2vecFile.close()
 	
-	def generateSummary(self, gs):
+	def generateSummary(self, gs,  lambda_val=1.0, diversity=False):
 		if gs <= 0: return 0
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
 		s2vDict = pickle.load (sent2vecFile)
 
-		self.populateSummary(1, s2vDict)
-		self.populateSummary(2, s2vDict)
+		summGen = SummaryGenerator (diverse_summ=diversity,\
+			 postgres_connection = self.postgresConnection,\
+			 lambda_val = lambda_val)
+
+		summGen.populateSummary(1, {})
+		summGen.populateSummary(2, s2vDict)
+
 
 	def runEvaluationTask(self):
 		"""
@@ -143,15 +149,14 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		we do not want to incorporate in training and testing. 
 		For example. validation set or unsup set
 		"""
-
+		summaryMethodID = 2
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
 		s2vDict = pickle.load (sent2vecFile)
+		self._runClassification(summaryMethodID, self.latReprName, s2vDict)
 
-		self.generateData(1, self.latReprName, s2vDict)
-		self.generateData(2, self.latReprName, s2vDict)
-
-		self.runClassificationTask(1, self.latReprName) 
-		self.runClassificationTask(2, self.latReprName)
+		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
+		s2vDict_raw = pickle.load(sent2vecFile_raw)
+		self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
 		
 
 	def doHouseKeeping(self):
