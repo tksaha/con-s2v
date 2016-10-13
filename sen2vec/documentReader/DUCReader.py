@@ -66,7 +66,10 @@ class DUCReader(DocumentReader):
 			try:
 				doc_content = soup.find('text').text
 			except:
-#				Logger.logr.info("%s %s" %(document, "Skipping. Cause, TEXT tag not found"))
+				Logger.logr.info("%s %s" %(document, "Skipping. Cause, TEXT tag not found"))
+				continue
+			if doc_content.count('.') > 1000 or doc_content.count('.') < 1:
+				Logger.logr.info("%s %s" %(document, "Skipping. Cause, %s sentences." %doc_content.count('.')))
 				continue
 			self.postgres_recorder.insertIntoDocTable(document_id, title, \
 						doc_content, filename, metadata) 
@@ -296,14 +299,14 @@ class DUCReader(DocumentReader):
 		document_id = self._readDUC2002(document_id)
 		document_id = self._readDUC2003(document_id)
 		document_id = self._readDUC2004(document_id)
-		document_id = self._readDUC2005(document_id)
-		document_id = self._readDUC2006(document_id)
-		document_id = self._readDUC2007(document_id)
+#		document_id = self._readDUC2005(document_id)
+#		document_id = self._readDUC2006(document_id)
+#		document_id = self._readDUC2007(document_id)
 		
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		latent_space_size = 300
+#		latent_space_size = 300
 #	
 #		Logger.logr.info("Starting Running Para2vec Baseline")
 #		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
@@ -328,5 +331,5 @@ class DUCReader(DocumentReader):
 #		iterrunner.generateSummary(gs, 7, "_weighted")
 ##		iterrunner.runEvaluationTask()
 
-#		evaluation = RankingEvaluation(topics = ['2001', '2002'], models = [20], systems = [1, 2, 3, 4, 5, 6, 7, 21])
-#		evaluation._getRankingEvaluation()
+		evaluation = RankingEvaluation(topics = ['2003'], models = [20], systems = [1, 2, 3, 4, 5, 21])
+		evaluation._getRankingEvaluation()

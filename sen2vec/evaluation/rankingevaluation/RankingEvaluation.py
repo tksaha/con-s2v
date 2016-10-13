@@ -80,7 +80,8 @@ class RankingEvaluation:
 	def __runRouge(self):
 		config_file_name = self.__prepareConfigurationFile()
 #		cmd = self.rouge + " -f A -a -x -s -m -2 -4 -u " + self.summary_dir+"/"+config_file_name
-		cmd = self.rouge + " -c 95 -2 -1 -U -r 1000 -n 4 -w 1.2 -a " + self.summary_dir+"/"+config_file_name
+#		cmd = self.rouge + " -c 95 -2 -1 -U -r 1000 -n 4 -w 1.2 -a " + self.summary_dir+"/"+config_file_name
+		cmd = self.rouge + " -c 95 -2 -1 -U -r 1000 -n 4 -w 1.2 -l 20 -m -s -a " + self.summary_dir+"/"+config_file_name
 		output = subprocess.check_output(cmd, shell=True)
 		with open('%s%s%s' %(self.summary_dir, "/", config_file_name.replace('config', 'output')), 'w') as f:
 			f.write(output.decode("utf-8"))
@@ -98,7 +99,7 @@ class RankingEvaluation:
 				for result in self.postgresConnection.memoryEfficientSelect(\
 				['content'], ['summary', 'sentence'], [['summary.sentence_id',\
 				 '=', 'sentence.id'], ['summary.doc_id', '=',document_id], \
-				 ['method_id', '=', system]], [], ['position']):
+				 ['method_id', '=', system], ['position', '=', '1']], [], ['position']):#, ['position', '=', '1']
 					for row_id in range(0,len(result)):
 						sentences += [result[row_id][0]]
 				
@@ -138,7 +139,7 @@ class RankingEvaluation:
 						summarizer = result[row_id][1].split(':')[1]
 						modelname = "%s.%s" %(model, summarizer)
 						sentences = result[row_id][0]
-						sentences = sent_tokenize(sentences)
+#						sentences = sent_tokenize(sentences)
 						
 						if filename not in self.evalsDict:
 							self.evalsDict[filename] = {'models': [], 'systems': []}
