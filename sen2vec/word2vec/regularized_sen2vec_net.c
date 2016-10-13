@@ -696,7 +696,7 @@ void *TrainModelThread(void *id) {
             lnbr = nbrid * layer1_size;
             diff += nbrwgt * (syn0[c + lnbr] - syn0[c+l1]);
           }
-          if (nbr > 0) syn0[c+l1] += alpha * (1.0/nbr) * diff ;    
+          if (nbr > 0) syn0[c+l1] += alpha * (beta/nbr) * diff ;    
         }
       }
     }
@@ -860,9 +860,11 @@ int main(int argc, char **argv) {
     printf("\t\twith full sentence context instead of just the window. Use 1 to turn on.\n");
     printf("\t\tMaximum 30 * 0.7 = 21M words in the vocabulary. If you want more words to be in the vocabulary please change the hash size\n");
     printf("\nExamples:\n");
-    //printf("./reg_sen2vec_net -train data.txt -output vec.txt  -neighbor neighborfile -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3\n\n");
+    printf("./reg_sen2vec_net -train data.txt -output vec.txt  -neighbor neighborfile -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3");
+    printf("-sentence-vectors 0 -beta 0.05 \n\n");
     return 0;
   }
+
   output_file[0] = 0;
   save_vocab_file[0] = 0;
   read_vocab_file[0] = 0;
