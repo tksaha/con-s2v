@@ -12,26 +12,30 @@ from sklearn.dummy import DummyClassifier
 from sklearn import linear_model
 import operator
 import numpy as np 
-from baselineRunner.BaselineRunner import BaselineRunner
-
-
-
-
+import subprocess 
+from db_connector.PostgresPythonConnector import PostgresPythonConnector
+from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
 
 class BaselineRunner:
 	def __init__(self, dbstring, **kwargs):
 		"""
 		"""
-		pass
+		self.postgresConnection = PostgresPythonConnector(dbstring)
 
-	def _runProcess (args): 
+	def _runProcess (self,args): 
 		Logger.logr.info(args)
 		proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = proc.communicate()
 		if 	proc.returncode != 0: 
 			Logger.logr.error("Process haven't terminated successfully")
+			Logger.logr.info(out)
+			Logger.logr.info(err)
 			sys.exit(1)
 
+	def _runClassification(self, summaryMethodID,  reprName, vDict):
+		classeval = ClassificationEvaluation(postgres_connection=self.postgresConnection)
+		classeval.generateData(summaryMethodID, reprName, vDict)
+		classeval.runClassificationTask(summaryMethodID, reprName)
 
 	@abstractmethod
 	def prepareData(self):

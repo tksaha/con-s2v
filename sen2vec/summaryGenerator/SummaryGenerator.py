@@ -3,7 +3,11 @@
 
 import os 
 import sys 
-
+import networkx as nx 
+import operator
+import numpy as np 
+import math
+from log_manager.log_config import Logger 
 from summaryGenerator.WordBasedGraphGenerator import WordBasedGraphGenerator
 from summaryGenerator.PageRankBasedSummarizer import PageRankBasedSummarizer
 
@@ -20,26 +24,23 @@ class SummaryGenerator:
 		self.dumpingFactor = float(os.environ["DUMPFACTOR"])
 		self.postgresConnection = kwargs['postgres_connection']
 		self.diversity = kwargs['diverse_summ']
-		self.whichMethod = "TF" # "TF or LAT"
-		self.lambda_value = float(kwargs['lambda']) # relative weight between ranker and cosine similarity
+		self.lambda_value = float(kwargs['lambda_val']) # relative weight between ranker and cosine similarity
 		self.vecDict = {}
 		self.sentenceDict = {}
 
-	def __constructSingleDocGraphP2V(self):
+	def __constructSingleDocGraphLat(self):
 		"""
 		"""
 		graph = nx.Graph() 
 		sortedSentenceDict = sorted(self.sentenceDict.items(),\
 		 key=operator.itemgetter(0), reverse=True) 
 
-		ThrSummary = self.intraThrSum_TFIDF if self.whichMethod=="TF" else self.intraThrSum_LAT
-
 		for node_id,value in sortedSentenceDict:
 			for in_node_id, value in sortedSentenceDict:
 				doc_vec_1 = self.vecDict[node_id]
 				doc_vec_2 = self.vecDict[in_node_id]
 				sim = np.inner(doc_vec_1, doc_vec_2)
-				if 	sim >= ThrSummary: 
+				if 	sim >= self.intraThrSum_LAT: 
 					graph.add_edge(node_id, in_node_id, weight=sim)
 
 		return graph
@@ -49,7 +50,7 @@ class SummaryGenerator:
 		"""
 		position = 1
 		for sumSentID, value  in prSummary.getSummary(self.dumpingFactor,\
-			 self.diverse_summ, self.lambda_value):
+			 self.diversity, self.lambda_value):
 			if 	methodID == 1:
 				sumSentID = idMap [sumSentID]
 			if  position > len(self.sentenceDict) or\
@@ -68,7 +69,7 @@ class SummaryGenerator:
 		Method id 1, 2 for the word based and paragraph2vec 
 		based summarizer.
 		"""
-		nx_G = self.__constructSingleDocGraphP2V()
+		nx_G = self.__constructSingleDocGraphLat()
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
 		self.__dumpSummmaryToTable(doc_id, prSummary, "", methodID)
 
@@ -77,7 +78,7 @@ class SummaryGenerator:
 		"""
 		wbasedGenerator = WordBasedGraphGenerator(\
 			sentDictionary=self.sentenceDict,\
-		 	threshold=self.intraThrSummary)
+		 	threshold=self.intraThrSum_TFIDF)
 		nx_G, idMap = wbasedGenerator.generateGraph()
 
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
@@ -88,9 +89,7 @@ class SummaryGenerator:
 		"""
 		Method ID one is traditionally assigned to TF-IDF 
 		"""
-		if methodID ==1:
-			self.__sumarizeAndWriteTFIDFBasedSummary(id_ , methodID)
-			return 0 
+		 
 
 		self.vecDict = vecDict
 		for result in self.postgresConnection.memoryEfficientSelect(\
@@ -98,6 +97,10 @@ class SummaryGenerator:
 			for row_id in range(0,len(result)):
 				self.sentenceDict.clear()
 				id_ = result[row_id][0]
+				if methodID ==1:
+					self.__sumarizeAndWriteTFIDFBasedSummary(id_ , methodID)
+					continue 
+
 				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
 					['id','content'],['sentence'],[["doc_id","=",id_]],[],[]):
 					for inrow_id in range(0, len(sentence_result)):

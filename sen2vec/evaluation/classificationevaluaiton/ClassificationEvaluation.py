@@ -5,7 +5,8 @@ import os
 import sys 
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
-
+from sklearn.dummy import DummyClassifier
+from sklearn import linear_model
 import numpy as np
 import pandas as pd
 import sklearn.metrics as mt
@@ -56,6 +57,21 @@ class ClassificationEvaluation:
 	 		vec_str = ','.join(str(x) for x in vec)
 	 		fileToWrite.write("%s,%s,%s%s"%(id_,vec_str,topic, os.linesep))
 
+	def __writeClassificationReport(self, evaluationResultFile, dummyName=""):
+
+		evaluationResultFile.write("%s%s%s%s" %("######Classification Report",\
+					"(%s)######\n"%dummyName, \
+					self._getClassificationReport(), "\n\n"))
+		evaluationResultFile.write("%s%s%s" %("######Accuracy Score######\n", \
+					self._getAccuracyScore(), "\n\n"))
+		evaluationResultFile.write("%s%s%s" %("######Confusion Matrix######\n", \
+					self._getConfusionMatrix(), "\n\n"))
+		evaluationResultFile.write("%s%s%s" %("######Cohen's Kappa######\n", \
+					self._getCohenKappaScore(), "\n\n"))
+					
+		Logger.logr.info("Evaluation with Logistic regression Completed.")
+
+
 	def __getXY(self, data):
 		"""
 		This function assumes that the data (pandas DF) has id in the 
@@ -69,7 +85,7 @@ class ClassificationEvaluation:
 	"""
 	Public methods 
 	"""
-	def generateData(self,summaryMethodID, latReprName, vecDict):
+	def generateData(self, summaryMethodID, latReprName, vecDict):
 		trainFileToWrite = open("%s/%strain_%i.csv"%(self.trainTestFolder,\
 			 latReprName, summaryMethodID), "w")
 		testFileToWrite = open("%s/%stest_%i.csv"%(self.trainTestFolder,\
@@ -86,21 +102,7 @@ class ClassificationEvaluation:
 			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'NO'"] ], [], []):
 			 	self.__writeClassificationData (result, testFileToWrite, vecDict)
 
-	def __writeClassificationReport(self, evaluationResultFile, dummyName=""):
-
-		evaluationResultFile.write("%s%s%s%s" %("######Classification Report",\
-					"(%s)######\n"%dummyName, \
-					self._getClassificationReport(), "\n\n"))
-		evaluationResultFile.write("%s%s%s" %("######Accuracy Score######\n", \
-					self._getAccuracyScore(), "\n\n"))
-		evaluationResultFile.write("%s%s%s" %("######Confusion Matrix######\n", \
-					self._getConfusionMatrix(), "\n\n"))
-		evaluationResultFile.write("%s%s%s" %("######Cohen's Kappa######\n", \
-					self._getCohenKappaScore(), "\n\n"))
-					
-		Logger.logr.info("Evaluation with Logistic regression Completed.")
-
-		
+	
 	def runClassificationTask(self, summaryMethodID, latReprName):
 		"""
 		This function uses the generated train and test 
@@ -141,20 +143,20 @@ class ClassificationEvaluation:
 		evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
 				latReprName, summaryMethodID), "w")
 		
-		self.__writeClassificationData(evaluationResultFile, latReprName)
+		self.__writeClassificationReport(evaluationResultFile, latReprName)
 
 
 ###################### Dummy Classifiers (Most Frequent) #######################################
-		dummyClf = DummyClassifier(strategy='most_frequent',random_state=0)
-		dummyClf.fit(train_X, train_Y)
-		self.predicted_values  = dummyClf.predict(test_X)
-		self.__writeClassificationData(evaluationResultFile, 'Most Frequent')
+		# dummyClf = DummyClassifier(strategy='most_frequent',random_state=0)
+		# dummyClf.fit(train_X, train_Y)
+		# self.predicted_values  = dummyClf.predict(test_X)
+		# self.__writeClassificationReport(evaluationResultFile, 'Most Frequent')
 
 		
 ###################### Dummy Classifier () ######################################################
 		dummyClf = DummyClassifier(strategy='stratified',random_state=0)
 		dummyClf.fit(train_X, train_Y)
 		self.predicted_values = dummyClf.predict(test_X)
-		self.__writeClassificationData(evaluationResultFile, 'Stratified')
+		self.__writeClassificationReport(evaluationResultFile, 'Stratified')
 
 

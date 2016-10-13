@@ -23,7 +23,7 @@ class PageRankBasedSummarizer(Summarizer):
 
 
 
-	def _generateSummary(self, dumpingfactor):
+	def __generateSummary(self, dumpingfactor):
 		"""
 		pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1e-06, 
 		nstart=None, weight='weight', dangling=None)

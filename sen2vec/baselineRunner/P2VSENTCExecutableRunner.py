@@ -11,11 +11,10 @@ from log_manager.log_config import Logger
 import multiprocessing
 from collections import namedtuple
 from utility.Utility import Utility
-import subprocess 
 from word2vec.WordDoc2Vec import WordDoc2Vec
 from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
-
-
+from summaryGenerator.SummaryGenerator import SummaryGenerator
+from baselineRunner.BaselineRunner import BaselineRunner
 
 label_sent = lambda id_: 'SENT_%s' %(id_)
 
@@ -99,7 +98,12 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
 		sent2vec_dict = {}
-		
+
+
+		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"wb")
+		sent2vec_raw_dict = {}
+
+
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
@@ -107,24 +111,34 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 				vec1 = sent2vecModel[label_sent(id_)]
 				vec2 = sent2vecModelDBOW[label_sent(id_)]
 				vec = np.hstack((vec1,vec2))
+				sent2vec_raw_dict[id_] = vec 
 				#Logger.logr.info("Reading a vector of length %s"%vec.shape)
 				sent2vecFileRaw.write("%s "%(str(id_)))	
 				vec_str = self.convert_to_str(vec)
 				#Logger.logr.info(vec_str)
 				sent2vecFileRaw.write("%s%s"%(vec_str, os.linesep))
 				sent2vec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
+				
 
 		Logger.logr.info("Total Number of Sentences written=%i", len(sent2vec_dict))			
-		pickle.dump(sent2vec_dict, sent2vecFile)			
+		pickle.dump(sent2vec_dict, sent2vecFile)	
+		pickle.dump(sent2vec_raw_dict, sent2vecFile_raw)	
+
+		sent2vecFile_raw.close()	
 		sent2vecFile.close()
 	
-	def generateSummary(self, gs):
+	def generateSummary(self, gs,  lambda_val=1.0, diversity=False):
 		if gs <= 0: return 0
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
 		s2vDict = pickle.load (sent2vecFile)
 
-		self.populateSummary(1, {})
-		self.populateSummary(2, s2vDict)
+		summGen = SummaryGenerator (diverse_summ=diversity,\
+			 postgres_connection = self.postgresConnection,\
+			 lambda_val = lambda_val)
+
+		summGen.populateSummary(1, {})
+		summGen.populateSummary(2, s2vDict)
+
 
 	def runEvaluationTask(self):
 		"""
@@ -135,15 +149,14 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		we do not want to incorporate in training and testing. 
 		For example. validation set or unsup set
 		"""
-
+		summaryMethodID = 2
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
 		s2vDict = pickle.load (sent2vecFile)
+		self._runClassification(summaryMethodID, self.latReprName, s2vDict)
 
-		self.generateData(1, self.latReprName, s2vDict)
-		self.generateData(2, self.latReprName, s2vDict)
-
-		self.runClassificationTask(1, self.latReprName) 
-		self.runClassificationTask(2, self.latReprName)
+		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
+		s2vDict_raw = pickle.load(sent2vecFile_raw)
+		self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
 		
 
 	def doHouseKeeping(self):

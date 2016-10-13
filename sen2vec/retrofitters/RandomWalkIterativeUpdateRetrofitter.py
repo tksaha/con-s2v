@@ -21,6 +21,7 @@ class RandomWalkIterativeUpdateRetrofitter:
       Beta_ij is equal to one 
       """
       newSen2Vecs = deepcopy(sen2vec)
+      normalized_newSen2Vecs = deepcopy(sen2vec)
       allSentenceIds = list(newSen2Vecs.keys())
 
       for iter_ in range(self.numIters):
@@ -41,6 +42,6 @@ class RandomWalkIterativeUpdateRetrofitter:
 
       for Id  in allSentenceIds:
         vec = newSen2Vecs[Id]    
-        newSen2Vecs[Id] = vec / ( np.linalg.norm(vec) +  1e-6)
+        normalized_newSen2Vecs[Id] = vec / ( np.linalg.norm(vec) +  1e-6)
 
-      return newSen2Vecs
+      return newSen2Vecs, normalized_newSen2Vecs

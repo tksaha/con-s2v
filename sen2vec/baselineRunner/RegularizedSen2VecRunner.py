@@ -13,7 +13,7 @@ import multiprocessing
 import subprocess 
 import numpy as np 
 from word2vec.WordDoc2Vec import WordDoc2Vec
-
+from summaryGenerator.SummaryGenerator import SummaryGenerator
 
 
 label_sent = lambda id_: 'SENT_%s' %(id_)
@@ -86,26 +86,30 @@ class RegularizedSen2VecRunner(BaselineRunner):
 
 		self.__write_neighbors (max_neighbor, neighbor_file_w, weighted=True)
 		self.__write_neighbors (max_neighbor, neighbor_file_unw, weighted=False)
+		self.Graph = nx.Graph()
 
 
-	def __dumpVecs(self, reprFile, vecFile):
+	def __dumpVecs(self, reprFile, vecFile, vecRawFile):
 
 		vModel = Word2Vec.load_word2vec_format(reprFile, binary=False)
-			
+		
 		vec_dict = {}
+		vec_dict_raw = {}
+
+		
+
 		for nodes in self.Graph.nodes():
-			print  (label_sent(str(nodes)))
 			vec = vModel[label_sent(str(nodes))]
+			vec_dict_raw[int(nodes)] = vec 
 			vec_dict[int(nodes)] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
 		pickle.dump(vec_dict, vecFile)
-
-	def __printLogs (self, out, err):
-		Logger.logr.info(out)
-		Logger.logr.info(err) 
+		pickle.dump(vec_dict_raw, vecRawFile)
 
 	def runTheBaseline(self, rbase, latent_space_size):
 		if rbase <= 0: return 0 
+
+		self.Graph = nx.read_gpickle(self.graphFile)
 
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
@@ -122,56 +126,60 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		wPDict["output"] = "%s_neighbor_w"%(self.regsen2vReprFile)
 		wPDict["neighborFile"], wPDict["reg-nbr"] = neighborFile, str(1)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
-		Logger.logr.info(args)
-		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		out, err = process.communicate()
-		self.__printLogs(out, err)
-		self.__dumpVecs(wPDict["output"], open("%s.p"%wPDict["output"], "wb"))
+		#self._runProcess (args)
+		self.__dumpVecs(wPDict["output"],\
+			 open("%s.p"%wPDict["output"], "wb"),\
+			 open("%s_raw.p"%wPDict["output"], "wb"))
 
 		
-######################### Working for UnWeighted Neighbor File ###################
-		
+######################### Working for UnWeighted Neighbor File ###################		
 		neighborFile = 	"%s_neighbor_unw.txt"%(self.regsen2vReprFile)
 		wPDict["output"] = "%s_neighbor_unw"%(self.regsen2vReprFile)
 		wPDict["neighborFile"], wPDict["reg-nbr"] = neighborFile, str(1)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
-		Logger.logr.info(args)
-		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		out, err = process.communicate()
-		self.__printLogs(out, err)
-		self.__dumpVecs(wPDict["output"], open("%s.p"%wPDict["output"], "wb"))
+		self._runProcess (args)
+		self.__dumpVecs(wPDict["output"],\
+				open("%s.p"%wPDict["output"], "wb"),\
+				open("%s_raw.p"%wPDict["output"], "wb"))
+		self.Graph = nx.Graph()
 
-
-	def generateSummary(self, gs, methodId, filePrefix):
+	def generateSummary(self, gs, methodId, filePrefix, lambda_val=1.0, diversity=False):
 		if gs <= 0: return 0
 		regsentvecFile = open("%s%s.p"%(self.regsen2vReprFile, filePrefix),"rb")
 		regsentvDict = pickle.load (regsentvecFile)
-		self.populateSummary(methodId, itupdatevDict)
 		
+		summGen = SummaryGenerator (diverse_summ=diversity,\
+			 postgres_connection = self.postgresConnection,\
+			 lambda_val = lambda_val)
+
+		summGen.populateSummary(methodId, itupdatevDict)
+		
+
+	def __runEval(self, summaryMethodID, vecFileName, reprName):
+		vecFile = open("%s.p"%vecFileName,"rb")
+		vDict = pickle.load (vecFile)
+		self._runClassification(summaryMethodID, reprName, vDict)
+
+		vecFile = open("%s_raw.p"%vecFileName, "rb")
+		vDict = pickle.load (vecFile)
+		self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
+
 
 	def runEvaluationTask(self):
 		summaryMethodID = 2 
-		self.Graph = nx.read_gpickle(self.graphFile)
-
-		self.__dumpVecs("%s_neighbor_w"%(self.regsen2vReprFile), open("%s_neighbor_w.p"%(self.regsen2vReprFile), "wb"))
-		regvecFile = open("%s_neighbor_w.p"%(self.regsen2vReprFile),"rb")
-		regvDict = pickle.load (regvecFile)
+		Logger.logr.info("Starting Regularized Sentence 2 Vector Evaluation")
+		
+		regvecFile = "%s_neighbor_w"%(self.regsen2vReprFile)
 		reprName = "%s_neighbor_w"%self.latReprName
-		self.generateData(summaryMethodID, reprName, regvDict)
-		self.runClassificationTask(summaryMethodID, reprName)
-		
+		self.__runEval(summaryMethodID, regvecFile, reprName)
 
-		# regvecFile = open("%s_neighbor_unw.p"%(self.regsen2vReprFile),"rb")
-		# regvDict = pickle.load (regvecFile)
-		# reprName = "%s_neighbor_unw"%self.latReprName
-		# self.generateData(summaryMethodID, reprName, regvDict)
-		# self.runClassificationTask(summaryMethodID, reprName)
-		
+		regvecFile = "%s_neighbor_unw"%(self.regsen2vReprFile)
+		reprName = "%s_neighbor_unw"%self.latReprName
+		self.__runEval(summaryMethodID, regvecFile, reprName)
+
 		
 	def doHouseKeeping(self):
 		"""
 		Here, we destroy the database connection.
 		"""
 		self.postgresConnection.disconnectDatabase()
-	
-	

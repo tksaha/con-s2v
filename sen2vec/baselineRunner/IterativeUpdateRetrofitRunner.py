@@ -12,7 +12,7 @@ import networkx as nx
 import pickle 
 import numpy as np 
 from log_manager.log_config import Logger 
-
+from summaryGenerator.SummaryGenerator import SummaryGenerator
 
 
 class IterativeUpdateRetrofitRunner(BaselineRunner):
@@ -35,40 +35,63 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		"""
 		pass 
 
+	
 	def runTheBaseline(self, rbase):
 		"""
 		Write down the Iterative update vector
+		Hyperparameter numIter, alpha etc.
 		"""
 		self.Graph = nx.read_gpickle(self.graphFile)
 		p2vfileToRead = open ("%s.p" %self.p2vFile, "rb")
 		self.sen2Vec = pickle.load(p2vfileToRead)
+
+
 		Logger.logr.info("Dictionary has %i objects" % len(self.sen2Vec))
 
-
 		retrofitter = IterativeUpdateRetrofitter(numIter=20, nx_Graph = self.Graph) 
-		retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
-		Logger.logr.info("Retrofitted Dicitionary has %i objects" %len(retrofitted_dict))
-
+		retrofitted_dict, normalized_retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
 		iterupdatevecFile = open("%s_unweighted.p"%(self.retrofittedsen2vReprFile),"wb")
-		pickle.dump(retrofitted_dict,iterupdatevecFile )
+		iterupdatevecFile_Raw = open("%s_unweighted_raw.p"%(self.retrofittedsen2vReprFile),"wb")
+		pickle.dump(retrofitted_dict, iterupdatevecFile)
+		pickle.dump(normalized_retrofitted_dict, iterupdatevecFile_Raw)
+
 
 		wretrofitter = WeightedIterativeUpdateRetrofitter(numIter=20, nx_Graph = self.Graph)
-		retrofitted_dict = wretrofitter.retrofitWithIterUpdate(self.sen2Vec, alpha =-1)
+		retrofitted_dict, normalized_retrofitted_dict = wretrofitter.retrofitWithIterUpdate(self.sen2Vec, alpha =-1) #Hyperparameter
 		iterupdatevecFile = open("%s_weighted.p"%(self.retrofittedsen2vReprFile),"wb")
+		iterupdatevecFile_Raw = open("%s_weighted_raw.p"%(self.retrofittedsen2vReprFile),"wb")
 		pickle.dump(retrofitted_dict, iterupdatevecFile)
+		pickle.dump(normalized_retrofitted_dict, iterupdatevecFile_Raw)
+
+
 
 		randomwalkretrofitter = RandomWalkIterativeUpdateRetrofitter(numIter=10)
-		rand_retrofitted_dict = randomwalkretrofitter.retrofitWithIterUpdate(self.sen2Vec)
+		rand_retrofitted_dict, normalized_retrofitted_dict = randomwalkretrofitter.retrofitWithIterUpdate(self.sen2Vec)
 		rand_iterupdateFile = open("%s_randomwalk.p"%(self.retrofittedsen2vReprFile),"wb")
+		rand_iterupdateFile_Raw = open("%s_randomwalk_raw.p"%(self.retrofittedsen2vReprFile),"wb")
 		pickle.dump(rand_retrofitted_dict, rand_iterupdateFile)
+		pickle.dump(normalized_retrofitted_dict, rand_iterupdateFile_Raw)
 
 
-	def generateSummary(self, gs, methodId, filePrefix):
+	def generateSummary(self, gs, methodId, filePrefix, lambda_val=1.0, diversity=False):
 		if gs <= 0: return 0
 		itupdatevecFile = open("%s%s.p"%(self.retrofittedsen2vReprFile, filePrefix),"rb")
 		itupdatevDict = pickle.load (itupdatevecFile)
-		self.populateSummary(methodId, itupdatevDict)
 		
+		summGen = SummaryGenerator (diverse_summ=diversity,\
+			 postgres_connection = self.postgresConnection,\
+			 lambda_val = lambda_val)
+
+		summGen.populateSummary(methodId, itupdatevDict)
+	
+	def __runEval(self, summaryMethodID, vecFileName, reprName):
+		vecFile = open("%s.p"%vecFileName,"rb")
+		vDict = pickle.load (vecFile)
+		self._runClassification(summaryMethodID, reprName, vDict)
+
+		vecFile = open("%s_raw.p"%vecFileName, "rb")
+		vDict = pickle.load (vecFile)
+		self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
 
 	def runEvaluationTask(self):
 		"""
@@ -82,23 +105,17 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 
 		summaryMethodID = 2 
 
-		itupdatevecFile = open("%s_unweighted.p"%(self.retrofittedsen2vReprFile),"rb")
-		itupdatevDict = pickle.load (itupdatevecFile)
+		vecFile = "%s_unweighted"%self.retrofittedsen2vReprFile
 		reprName = "%s_unweighted"%self.latReprName
-		self.generateData(summaryMethodID, reprName, itupdatevDict)
-		self.runClassificationTask(summaryMethodID, reprName)
+		self.__runEval(summaryMethodID, vecFile, reprName)
 		
-		itupdatevecFile = open("%s_weighted.p"%(self.retrofittedsen2vReprFile),"rb")
-		itupdatevDict = pickle.load (itupdatevecFile)
+		vecFile = "%s_weighted"%self.retrofittedsen2vReprFile
 		reprName = "%s_weighted"%self.latReprName
-		self.generateData(summaryMethodID, reprName, itupdatevDict)
-		self.runClassificationTask(summaryMethodID, reprName)
-
-		rand_itervecFile = open("%s_randomwalk.p"%(self.retrofittedsen2vReprFile),"rb")
-		rand_itupdatevDict = pickle.load(rand_itervecFile) 
+		self.__runEval(summaryMethodID, vecFile, reprName)
+		
+		vecFile = "%s_randomwalk"%self.retrofittedsen2vReprFile
 		reprName = "%s_randomwalk"%self.latReprName
-		self.generateData(summaryMethodID, reprName, rand_itupdatevDict)
-		self.runClassificationTask(summaryMethodID, reprName)
+		self.__runEval(summaryMethodID, vecFile, reprName)
 
 	def doHouseKeeping(self):
 		"""

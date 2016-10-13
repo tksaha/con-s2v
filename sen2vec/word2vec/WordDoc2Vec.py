@@ -7,6 +7,8 @@ import multiprocessing
 
 class WordDoc2Vec: 
 	def __init__(self, *args, **kwargs):
+		"""
+		"""
 		self.wordParamDict = {}
 		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
 		self.retrofitOneExe = os.environ['RETROFITONEEXE']
@@ -25,7 +27,7 @@ class WordDoc2Vec:
 		self.wordParamDict["negative"] = str(5)
 		self.wordParamDict["hs"] = str(0)
 		self.wordParamDict["sample"] = str(1e-4)
-		self.wordParamDict["threads"] = str(self.cores * 2)
+		self.wordParamDict["threads"] = str(self.cores * 10)
 		self.wordParamDict["binary"] = str(0)
 		self.wordParamDict["iter"] = str(20)
 		self.wordParamDict["min-count"]= str(1)

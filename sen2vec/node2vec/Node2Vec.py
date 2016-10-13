@@ -54,6 +54,9 @@ class Node2Vec:
 		Logger.logr.info(args)
 		process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = process.communicate()
+		if 	process.returncode != 0: 
+			Logger.logr.error("Process haven't terminated successfully")
+			sys.exit(1)
 		print (out)
 		print (err)
 
