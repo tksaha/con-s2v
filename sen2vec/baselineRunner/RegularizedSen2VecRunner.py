@@ -96,8 +96,6 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		vec_dict = {}
 		vec_dict_raw = {}
 
-		
-
 		for nodes in self.Graph.nodes():
 			vec = vModel[label_sent(str(nodes))]
 			vec_dict_raw[int(nodes)] = vec 
@@ -124,7 +122,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
 ######################### Working for Weighted Neighbor File ##################	
 		neighborFile = 	"%s_neighbor_w.txt"%(self.regsen2vReprFile)
 		wPDict["output"] = "%s_neighbor_w"%(self.regsen2vReprFile)
-		wPDict["neighborFile"], wPDict["reg-nbr"] = neighborFile, str(1)
+		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(1.0)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
 		#self._runProcess (args)
 		self.__dumpVecs(wPDict["output"],\
@@ -135,7 +133,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
 ######################### Working for UnWeighted Neighbor File ###################		
 		neighborFile = 	"%s_neighbor_unw.txt"%(self.regsen2vReprFile)
 		wPDict["output"] = "%s_neighbor_unw"%(self.regsen2vReprFile)
-		wPDict["neighborFile"], wPDict["reg-nbr"] = neighborFile, str(1)
+		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(1.0)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
 		self._runProcess (args)
 		self.__dumpVecs(wPDict["output"],\
