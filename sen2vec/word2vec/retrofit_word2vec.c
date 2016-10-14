@@ -372,7 +372,7 @@ void ReadVocab() {
 
 void InitNet() {
   long long a, b;
-  unsigned long long next_random = 1;
+  //unsigned long long next_random = 1;
   a = posix_memalign((void **)&syn0, 128, (long long)vocab_size * layer1_size * sizeof(real));
   if (syn0 == NULL) {printf("Memory allocation failed\n"); exit(1);}
   if (hs) {
@@ -422,19 +422,12 @@ void InitNet() {
       {
         fscanf(finit,"%lf",&temp); 
         initembed[b + index*layer1_size] = temp; 
+        syn0[a * layer1_size + b] = temp ; 
       }
     }
     // Once done free word 
     free(word);
     printf("Successfully Loaded the initial values for vectors from file\n");
-  }
-
-  // Randomly initialize the embedding
-  for (a = 0; a < vocab_size; a++) {
-    for (b = 0; b < layer1_size; b++) {
-      next_random = next_random * (unsigned long long)25214903917 + 11;
-      syn0[a * layer1_size + b] = (((next_random & 0xFFFF) / (real)65536) - 0.5) / layer1_size;
-    }
   }
   // End of Tanay's Modification 
 

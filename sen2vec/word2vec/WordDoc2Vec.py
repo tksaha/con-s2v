@@ -68,8 +68,8 @@ class WordDoc2Vec:
 		args = self.buildArgListforW2V(wPDict, retrofit)
 		args.append("-neighbor")
 		args.append(wPDict["neighborFile"])
-		args.append("-reg-nbr")
-		args.append(wPDict["reg-nbr"])
+		args.append("-beta")
+		args.append(wPDict["beta"])
 		return args 
 
 
