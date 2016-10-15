@@ -124,7 +124,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		wPDict["output"] = "%s_neighbor_w"%(self.regsen2vReprFile)
 		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(1.0)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
-		#self._runProcess (args)
+		self._runProcess (args)
 		self.__dumpVecs(wPDict["output"],\
 			 open("%s.p"%wPDict["output"], "wb"),\
 			 open("%s_raw.p"%wPDict["output"], "wb"))
