@@ -422,7 +422,7 @@ void InitNet() {
       {
         fscanf(finit,"%lf",&temp); 
         initembed[b + index*layer1_size] = temp; 
-        syn0[a * layer1_size + b] = temp ; 
+        syn0[b + index*layer1_size] = temp ; 
       }
     }
     // Once done free word 
