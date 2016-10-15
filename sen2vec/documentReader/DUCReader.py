@@ -12,8 +12,8 @@ from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRun
 from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
-
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
+from rouge.Rouge import Rouge 
 
 # There are some summaries [ex:fbis4-45908, FT932-15960] for which the 
 # original document is not present
@@ -167,175 +167,18 @@ class DUCReader(DocumentReader):
             summaries += [os.path.join(root, file_)\
                 for file_ in files if file_ in "perdocs"]
  
-        
         summaryFileDict = {}
         summaryFileDict = self.__getValidSummaryFiles(summaries, summaryFileDict)
         Logger.logr.info("Got %i documents and %i summaries"%(len(documents), len(summaryFileDict)))
         
         Logger.logr.info("Recording DUC 2001 Documents.")
         docFileDict = self.recordDocuments(documents, topic, summaryFileDict)
-
-
         Logger.logr.info("%i elements in summary dict and %i"\
          " elements in doc dict"%(len(summaryFileDict), len(docFileDict)))
-
-
         Logger.logr.info("Recording DUC 2001 Summaries.")
         self.__recordSummariesA(summaries, docFileDict)
         
         
-    
-    # def __readDUC2002(self, document_id):
-    #   """
-    #   It loads the DUC 2002 documents into
-    #   the database
-    #   """
-    #   topic = "2002"
-    #   cur_path = "%s/%s/%s" %(self.folderPath, "DUC2002", "summaries")
-
-    #   # Go one pass to collect all valid summary file names 
-    #   summaryFileDict = {}
-    #   summaryFileDict = self.__getValidSummaryFiles(cur_path, summaryFileDict)
-
-    #   cur_path = "%s/%s/%s" %(self.folderPath, "DUC2002", "docs")
-    #   documents = []
-    #   for root, directories, files in os.walk(cur_path):
-    #       documents += [os.path.join(root, file_) for file_ in files]
-        
-    #   Logger.logr.info("Recording DUC 2002 Documents.")
-    #   document_dict = self.recordDocuments(documents, topic, summaryFileDict)
-        
-    #   Logger.logr.info("Recording DUC 2001 Summaries.")
-    #   self.recordSummariesA(summaries, document_dict)
-
-
-        
-        
-        
-    # def _readDUC2003(self, document_id):
-    #   """
-    #   It loads the DUC 2003 documents into
-    #   the database
-    #   """
-    #   topic = "2003"
-    #   cur_path = "%s/%s/%s" %(self.folderPath, "DUC2003", "duc2003_testdata")
-    #   documents = []
-
-    #   for root, directories, files in os.walk(cur_path):
-    #       documents += [os.path.join(root, file_) for file_ in files]
-        
-    #   Logger.logr.info("Recording DUC 2003 Documents.")
-    #   document_id = self.recordDocuments(documents, document_id,topic)
-                
-    #   cur_path = "%s/%s/%s/%s" %(self.folderPath, "DUC2003", "detagged.duc2003.abstracts", "models")
-    #   summaries = []
-    #   for root, directories, files in os.walk(cur_path):
-    #       summaries += [os.path.join(root, file_) for file_ in files if file_.split('.')[1] == 'P']
-        
-    #   Logger.logr.info("Recording DUC 2003 Summaries.")
-    #   self.recordSummariesB(summaries)
-        
-    #   return document_id
-        
-    # def _readDUC2004(self, document_id):
-    #   """
-    #   It loads the DUC 2004 documents into
-    #   the database
-    #   """
-    #   topic = "2004"
-    #   cur_path = "%s/%s/%s" %(self.folderPath, "DUC2004", "duc2004_testdata")
-    #   summaries = []
-    #   documents = []
-    #   for root, directories, files in os.walk(cur_path):
-    #       for file_ in files:
-    #           if file_ in ['50', '100', '200', '400']:
-    #               pass
-    #           elif file_ in ['perdocs']:
-    #               summaries += [os.path.join(root, file_)]
-    #           else:
-    #               documents += [os.path.join(root, file_)]
-        
-    #   Logger.logr.info("Recording DUC 2004 Documents.")
-    #   document_id = self.recordDocuments(documents, document_id, topic)
-        
-    #   cur_path = "%s/%s/%s/%s/%s" %(self.folderPath, "DUC2004", "duc2004_results", "ROUGE", "eval")
-    #   summaries = []
-    #   for root, directories, files in os.walk(cur_path):
-    #       summaries += [os.path.join(root, file_) for file_ in files if file_.split('.')[1] == 'P']
-        
-    #   Logger.logr.info("Recording DUC 2004 Summaries.")
-    #   self.recordSummariesA(summaries)
-
-    #   return document_id
-        
-    # def _readDUC2005(self, document_id):
-    #   """
-    #   It loads the DUC 2005 documents into
-    #   the database
-    #   """
-    #   topic = "2005"
-    #   cur_path = "%s/%s" %(self.folderPath, "DUC2005")
-    #   summaries = []
-    #   documents = []
-    #   for root, directories, files in os.walk(cur_path):
-    #       for file_ in files:
-    #           if file_ in ['50', '100', '200', '400']:
-    #               pass
-    #           elif file_ in ['perdocs']:
-    #               summaries += [os.path.join(root, file_)]
-    #           else:
-    #               documents += [os.path.join(root, file_)]
-        
-    #   Logger.logr.info("Recording DUC 2005 Documents.")
-    #   document_id = self.recordDocuments(documents, document_id, topic)
-
-    #   return document_id
-        
-    # def _readDUC2006(self, document_id):
-    #   """
-    #   It loads the DUC 2006 documents into
-    #   the database
-    #   """
-    #   topic = "2006"
-    #   cur_path = "%s/%s" %(self.folderPath, "DUC2006")
-    #   summaries = []
-    #   documents = []
-    #   for root, directories, files in os.walk(cur_path):
-    #       for file_ in files:
-    #           if file_ in ['50', '100', '200', '400']:
-    #               pass
-    #           elif file_ in ['perdocs']:
-    #               summaries += [os.path.join(root, file_)]
-    #           else:
-    #               documents += [os.path.join(root, file_)]
-        
-    #   Logger.logr.info("Recording DUC 2006 Documents.")
-    #   document_id = self.recordDocuments(documents, document_id, topic)
-
-    #   return document_id
-        
-    # def _readDUC2007(self, document_id):
-    #   """
-    #   It loads the DUC 2007 documents into
-    #   the database
-    #   """
-    #   topic = "2007"
-    #   cur_path = "%s/%s" %(self.folderPath, "DUC2007")
-    #   summaries = []
-    #   documents = []
-    #   for root, directories, files in os.walk(cur_path):
-    #       for file_ in files:
-    #           if file_ in ['50', '100', '200', '400']:
-    #               pass
-    #           elif file_ in ['perdocs']:
-    #               summaries += [os.path.join(root, file_)]
-    #           else:
-    #               documents += [os.path.join(root, file_)]
-        
-    #   Logger.logr.info("Recording DUC 2007 Documents.")
-    #   document_id = self.recordDocuments(documents, document_id, topic)
-
-    #   return document_id
     
     def readDocument(self, ld): 
         if ld <= 0: return 0 
@@ -352,17 +195,28 @@ class DUCReader(DocumentReader):
         # document_id = self._readDUC2005(document_id)
         # document_id = self._readDUC2006(document_id)
         # document_id = self._readDUC2007(document_id)
+
+
+    def __runCombinedEvaluation(self):
+        rougeInstance = Rouge()
+        rPDict = rougeInstance.buildRougeParamDict()
+        rPDict['-l'] = str(100)
+        rPDict['-c'] = str(0.99)
+
+        evaluation = RankingEvaluation(topics = ['2001'], models = [20], systems = [1,2])
+        evaluation._getRankingEvaluation(rPDict, rougeInstance)
         
     def runBaselines(self, pd, rbase, gs):
         """
         """
         latent_space_size = 300
-    
+        self.postgres_recorder.truncateSummaryTable()
+
         # Logger.logr.info("Starting Running Para2vec Baseline")
-        # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+        paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
         # paraBaseline.prepareData(pd)
         # paraBaseline.runTheBaseline(rbase,latent_space_size)
-        # paraBaseline.generateSummary(gs)
+        paraBaseline.generateSummary(gs, lambda_val=0.8, diversity=True)
         # paraBaseline.runEvaluationTask()
 
         # Logger.logr.info("Starting Running Node2vec Baseline")    
@@ -381,5 +235,6 @@ class DUCReader(DocumentReader):
         # iterrunner.generateSummary(gs, 7, "_weighted")
         # iterrunner.runEvaluationTask()
 
-        # evaluation = RankingEvaluation(topics = ['2003'], models = [20], systems = [1, 2, 3, 4, 5, 21])
-        # evaluation._getRankingEvaluation()
+        self.__runCombinedEvaluation()
+
+        

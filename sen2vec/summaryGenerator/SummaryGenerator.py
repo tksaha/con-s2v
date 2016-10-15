@@ -10,7 +10,7 @@ import math
 from log_manager.log_config import Logger 
 from summaryGenerator.WordBasedGraphGenerator import WordBasedGraphGenerator
 from summaryGenerator.PageRankBasedSummarizer import PageRankBasedSummarizer
-
+from log_manager.log_config import Logger 
 
 
 
@@ -24,7 +24,8 @@ class SummaryGenerator:
 		self.dumpingFactor = float(os.environ["DUMPFACTOR"])
 		self.postgresConnection = kwargs['postgres_connection']
 		self.diversity = kwargs['diverse_summ']
-		self.lambda_value = float(kwargs['lambda_val']) # relative weight between ranker and cosine similarity
+		self.lambda_value = float(kwargs['lambda_val']) # relative weight between ranker 
+														# and cosine similarity
 		self.vecDict = {}
 		self.sentenceDict = {}
 
@@ -97,15 +98,13 @@ class SummaryGenerator:
 			for row_id in range(0,len(result)):
 				self.sentenceDict.clear()
 				id_ = result[row_id][0]
-				if methodID ==1:
-					self.__sumarizeAndWriteTFIDFBasedSummary(id_ , methodID)
-					continue 
-
 				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
 					['id','content'],['sentence'],[["doc_id","=",id_]],[],[]):
 					for inrow_id in range(0, len(sentence_result)):
 						sentence_id = int(sentence_result[inrow_id][0])
 						sentence = sentence_result[inrow_id][1]
 						self.sentenceDict[sentence_id] = sentence 
-				if methodID >1:
+				if methodID ==1:
+					self.__sumarizeAndWriteTFIDFBasedSummary(id_ , methodID)
+				else:
 					self.__summarizeAndWriteLatentSpaceBasedSummary(id_, methodID)

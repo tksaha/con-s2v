@@ -42,16 +42,16 @@ export GINTERTHR=0.6
 export GINTRATHR=0.4
 
 export GTHRSUMTFIDF=0.1
-export GTHRSUMLAT=0.4
+export GTHRSUMLAT=0.1
 export DUMPFACTOR=0.85
-export TOPNSUMMARY=0.2
+export TOPNSUMMARY=1.0
 export KNEIGHBOR=20
 
 export ITERUPDATESEN2VECFILE=~/Documents/sen2vec/Data/retrofitted_repr
 export GRAPHFILE=~/Documents/sen2vec/Data/graph_0.6_0.4
 
-export ROUGE=~/Documents/sen2vec/sen2vec/rouge-1.5.5/ROUGE-1.5.5.pl
-export ROUGE_EVAL_HOME=~/Documents/sen2vec/sen2vec/rouge-1.5.5/data
+export ROUGE=~/Documents/sen2vec/sen2vec/rouge/ROUGE-1.5.5.pl
+export ROUGE_EVAL_HOME=~/Documents/sen2vec/sen2vec/rouge/data
 export SUMMARYFOLDER=~/Documents/sen2vec/Data/Summary/
 export MODELSUMMARYFOLDER=~/Documents/sen2vec/Data/Summary/model
 export SYSTEMSUMMARYFOLDER=~/Documents/sen2vec/Data/Summary/system

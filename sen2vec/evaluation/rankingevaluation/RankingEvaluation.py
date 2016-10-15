@@ -77,12 +77,18 @@ class RankingEvaluation:
 			f.write('</ROUGE-EVAL>')
 		return config_file_name
 	
-	def __runRouge(self):
+	def __runRouge(self, rPDict, rougeInstance):
 		config_file_name = self.__prepareConfigurationFile()
-#		cmd = self.rouge + " -f A -a -x -s -m -2 -4 -u " + self.summary_dir+"/"+config_file_name
-#		cmd = self.rouge + " -c 95 -2 -1 -U -r 1000 -n 4 -w 1.2 -a " + self.summary_dir+"/"+config_file_name
-		cmd = self.rouge + " -c 95 -2 -1 -U -r 1000 -n 4 -w 1.2 -l 20 -m -s -a " + self.summary_dir+"/"+config_file_name
-		output = subprocess.check_output(cmd, shell=True)
+		rPDict['conf'] = "%s%s"%(self.summary_dir, config_file_name)
+		cmd = rougeInstance.buildArgListforRouge(rPDict)
+
+		Logger.logr.info(cmd)
+		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		output, err = proc.communicate()
+		if proc.returncode !=0:
+			Logger.logr.error("Process Did not run smoothly")
+			sys.exit(1)
+
 		with open('%s%s%s' %(self.summary_dir, "/", config_file_name.replace('config', 'output')), 'w') as f:
 			f.write(output.decode("utf-8"))
 
@@ -99,7 +105,7 @@ class RankingEvaluation:
 				for result in self.postgresConnection.memoryEfficientSelect(\
 				['content'], ['summary', 'sentence'], [['summary.sentence_id',\
 				 '=', 'sentence.id'], ['summary.doc_id', '=',document_id], \
-				 ['method_id', '=', system], ['position', '=', '1']], [], ['position']):#, ['position', '=', '1']
+				 ['method_id', '=', system]], [], ['position']):#, ['position', '=', '1']
 					for row_id in range(0,len(result)):
 						sentences += [result[row_id][0]]
 				
@@ -130,16 +136,15 @@ class RankingEvaluation:
 				for row_id in range(0,len(result)):
 					filenames += [result[row_id][0]]
 
-			for filename in filenames:
-				sentences = []
+			for filename in filenames:				
 				for result in self.postgresConnection.memoryEfficientSelect(\
 				['summary', 'metadata'], ['gold_summary'], [['gold_summary.filename', 'like', "'%s'" %filename], \
 				['method_id', '=', model]], [], []):
 					for row_id in range(0,len(result)):
+
 						summarizer = result[row_id][1].split(':')[1]
 						modelname = "%s.%s" %(model, summarizer)
-						sentences = result[row_id][0]
-#						sentences = sent_tokenize(sentences)
+						summary_sents = result[row_id][0]
 						
 						if filename not in self.evalsDict:
 							self.evalsDict[filename] = {'models': [], 'systems': []}
@@ -150,19 +155,17 @@ class RankingEvaluation:
 							f.write('<html>%s' %os.linesep)
 							f.write('<head><title>%s</title></head>%s' %(modelfilename, os.linesep))
 							f.write('<body bgcolor="white">%s' %os.linesep)
-							for i, sentence in enumerate(sentences):
-								i += 1
-								sentence = sentence.replace(os.linesep, '')
-								f.write('<a name="%s">[%s]</a> <a href="#%s" id=%s>%s</a>%s' %(i, i, i, i, sentence, os.linesep))
+							i = 1
+							#Logger.logr.info("Putting sentence %s"%summary_sents)
+							f.write('<a name="%s">[%s]</a> <a href="#%s" id=%s>%s</a>%s' %(i, i, i, i, summary_sents, os.linesep))
 							f.write('</body>%s' %os.linesep)
 							f.write('</html>%s' %os.linesep)
 	
 	"""
 	Protected Methods 
 	"""
-	def _getRankingEvaluation(self):
+	def _getRankingEvaluation(self, rPDict, rougeInstance):
 		self.__prepareSystemSummaryFiles()
 		self.__prepareModelSummaryFiles()
-		self.__runRouge()
-		
+		self.__runRouge(rPDict, rougeInstance)
 
