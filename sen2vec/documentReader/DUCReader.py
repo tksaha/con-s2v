@@ -201,7 +201,7 @@ class DUCReader(DocumentReader):
     def __runCombinedEvaluation(self):
         rougeInstance = Rouge()
         rPDict = rougeInstance.buildRougeParamDict()
-        rPDict['-l'] = str(10)
+        rPDict['-l'] = str(100)
         rPDict['-c'] = str(0.99)
 
         evaluation = RankingEvaluation(topics = ['2001'], models = [20], systems = [1,2,3,4,5,6,7,9,10,21])
@@ -210,15 +210,16 @@ class DUCReader(DocumentReader):
     def runBaselines(self, pd, rbase, gs):
         """
         """
+        if rbase <= 0: return 0
         latent_space_size = 300
-        self.postgres_recorder.truncateSummaryTable()
 
         # Logger.logr.info("Starting Running Para2vec Baseline")
         # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
         # paraBaseline.prepareData(pd)
         # paraBaseline.runTheBaseline(rbase,latent_space_size)
         # paraBaseline.generateSummary(gs, lambda_val=0.8, diversity=True)
-        # # paraBaseline.runEvaluationTask()
+       
+
 
         # Logger.logr.info("Starting Running Node2vec Baseline")    
         # n2vBaseline = Node2VecRunner(self.dbstring)
@@ -234,14 +235,14 @@ class DUCReader(DocumentReader):
         # iterrunner.runTheBaseline(rbase)
         # iterrunner.generateSummary(gs, 6, "_unweighted")
         # iterrunner.generateSummary(gs, 7, "_weighted")
-        # iterrunner.runEvaluationTask()
+      
 
 
-        regs2v = RegularizedSen2VecRunner(self.dbstring)
-        regs2v.prepareData(pd)
-        regs2v.runTheBaseline(rbase, latent_space_size)
-        regs2v.generateSummary(gs,9,"_neighbor_w")
-        regs2v.generateSummary(gs,10,"_neighbor_unw")
+        # regs2v = RegularizedSen2VecRunner(self.dbstring)
+        # regs2v.prepareData(pd)
+        # regs2v.runTheBaseline(rbase, latent_space_size)
+        # regs2v.generateSummary(gs,9,"_neighbor_w")
+        # regs2v.generateSummary(gs,10,"_neighbor_unw")
 
         self.__runCombinedEvaluation()
 

@@ -150,7 +150,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
 			 postgres_connection = self.postgresConnection,\
 			 lambda_val = lambda_val)
 
-		summGen.populateSummary(methodId, itupdatevDict)
+		summGen.populateSummary(methodId, regsentvDict)
 		
 
 	def __runEval(self, summaryMethodID, vecFileName, reprName):
