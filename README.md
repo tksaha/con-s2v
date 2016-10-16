@@ -94,6 +94,7 @@ Please go to the word2vec code directory inside the project and
 type the following command for creating executable:
 
 ```
+make clean
 make
 ```
 
