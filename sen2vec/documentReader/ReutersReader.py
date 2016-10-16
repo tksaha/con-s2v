@@ -12,6 +12,7 @@ from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
 from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
+from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRunner
 
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 
@@ -170,25 +171,23 @@ class ReutersReader(DocumentReader):
 		n2vBaseline = Node2VecRunner(self.dbstring)
 		n2vBaseline.prepareData(pd)
 		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-		
-
-		n2vBaseline.generateSummary(gs, 3, "")
+		#n2vBaseline.generateSummary(gs, 3, "")
 		n2vBaseline.runEvaluationTask()
 
 		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
 		iterrunner.prepareData(pd)
 		iterrunner.runTheBaseline(rbase)
-		iterrunner.generateSummary(gs, 6, "_unweighted")
+		#iterrunner.generateSummary(gs, 6, "_unweighted")
 		iterrunner.runEvaluationTask()
 
-		# evaluation = RankingEvaluation(['n2v', 'p2v'])
-		# print (evaluation._getRankingEvaluation())
-
+	
 		regs2v = RegularizedSen2VecRunner(self.dbstring)
 		regs2v.prepareData(pd)
 		regs2v.runTheBaseline(rbase, latent_space_size)
-		regs2v.generateSummary(gs,9,"_neighbor_w")
+		#regs2v.generateSummary(gs,9,"_neighbor_w")
 		regs2v.runEvaluationTask() 
 
-
-
+		dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
+		dictregs2v.prepareData(pd)
+		dictregs2v.runBaselines(rbase, latent_space_size)
+		dictregs2v.runEvaluationTask()
