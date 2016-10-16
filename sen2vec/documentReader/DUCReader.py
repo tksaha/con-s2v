@@ -213,36 +213,36 @@ class DUCReader(DocumentReader):
         if rbase <= 0: return 0
         latent_space_size = 300
 
-        # Logger.logr.info("Starting Running Para2vec Baseline")
-        # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-        # paraBaseline.prepareData(pd)
-        # paraBaseline.runTheBaseline(rbase,latent_space_size)
-        # paraBaseline.generateSummary(gs, lambda_val=0.8, diversity=True)
+        Logger.logr.info("Starting Running Para2vec Baseline")
+        paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+        paraBaseline.prepareData(pd)
+        paraBaseline.runTheBaseline(rbase,latent_space_size)
+        paraBaseline.generateSummary(gs, lambda_val=0.8, diversity=True)
        
 
 
-        # Logger.logr.info("Starting Running Node2vec Baseline")    
-        # n2vBaseline = Node2VecRunner(self.dbstring)
-        # n2vBaseline.prepareData(pd)
-        # n2vBaseline.runTheBaseline(rbase, latent_space_size)
-        # n2vBaseline.generateSummary(gs, 3, "")
-        # n2vBaseline.generateSummary(gs, 4, "_init")
-        # n2vBaseline.generateSummary(gs, 5, "_retrofit")
+        Logger.logr.info("Starting Running Node2vec Baseline")    
+        n2vBaseline = Node2VecRunner(self.dbstring)
+        n2vBaseline.prepareData(pd)
+        n2vBaseline.runTheBaseline(rbase, latent_space_size)
+        n2vBaseline.generateSummary(gs, 3, "")
+        n2vBaseline.generateSummary(gs, 4, "_init")
+        n2vBaseline.generateSummary(gs, 5, "_retrofit")
  
 
-        # iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-        # iterrunner.prepareData(pd)
-        # iterrunner.runTheBaseline(rbase)
-        # iterrunner.generateSummary(gs, 6, "_unweighted")
-        # iterrunner.generateSummary(gs, 7, "_weighted")
+        iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+        iterrunner.prepareData(pd)
+        iterrunner.runTheBaseline(rbase)
+        iterrunner.generateSummary(gs, 6, "_unweighted")
+        iterrunner.generateSummary(gs, 7, "_weighted")
       
 
 
-        # regs2v = RegularizedSen2VecRunner(self.dbstring)
-        # regs2v.prepareData(pd)
-        # regs2v.runTheBaseline(rbase, latent_space_size)
-        # regs2v.generateSummary(gs,9,"_neighbor_w")
-        # regs2v.generateSummary(gs,10,"_neighbor_unw")
+        regs2v = RegularizedSen2VecRunner(self.dbstring)
+        regs2v.prepareData(pd)
+        regs2v.runTheBaseline(rbase, latent_space_size)
+        regs2v.generateSummary(gs,9,"_neighbor_w")
+        regs2v.generateSummary(gs,10,"_neighbor_unw")
 
         self.__runCombinedEvaluation()
 

@@ -71,6 +71,7 @@ class DocumentReader:
 
 				sentence = sentence.replace("\x03","")
 				sentence = sentence.replace("\x02","")
+				sentence = sentence.replace('\n', ' ').replace('\r', '').strip()
 				sentence_id = recorder.insertIntoSenTable(sentence,\
 					 topic, istrain, document_id, paragraph_id)
 				recorder.insertIntoParSenTable(paragraph_id, sentence_id,\

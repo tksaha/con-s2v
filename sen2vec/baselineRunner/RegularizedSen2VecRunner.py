@@ -141,9 +141,11 @@ class RegularizedSen2VecRunner(BaselineRunner):
 				open("%s_raw.p"%wPDict["output"], "wb"))
 		self.Graph = nx.Graph()
 
-	def generateSummary(self, gs, methodId, filePrefix, lambda_val=1.0, diversity=False):
+	def generateSummary(self, gs, methodId, filePrefix,\
+		 lambda_val=1.0, diversity=False):
 		if gs <= 0: return 0
-		regsentvecFile = open("%s%s.p"%(self.regsen2vReprFile, filePrefix),"rb")
+		regsentvecFile = open("%s%s.p"%(self.regsen2vReprFile,\
+			 filePrefix),"rb")
 		regsentvDict = pickle.load (regsentvecFile)
 		
 		summGen = SummaryGenerator (diverse_summ=diversity,\
