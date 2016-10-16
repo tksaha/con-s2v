@@ -44,6 +44,7 @@ export GINTRATHR=0.4
 export GTHRSUMTFIDF=0.1
 export GTHRSUMLAT=0.1
 export DUMPFACTOR=0.85
+# TOPNSUMMARY should be set to 0.2 for classification tasks and to 1.0 for ranking tasks
 export TOPNSUMMARY=1.0
 export KNEIGHBOR=20
 
