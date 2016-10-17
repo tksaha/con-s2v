@@ -15,6 +15,7 @@ import numpy as np
 import subprocess 
 from db_connector.PostgresPythonConnector import PostgresPythonConnector
 from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
+from evaluation.clusteringevaluation import ClusteringEvaluation 
 
 class BaselineRunner:
 	def __init__(self, dbstring, **kwargs):
@@ -36,6 +37,11 @@ class BaselineRunner:
 		classeval = ClassificationEvaluation(postgres_connection=self.postgresConnection)
 		classeval.generateData(summaryMethodID, reprName, vDict)
 		classeval.runClassificationTask(summaryMethodID, reprName)
+
+	def _runClustering(self, summaryMethodID, reprName, vDict):
+		clusterEval = ClusteringEvaluation(postgres_connection=self.postgresConnection)
+		clusterEval.generateData(summaryMethodID, reprName, vDict)
+		clusterEval.runClusteringTask(summaryMethodID, reprName)
 
 	@abstractmethod
 	def prepareData(self):

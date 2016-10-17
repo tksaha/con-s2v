@@ -158,6 +158,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
 		s2vDict_raw = pickle.load(sent2vecFile_raw)
 		self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
+		self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
 		
 
 	def doHouseKeeping(self):
