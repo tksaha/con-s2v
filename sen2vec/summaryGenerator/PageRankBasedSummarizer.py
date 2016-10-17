@@ -52,7 +52,7 @@ class PageRankBasedSummarizer(Summarizer):
 		Implementing min {I\S} (lambda* rank  + max [j \in S] {( 1 - lambda )*maxcos} )
 		"""
 		
-		Logger.logr.info("[Diverse]Generating diverse summary with lambda=%lf"%lambda_val)
+		#Logger.logr.info("[Diverse]Generating diverse summary with lambda=%lf"%lambda_val)
 		candidates = []
 		id_value_list = [] 
 
@@ -68,7 +68,7 @@ class PageRankBasedSummarizer(Summarizer):
 
 		cur_pos = 0
 		while len(candidates) < len(self.pagerankedNodes):
-			Logger.logr.info("Total candidate=%i, total nodes=%i"%(len(candidates), len(self.pagerankedNodes)))
+			#Logger.logr.info("Total candidate=%i, total nodes=%i"%(len(candidates), len(self.pagerankedNodes)))
 			if len(candidates) == 0:
 				candidates.append((id_value_list[0][0], id_value_list[0][4]))
 				cur_pos = cur_pos + 1
@@ -85,10 +85,10 @@ class PageRankBasedSummarizer(Summarizer):
 					if current_cos < similarity:
 						current_cos = similarity
 						value = (lambda_val * id_value_list[pos][1]) + ((1.0 - lambda_val)*current_cos)
-						self.__printTuples(id_value_list[pos])
+						#self.__printTuples(id_value_list[pos])
 						tup = (id_value_list[pos][0], id_value_list[pos][1], current_cos, value, id_value_list[pos][4])
 						id_value_list[pos] = tup 
-						self.__printTuples(id_value_list[pos])
+						#self.__printTuples(id_value_list[pos])
 
 
 				sorted_list = sorted(id_value_list[cur_pos:], key = lambda tup: tup[3])
@@ -105,7 +105,7 @@ class PageRankBasedSummarizer(Summarizer):
 				if pos == cur_pos :
 					cur_pos = cur_pos + 1
 				else:
-					Logger.logr.info("Exchanging ............%i with %i" %(cur_pos, pos))
+					#Logger.logr.info("Exchanging ............%i with %i" %(cur_pos, pos))
 					temp = id_value_list[cur_pos]
 					id_value_list[cur_pos] = id_value_list[pos]
 					id_value_list[pos] = temp 
@@ -125,9 +125,9 @@ class PageRankBasedSummarizer(Summarizer):
 			for key,value in self.pagerankedNodes:
 				yield key, value 
 		else:
-			Logger.logr.info("Generating diverse summary with lambda=%lf"%lambda_val)
+			#Logger.logr.info("Generating diverse summary with lambda=%lf"%lambda_val)
 			for candidate in self.__getDiverseSummary(dumpingfactor, lambda_val):
-				Logger.logr.info("[Diverse]Generating diverse summary with lambda=%lf"%lambda_val)
+				#Logger.logr.info("[Diverse]Generating diverse summary with lambda=%lf"%lambda_val)
 				yield candidate[0], candidate[1]
 	
 

@@ -85,14 +85,36 @@ class SummaryGenerator:
 		prSummary = PageRankBasedSummarizer(nx_G = nx_G)
 		self.__dumpSummmaryToTable(doc_id, prSummary, idMap, methodID)
 
+	def recordFirstSentenceBaselineSummary(self, methodID):
+		"""
+		Recording First Sentence as a Baseline Summary
+		First sentence as a baseline summary = 21
+		"""
+		
+		position = 1
+
+		for doc_result in self.postgresConnection.memoryEfficientSelect(["id"],\
+			["document"], [], [], ["id"]):
+			for row_id in range(0,len(doc_result)):
+				doc_id = doc_result[row_id][0]
+				sentence_id = -1
+				for result in self.postgresConnection.memoryEfficientSelect(["id"], ["sentence"], [["doc_id", "=", doc_id]], [], ['id']):
+					sentence_id = result[0][0]
+
+				self.postgresConnection.insert ([doc_id, methodID, sentence_id, position], "summary",\
+			 ["doc_id", "method_id", "sentence_id", "position"])
+	
 
 	def populateSummary(self, methodID, vecDict):
 		"""
 		Method ID one is traditionally assigned to TF-IDF 
 		"""
-		 
-
 		self.vecDict = vecDict
+
+		if methodID==21:
+			self.recordFirstSentenceBaselineSummary(methodID)
+			return 0
+
 		for result in self.postgresConnection.memoryEfficientSelect(\
 			['id'],['document'],[],[],[]):
 			for row_id in range(0,len(result)):

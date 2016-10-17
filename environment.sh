@@ -60,9 +60,16 @@ export SYSTEMSUMMARYFOLDER=~/Documents/sen2vec/Data/Summary/system
 export DUC_DBSTRING=duc,postgres,postgres,localhost,5432
 export DUC_PATH=~/Documents/sen2vec/Data/DUC_merged
 
+
+export DUC_LAMBDA=1.0
+export DUC_DIVERSITY=0
+export DUC_TOPIC=2001
+
 export REGSEN2VECREPRFILE=~/Documents/sen2vec/Data/reg_sent
 export REGSEN2VECEXE=~/Documents/sen2vec/sen2vec/word2vec/reg_sen2vec_net
 
 export DICTREGSEN2VECREPRFILE=~/Documents/sen2vec/Data/dictreg_sent
 export DICTDIR=~/Documents/sen2vec/Data/lexicons
+
+
 

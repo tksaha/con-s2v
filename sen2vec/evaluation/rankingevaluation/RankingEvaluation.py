@@ -7,7 +7,6 @@ from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 from db_connector.PostgresPythonConnector import PostgresPythonConnector
 from nltk.tokenize import sent_tokenize
-
 import numpy as np
 import pandas as pd
 import sklearn.metrics as mt
@@ -42,6 +41,7 @@ class RankingEvaluation:
 		self.dbstring = os.environ["DUC_DBSTRING"]
 		self.postgresConnection = PostgresPythonConnector(self.dbstring)
 		self.postgresConnection.connectDatabase()
+		self.config_file_name = ""
 		
 		self.evalsDict = {}
 	
@@ -51,6 +51,7 @@ class RankingEvaluation:
 			config_file_name += str(model)+"_"
 		for system in self.systems:
 			config_file_name += "_"+str(system)
+	
 		config_file_name += ".config"
 		
 		with open('%s%s%s' %(self.summary_dir,"/",config_file_name), 'w') as f:
@@ -77,20 +78,7 @@ class RankingEvaluation:
 			f.write('</ROUGE-EVAL>')
 		return config_file_name
 	
-	def __runRouge(self, rPDict, rougeInstance):
-		config_file_name = self.__prepareConfigurationFile()
-		rPDict['conf'] = "%s%s"%(self.summary_dir, config_file_name)
-		cmd = rougeInstance.buildArgListforRouge(rPDict)
-
-		Logger.logr.info(cmd)
-		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		output, err = proc.communicate()
-		if proc.returncode !=0:
-			Logger.logr.error("Process Did not run smoothly")
-			sys.exit(1)
-
-		with open('%s%s%s' %(self.summary_dir, "/", config_file_name.replace('config', 'output')), 'w') as f:
-			f.write(output.decode("utf-8"))
+	
 
 	def __prepareSystemSummaryFiles(self):
 		for system in self.systems:
@@ -164,8 +152,25 @@ class RankingEvaluation:
 	"""
 	Protected Methods 
 	"""
-	def _getRankingEvaluation(self, rPDict, rougeInstance):
+	def _prepareFiles(self):
 		self.__prepareSystemSummaryFiles()
 		self.__prepareModelSummaryFiles()
-		self.__runRouge(rPDict, rougeInstance)
+		self.config_file_name = self.__prepareConfigurationFile()	
+
+	def _getRankingEvaluation(self, rPDict, rougeInstance):
+		
+		rPDict['conf'] = "%s%s"%(self.summary_dir, self.config_file_name)
+		cmd = rougeInstance.buildArgListforRouge(rPDict)
+
+		Logger.logr.info(cmd)
+		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		output, err = proc.communicate()
+		if proc.returncode !=0:
+			Logger.logr.error("Process did not run smoothly")
+			sys.exit(1)
+
+		with open('%s%s%s' %(self.summary_dir, "/",\
+			self.config_file_name.replace('config', 'output').replace('.','_')+\
+				"_%s.txt"%rPDict['-l']), 'w') as f:
+			f.write(output.decode("utf-8"))
 

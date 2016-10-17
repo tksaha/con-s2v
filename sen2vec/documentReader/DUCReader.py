@@ -36,6 +36,9 @@ class DUCReader(DocumentReader):
 		self.folderPath = os.environ['DUC_PATH']
 		self.processed_filenames = []
 		self.processed_summaries = []
+		self.lambda_val = os.environ['DUC_LAMBDA']
+		self.diversity = os.environ['DUC_DIVERSITY']
+		self.duc_topic = os.environ['DUC_TOPIC']
 		self.document_id = 0
 
 	def readTopic(self):
@@ -47,14 +50,6 @@ class DUCReader(DocumentReader):
 		self.postgres_recorder.insertIntoTopTable(topic_names, categories)
 		Logger.logr.info("Topic reading complete.")
 	
-	def recordFirstSentenceBaselineSummary(self, document_id):
-		"""
-		Recording First Sentence as a Baseline Summary
-		"""
-		sentence_id = self.postgres_recorder.selectFirstSentBaselineId(document_id)
-		method_id = 21 #First sentence as a baseline summary= 21
-		position = 1
-		self.postgres_recorder.insertIntoSumTable(document_id, method_id, sentence_id, position)
 	
 	def recordDocuments(self, documents, topic, summaryFileDict):
 		docFileDict = {}
@@ -95,8 +90,6 @@ class DUCReader(DocumentReader):
 						[topic], [category])
 			self._recordParagraphAndSentence(self.document_id, doc_content, self.postgres_recorder, topic, istrain)
 			
-			self.recordFirstSentenceBaselineSummary(self.document_id) #Recording First Sentence as a Baseline Summary
-
 		return docFileDict
 		
 	def __recordSummariesA(self, summaries, document_dict):
@@ -149,14 +142,14 @@ class DUCReader(DocumentReader):
 				summaryFileDict[names] = 1
 		return summaryFileDict
 
-	def __readDUC2001(self, document_id):
+	def __readDUC2001(self):
 		"""
 		It loads the DUC 2001 documents into
 		the database. Check whether the number of words 
 		in the summary is less than 100, if yes then discard. 
 		As a rough heuristic, split the sentence and 
-		then count. The function also makes sure there will 
-		be no document without summary. 
+		then count number of words. The function also makes 
+		sure that there will be no document without summary. 
 		"""
 		topic = "2001"
 		cur_path = "%s/%s" %(self.folderPath, "DUC2001")
@@ -181,7 +174,7 @@ class DUCReader(DocumentReader):
 		self.__recordSummariesA(summaries, docFileDict)
 		
 		
-	def __readDUC2002(self, document_id):
+	def __readDUC2002(self):
 		"""
 		It loads the DUC 2002 documents into
 		the database. Check whether the number of words 
@@ -221,8 +214,10 @@ class DUCReader(DocumentReader):
 		self.readTopic()
 		
 		document_id = 0
-		document_id = self.__readDUC2001(document_id)
-		# document_id = self._readDUC2002(document_id)
+		if self.duc_topic == str(2001):
+			self.__readDUC2001()
+		else:
+		    self.__readDUC2002()
 		# document_id = self._readDUC2003(document_id)
 		# document_id = self._readDUC2004(document_id)
 		# document_id = self._readDUC2005(document_id)
@@ -237,57 +232,77 @@ class DUCReader(DocumentReader):
 		rPDict['-c'] = str(0.99)
 
 		evaluation = RankingEvaluation(topics = ['2001'], models = [20], systems = [1,2,3,4,5,6,7,8,9,10,11,12,21])
+		evaluation._prepareFiles()
+		evaluation._getRankingEvaluation(rPDict, rougeInstance)
+
+		rPDict['-l'] = str(10)
 		evaluation._getRankingEvaluation(rPDict, rougeInstance)
 		
 	def runBaselines(self, pd, rbase, gs):
 		"""
+
 		"""
 		if rbase <= 0: return 0
 		latent_space_size = 300
 
+		diversity = False
+		if self.diversity == str(1):
+			diversity = True 
+		
+
 		self.postgres_recorder.truncateSummaryTable()
 
-		# Logger.logr.info("Starting Running Para2vec Baseline")
+		Logger.logr.info("Starting Running Para2vec Baseline")
 		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-		# paraBaseline.prepareData(pd)
-		# paraBaseline.runTheBaseline(rbase,latent_space_size)
-		paraBaseline.generateSummary(gs, lambda_val=0.8, diversity=True)
-		# paraBaseline.generateSummary(gs)
+		paraBaseline.prepareData(pd)
+		paraBaseline.runTheBaseline(rbase,latent_space_size)
+		paraBaseline.generateSummary(gs,\
+			lambda_val=self.lambda_val, diversity=diversity)
 		paraBaseline.doHouseKeeping()
 
 
-		# Logger.logr.info("Starting Running Node2vec Baseline")	
+		Logger.logr.info("Starting Running Node2vec Baseline")	
 		n2vBaseline = Node2VecRunner(self.dbstring)
-		# n2vBaseline.prepareData(pd)
-		# n2vBaseline.runTheBaseline(rbase, latent_space_size)
-		n2vBaseline.generateSummary(gs, 3, "", lambda_val=0.8, diversity=True)
-		n2vBaseline.generateSummary(gs, 4, "_init", lambda_val=0.8, diversity=True)
-		n2vBaseline.generateSummary(gs, 5, "_retrofit", lambda_val=0.8, diversity=True)
+		n2vBaseline.prepareData(pd)
+		n2vBaseline.runTheBaseline(rbase, latent_space_size)
+		n2vBaseline.generateSummary(gs, 3, "",\
+			 lambda_val=self.lambda_val, diversity=diversity)
+		n2vBaseline.generateSummary(gs, 4, "_init",\
+			 lambda_val=self.lambda_val, diversity=diversity)
+		n2vBaseline.generateSummary(gs, 5, "_retrofit",\
+			 lambda_val=self.lambda_val, diversity=diversity)
 		n2vBaseline.doHouseKeeping()
  
 
 		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-		# iterrunner.prepareData(pd)
-		# iterrunner.runTheBaseline(rbase)
-		iterrunner.generateSummary(gs, 6, "_unweighted", lambda_val=0.8, diversity=True)
-		iterrunner.generateSummary(gs, 7, "_weighted", lambda_val=0.8, diversity=True)
-		iterrunner.generateSummary(gs, 8, "_randomwalk", lambda_val=0.8, diversity=True)
+		iterrunner.prepareData(pd)
+		iterrunner.runTheBaseline(rbase)
+		iterrunner.generateSummary(gs, 6, "_unweighted",\
+		 lambda_val=self.lambda_val, diversity=diversity)
+		iterrunner.generateSummary(gs, 7, "_weighted",\
+		 lambda_val=self.lambda_val, diversity=diversity)
+		iterrunner.generateSummary(gs, 8, "_randomwalk",\
+		 lambda_val=self.lambda_val, diversity=diversity)
 		iterrunner.doHouseKeeping()
 
 
 		regs2v = RegularizedSen2VecRunner(self.dbstring)
-		# regs2v.prepareData(pd)
-		# regs2v.runTheBaseline(rbase, latent_space_size)
-		regs2v.generateSummary(gs,9,"_neighbor_w", lambda_val=0.8, diversity=True)
-		regs2v.generateSummary(gs,10,"_neighbor_unw", lambda_val=0.8, diversity=True)
+		regs2v.prepareData(pd)
+		regs2v.runTheBaseline(rbase, latent_space_size)
+		regs2v.generateSummary(gs,9,"_neighbor_w",\
+			 lambda_val=self.lambda_val, diversity=diversity)
+		regs2v.generateSummary(gs,10,"_neighbor_unw",\
+			 lambda_val=self.lambda_val, diversity=diversity)
 		regs2v.doHouseKeeping()
 
 
 		dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
-		# dictregs2v.prepareData(pd)
-		# dictregs2v.runTheBaseline(rbase, latent_space_size)
-		dictregs2v.generateSummary(gs,11,"_neighbor_w", lambda_val=0.8, diversity=True)
-		dictregs2v.generateSummary(gs,12,"_neighbor_unw", lambda_val=0.8, diversity=True)
+		dictregs2v.prepareData(pd)
+		dictregs2v.runTheBaseline(rbase, latent_space_size)
+		dictregs2v.generateSummary(gs,11,"_neighbor_w",\
+			 lambda_val=self.lambda_val, diversity=diversity)
+		dictregs2v.generateSummary(gs,12,"_neighbor_unw",\
+			 lambda_val=self.lambda_val, diversity=diversity)
 		dictregs2v.doHouseKeeping()
 
 
