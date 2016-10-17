@@ -253,6 +253,7 @@ class DUCReader(DocumentReader):
 		# paraBaseline.runTheBaseline(rbase,latent_space_size)
 		paraBaseline.generateSummary(gs, lambda_val=0.8, diversity=True)
 		# paraBaseline.generateSummary(gs)
+		paraBaseline.doHouseKeeping()
 
 
 		# Logger.logr.info("Starting Running Node2vec Baseline")	
@@ -262,6 +263,7 @@ class DUCReader(DocumentReader):
 		n2vBaseline.generateSummary(gs, 3, "", lambda_val=0.8, diversity=True)
 		n2vBaseline.generateSummary(gs, 4, "_init", lambda_val=0.8, diversity=True)
 		n2vBaseline.generateSummary(gs, 5, "_retrofit", lambda_val=0.8, diversity=True)
+		n2vBaseline.doHouseKeeping()
  
 
 		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
@@ -270,6 +272,7 @@ class DUCReader(DocumentReader):
 		iterrunner.generateSummary(gs, 6, "_unweighted", lambda_val=0.8, diversity=True)
 		iterrunner.generateSummary(gs, 7, "_weighted", lambda_val=0.8, diversity=True)
 		iterrunner.generateSummary(gs, 8, "_randomwalk", lambda_val=0.8, diversity=True)
+		iterrunner.doHouseKeeping()
 
 
 		regs2v = RegularizedSen2VecRunner(self.dbstring)
@@ -277,6 +280,7 @@ class DUCReader(DocumentReader):
 		# regs2v.runTheBaseline(rbase, latent_space_size)
 		regs2v.generateSummary(gs,9,"_neighbor_w", lambda_val=0.8, diversity=True)
 		regs2v.generateSummary(gs,10,"_neighbor_unw", lambda_val=0.8, diversity=True)
+		regs2v.doHouseKeeping()
 
 
 		dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
@@ -284,6 +288,7 @@ class DUCReader(DocumentReader):
 		# dictregs2v.runTheBaseline(rbase, latent_space_size)
 		dictregs2v.generateSummary(gs,11,"_neighbor_w", lambda_val=0.8, diversity=True)
 		dictregs2v.generateSummary(gs,12,"_neighbor_unw", lambda_val=0.8, diversity=True)
+		dictregs2v.doHouseKeeping()
 
 
 		self.__runCombinedEvaluation()

@@ -166,28 +166,31 @@ class ReutersReader(DocumentReader):
 		if gs ==1: self.postgres_recorder.truncateSummaryTable()
 		paraBaseline.generateSummary(gs)
 		paraBaseline.runEvaluationTask()
+		paraBaseline.doHouseKeeping()
 
 		Logger.logr.info("Starting Running Node2vec Baseline")	
 		n2vBaseline = Node2VecRunner(self.dbstring)
 		n2vBaseline.prepareData(pd)
 		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-		#n2vBaseline.generateSummary(gs, 3, "")
 		n2vBaseline.runEvaluationTask()
+		n2vBaseline.doHouseKeeping()
 
 		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
 		iterrunner.prepareData(pd)
 		iterrunner.runTheBaseline(rbase)
-		#iterrunner.generateSummary(gs, 6, "_unweighted")
 		iterrunner.runEvaluationTask()
+		iterrunner.doHouseKeeping()
 
 	
 		regs2v = RegularizedSen2VecRunner(self.dbstring)
 		regs2v.prepareData(pd)
 		regs2v.runTheBaseline(rbase, latent_space_size)
-		#regs2v.generateSummary(gs,9,"_neighbor_w")
 		regs2v.runEvaluationTask() 
+		regs2v.doHouseKeeping()
+
 
 		dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
 		dictregs2v.prepareData(pd)
 		dictregs2v.runBaselines(rbase, latent_space_size)
 		dictregs2v.runEvaluationTask()
+		dictregs2v.doHouseKeeping()
