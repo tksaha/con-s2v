@@ -56,7 +56,7 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 		total_nodes = 0
 		for graph in graph_list:
 			max_nbr = self.__getMaxNeighbors(graph)
-			if max_nbr < max_neighbor:
+			if max_nbr > max_neighbor:
 				max_neighbor = max_nbr
 			total_nodes = total_nodes + graph.number_of_nodes()
 		
@@ -113,17 +113,33 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 			for line in open(file):
 				words = line.lower().strip().split()
 				if len(words) > 1:
-					first_word = norm_word(words[0])
+					first_word = self.norm_word(words[0])
 					for words in words[1:]:
-						nx_G.add_edge(first_word, norm_word(words))
+						nx_G.add_edge(first_word, self.norm_word(words))
 			graph_list.append(nx_G)
 
-		neighbor_file_w = open("%s_neighbor_w.txt"%(self.dictregsentvecFile), "w")
-		neighbor_file_unw = open("%s_neighbor_unw.txt"%(self.dictregsentvecFile), "w")
+		neighbor_file_w = open("%s_neighbor_w.txt"%(self.dictRegSen2vReprFile), "w")
+		neighbor_file_unw = open("%s_neighbor_unw.txt"%(self.dictRegSen2vReprFile), "w")
 
-		self.__write_neighbors (graph_list, weighted=True)
-		self.__write_neighbors (graph_list, weighted=False)
+		self.__write_neighbors (graph_list, neighbor_file_w, weighted=True)
+		self.__write_neighbors (graph_list, neighbor_file_unw, weighted=False)
 		self.Graph = nx.Graph()
+
+	def __dumpVecs(self, reprFile, vecFile, vecRawFile):
+
+		vModel = Word2Vec.load_word2vec_format(reprFile, binary=False)
+		
+		vec_dict = {}
+		vec_dict_raw = {}
+
+		for nodes in self.Graph.nodes():
+			vec = vModel[label_sent(str(nodes))]
+			vec_dict_raw[int(nodes)] = vec 
+			vec_dict[int(nodes)] = vec /  ( np.linalg.norm(vec) +  1e-6)
+
+		pickle.dump(vec_dict, vecFile)
+		pickle.dump(vec_dict_raw, vecRawFile)
+
 
 	def runTheBaseline(self, rbase, latent_space_size):
 		if rbase <=0: return 0

@@ -42,7 +42,7 @@ export GINTERTHR=0.6
 export GINTRATHR=0.4
 
 export GTHRSUMTFIDF=0.1
-export GTHRSUMLAT=0.1
+export GTHRSUMLAT=0.6
 export DUMPFACTOR=0.85
 # TOPNSUMMARY should be set to 0.2 for classification tasks and to 1.0 for ranking tasks
 export TOPNSUMMARY=1.0
@@ -62,3 +62,7 @@ export DUC_PATH=~/Documents/sen2vec/Data/DUC_merged
 
 export REGSEN2VECREPRFILE=~/Documents/sen2vec/Data/reg_sent
 export REGSEN2VECEXE=~/Documents/sen2vec/sen2vec/word2vec/reg_sen2vec_net
+
+export DICTREGSEN2VECREPRFILE=~/Documents/sen2vec/Data/dictreg_sent
+export DICTDIR=~/Documents/sen2vec/Data/lexicons
+

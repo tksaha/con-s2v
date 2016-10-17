@@ -13,6 +13,7 @@ from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
 from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
+from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRunner
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 from rouge.Rouge import Rouge 
 
@@ -235,7 +236,7 @@ class DUCReader(DocumentReader):
 		rPDict['-l'] = str(100)
 		rPDict['-c'] = str(0.99)
 
-		evaluation = RankingEvaluation(topics = ['2001'], models = [20], systems = [1,2,3,4,5,6,7,9,10,21])
+		evaluation = RankingEvaluation(topics = ['2001'], models = [20], systems = [1,2,3,4,5,6,7,8,9,10,11,12,21])
 		evaluation._getRankingEvaluation(rPDict, rougeInstance)
 		
 	def runBaselines(self, pd, rbase, gs):
@@ -244,35 +245,45 @@ class DUCReader(DocumentReader):
 		if rbase <= 0: return 0
 		latent_space_size = 300
 
-		Logger.logr.info("Starting Running Para2vec Baseline")
+		self.postgres_recorder.truncateSummaryTable()
+
+		# Logger.logr.info("Starting Running Para2vec Baseline")
 		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-		paraBaseline.prepareData(pd)
-		paraBaseline.runTheBaseline(rbase,latent_space_size)
+		# paraBaseline.prepareData(pd)
+		# paraBaseline.runTheBaseline(rbase,latent_space_size)
 		paraBaseline.generateSummary(gs, lambda_val=0.8, diversity=True)
-	   
+		# paraBaseline.generateSummary(gs)
 
 
-		Logger.logr.info("Starting Running Node2vec Baseline")	
+		# Logger.logr.info("Starting Running Node2vec Baseline")	
 		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.prepareData(pd)
-		n2vBaseline.runTheBaseline(rbase, latent_space_size)
-		n2vBaseline.generateSummary(gs, 3, "")
-		n2vBaseline.generateSummary(gs, 4, "_init")
-		n2vBaseline.generateSummary(gs, 5, "_retrofit")
+		# n2vBaseline.prepareData(pd)
+		# n2vBaseline.runTheBaseline(rbase, latent_space_size)
+		n2vBaseline.generateSummary(gs, 3, "", lambda_val=0.8, diversity=True)
+		n2vBaseline.generateSummary(gs, 4, "_init", lambda_val=0.8, diversity=True)
+		n2vBaseline.generateSummary(gs, 5, "_retrofit", lambda_val=0.8, diversity=True)
  
 
 		iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-		iterrunner.prepareData(pd)
-		iterrunner.runTheBaseline(rbase)
-		iterrunner.generateSummary(gs, 6, "_unweighted")
-		iterrunner.generateSummary(gs, 7, "_weighted")
-	  
+		# iterrunner.prepareData(pd)
+		# iterrunner.runTheBaseline(rbase)
+		iterrunner.generateSummary(gs, 6, "_unweighted", lambda_val=0.8, diversity=True)
+		iterrunner.generateSummary(gs, 7, "_weighted", lambda_val=0.8, diversity=True)
+		iterrunner.generateSummary(gs, 8, "_randomwalk", lambda_val=0.8, diversity=True)
 
 
 		regs2v = RegularizedSen2VecRunner(self.dbstring)
-		regs2v.prepareData(pd)
-		regs2v.runTheBaseline(rbase, latent_space_size)
-		regs2v.generateSummary(gs,9,"_neighbor_w")
-		regs2v.generateSummary(gs,10,"_neighbor_unw")
+		# regs2v.prepareData(pd)
+		# regs2v.runTheBaseline(rbase, latent_space_size)
+		regs2v.generateSummary(gs,9,"_neighbor_w", lambda_val=0.8, diversity=True)
+		regs2v.generateSummary(gs,10,"_neighbor_unw", lambda_val=0.8, diversity=True)
+
+
+		dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
+		# dictregs2v.prepareData(pd)
+		# dictregs2v.runTheBaseline(rbase, latent_space_size)
+		dictregs2v.generateSummary(gs,11,"_neighbor_w", lambda_val=0.8, diversity=True)
+		dictregs2v.generateSummary(gs,12,"_neighbor_unw", lambda_val=0.8, diversity=True)
+
 
 		self.__runCombinedEvaluation()
