@@ -57,18 +57,22 @@ class ClusteringEvaluation:
 
 
 	def runClusteringTask(self, summaryMethodID, latReprName):
+
+		Logger.logr.info("Doing Clustering Evaluation")
 		data = pd.read_csv("%s/%sclusterData_%i.csv"%(self.dataFolder,\
 			 latReprName, summaryMethodID), header=None)
 		X, Y = self.__getXY(data)
 
-		estimator = KMeans(init='k-means++', n_clusters=np.unique(Y), n_init=10)
-		estimator.fit(data)
+		n_clusters=np.unique(Y)
+
+		estimator = KMeans(init='k-means++', n_clusters=len(np.unique(Y)), n_init=10)
+		estimator.fit(X)
 
 		evaluationResultFile = open("%s/%sclustereval_%i.txt"%(self.dataFolder,\
 				latReprName, summaryMethodID), "w")
-
-    	evaluationResultFile.write('%0.3f   %.3f  %.3f   %.3f %s'
-          % (mt.homogeneity_score(Y, estimator.labels_),
-             mt.completeness_score(Y, estimator.labels_),
-             mt.v_measure_score(Y, estimator.labels_),
-             mt.adjusted_mutual_info_score(Y,  estimator.labels_), os.linesep))
+		evaluationResultFile.write("HomoGeneity:%0.3f   Completeness%.3f "\
+			"  v_measure:%.3f   Adjusted Mutual Info Score:%.3f %s"\
+    		% (mt.homogeneity_score(Y, estimator.labels_),\
+    			mt.completeness_score(Y, estimator.labels_),\
+    			mt.v_measure_score(Y, estimator.labels_),\
+    			mt.adjusted_mutual_info_score(Y,  estimator.labels_), os.linesep))

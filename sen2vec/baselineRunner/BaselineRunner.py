@@ -15,7 +15,7 @@ import numpy as np
 import subprocess 
 from db_connector.PostgresPythonConnector import PostgresPythonConnector
 from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
-from evaluation.clusteringevaluation import ClusteringEvaluation 
+from evaluation.clusteringevaluation.ClusteringEvaluation import ClusteringEvaluation 
 
 class BaselineRunner:
 	def __init__(self, dbstring, **kwargs):
