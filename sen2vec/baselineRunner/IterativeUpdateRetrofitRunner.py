@@ -23,6 +23,8 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		self.retrofittedsen2vReprFile = os.environ["ITERUPDATESEN2VECFILE"]
 		self.graphFile = os.environ["GRAPHFILE"]
 		self.p2vFile = os.environ['P2VCEXECOUTFILE']
+		#Hyperparameter Alpha
+		self.myalpha = float(os.environ['ITERUPDATE_ALPHA'])
 		self.Graph = nx.Graph()
 		self.postgresConnection.connectDatabase()
 		self.sen2Vec = {}
@@ -57,12 +59,11 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 
 
 		wretrofitter = WeightedIterativeUpdateRetrofitter(numIter=20, nx_Graph = self.Graph)
-		retrofitted_dict, normalized_retrofitted_dict = wretrofitter.retrofitWithIterUpdate(self.sen2Vec, alpha =-1) #Hyperparameter
+		retrofitted_dict, normalized_retrofitted_dict = wretrofitter.retrofitWithIterUpdate(self.sen2Vec, alpha = self.myalpha) #Hyperparameter
 		iterupdatevecFile = open("%s_weighted.p"%(self.retrofittedsen2vReprFile),"wb")
 		iterupdatevecFile_Raw = open("%s_weighted_raw.p"%(self.retrofittedsen2vReprFile),"wb")
 		pickle.dump(retrofitted_dict, iterupdatevecFile)
 		pickle.dump(normalized_retrofitted_dict, iterupdatevecFile_Raw)
-
 
 
 		randomwalkretrofitter = RandomWalkIterativeUpdateRetrofitter(numIter=10)

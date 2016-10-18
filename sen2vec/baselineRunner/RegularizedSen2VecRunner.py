@@ -26,6 +26,8 @@ class RegularizedSen2VecRunner(BaselineRunner):
 		self.regsen2vReprFile = os.environ["REGSEN2VECREPRFILE"]
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
+		self.regBetaUNW = float(os.environ['REG_BETA_UNW'])
+		self.regBetaW = float(os.environ['REG_BETA_W'])
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
@@ -122,7 +124,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
 ######################### Working for Weighted Neighbor File ##################	
 		neighborFile = 	"%s_neighbor_w.txt"%(self.regsen2vReprFile)
 		wPDict["output"] = "%s_neighbor_w"%(self.regsen2vReprFile)
-		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(1.0)
+		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(self.regBetaW)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
 		self._runProcess (args)
 		self.__dumpVecs(wPDict["output"],\
@@ -133,7 +135,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
 ######################### Working for UnWeighted Neighbor File ###################		
 		neighborFile = 	"%s_neighbor_unw.txt"%(self.regsen2vReprFile)
 		wPDict["output"] = "%s_neighbor_unw"%(self.regsen2vReprFile)
-		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(1.0)
+		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(self.regBetaUNW)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
 		self._runProcess (args)
 		self.__dumpVecs(wPDict["output"],\

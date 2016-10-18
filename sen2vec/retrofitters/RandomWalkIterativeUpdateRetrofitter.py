@@ -17,8 +17,8 @@ class RandomWalkIterativeUpdateRetrofitter:
 
     def retrofitWithIterUpdate(self, sen2vec):
       """
-      Alpha_i is equal to number of neighbors 
-      Beta_ij is equal to one 
+      Alpha_i is equal to 1
+      Beta_ij is equal to 1/d_i
       """
       newSen2Vecs = deepcopy(sen2vec)
       normalized_newSen2Vecs = deepcopy(sen2vec)

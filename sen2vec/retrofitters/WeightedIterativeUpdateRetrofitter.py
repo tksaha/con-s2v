@@ -20,6 +20,8 @@ class WeightedIterativeUpdateRetrofitter:
       the value is not initialized and initialized it 
       with the summation of weight. In all other case, 
       we use user configuration.
+
+      Here Beta_ij = 1.0 / d_i
       """
       newSen2Vecs = deepcopy(sen2vec)
       normalized_newSen2Vecs = deepcopy(sen2vec)
@@ -33,18 +35,17 @@ class WeightedIterativeUpdateRetrofitter:
           if numNeighbors == 0:
             continue
           
-          total_weight = 0.0
+          #total_weight = 0.0
+          if alpha <= 0.0:
+             alpha = 1.0
 
-          newVec = 0 * sen2vec[sentenceId]
+          newVec = alpha * numNeighbors * sen2vec[sentenceId]
           for neighborSentId in sentNeighbors:
             newVec += self.nx_Graph[sentenceId][neighborSentId]['weight'] * newSen2Vecs[neighborSentId]
-            total_weight = total_weight + self.nx_Graph[sentenceId][neighborSentId]['weight']
+            #total_weight = total_weight + self.nx_Graph[sentenceId][neighborSentId]['weight']
 
-          if  alpha < 0:
-              alpha = total_weight
-
-          newVec += alpha * sen2vec[sentenceId]
-          newSen2Vecs[sentenceId] = newVec/(alpha + total_weight)
+          #newVec += alpha * sen2vec[sentenceId]
+          newSen2Vecs[sentenceId] = newVec/(alpha*numNeighbors + numNeighbors)
 
       for Id  in allSentenceIds:
         vec = newSen2Vecs[Id] 

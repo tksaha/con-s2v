@@ -32,6 +32,8 @@ class Node2VecRunner(BaselineRunner):
 		self.intraThr = float(os.environ["GINTRATHR"])
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.kneighbors = int(os.environ['KNEIGHBOR'])
+		# Hyperparameter Beta
+		self.mybeta = float(os.environ['N2VBETA'])
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
@@ -192,7 +194,7 @@ class Node2VecRunner(BaselineRunner):
 		node2vecFile = open("%s_retrofit.p"%self.n2vReprFile, "wb")
 		node2vecFile_Raw = open("%s_retrofit_raw.p"%self.n2vReprFile, "wb")
 
-		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=1, beta=0.6)
+		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=1, beta=self.mybeta)
 		self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
 	
 
@@ -234,8 +236,6 @@ class Node2VecRunner(BaselineRunner):
 		reprName = "%s"%self.latReprName
 		self.__runEval(summaryMethodID, node2vecFileName, reprName)
 
-
-		
 		node2vecFileName ="%s_init"%(self.n2vReprFile)
 		reprName = "%s_init"%self.latReprName
 		self.__runEval(summaryMethodID, node2vecFileName, reprName)

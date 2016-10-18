@@ -28,6 +28,13 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.dictDir = os.environ['DICTDIR']
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
+
+		# Hyperparameter 
+		self.dictregBetaUNW = float(os.environ['REG_BETA_UNW'])
+		self.dictregBetaW = float(os.environ['REG_BETA_W'])
+		self.DictFile = os.environ['DICTREGDICT']
+
+
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
@@ -103,9 +110,9 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 		fileNames = []
 		for root, directories, files in os.walk(self.dictDir):
 			for file in files:
-				fileName = os.path.join(root, file)
-				fileNames.append(fileName)
-
+				if 	file == self.DictFile:
+					fileName = os.path.join(root, file)
+					fileNames.append(fileName)
 
 		for file in fileNames:
 			Logger.logr.info("Working for dictionary file %s"%file)
@@ -159,7 +166,7 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 ######################### Working for Weighted Neighbor File ##################	
 		neighborFile = 	"%s_neighbor_w.txt"%(self.dictRegSen2vReprFile)
 		wPDict["output"] = "%s_neighbor_w"%(self.dictRegSen2vReprFile)
-		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(1.0)
+		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(self.dictregBetaW)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
 		self._runProcess (args)
 		self.__dumpVecs(wPDict["output"],\
@@ -170,7 +177,7 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 ######################### Working for UnWeighted Neighbor File ###################		
 		neighborFile = 	"%s_neighbor_unw.txt"%(self.dictRegSen2vReprFile)
 		wPDict["output"] = "%s_neighbor_unw"%(self.dictRegSen2vReprFile)
-		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(1.0)
+		wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(self.dictregBetaUNW)
 		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
 		self._runProcess (args)
 		self.__dumpVecs(wPDict["output"],\
