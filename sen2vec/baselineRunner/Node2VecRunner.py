@@ -217,6 +217,7 @@ class Node2VecRunner(BaselineRunner):
 		node2vecFile = open("%s_raw.p"%node2vecFileName, "rb")
 		n2vDict = pickle.load (node2vecFile)
 		self._runClassification(summaryMethodID, "%s_raw"%reprName, n2vDict)
+		self._runClustering(summaryMethodID, "%s_raw"%reprName, n2vDict)
 
 	def runEvaluationTask(self):
 		"""
@@ -232,6 +233,7 @@ class Node2VecRunner(BaselineRunner):
 		node2vecFileName = "%s"%(self.n2vReprFile)
 		reprName = "%s"%self.latReprName
 		self.__runEval(summaryMethodID, node2vecFileName, reprName)
+
 
 		
 		node2vecFileName ="%s_init"%(self.n2vReprFile)

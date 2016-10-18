@@ -200,6 +200,7 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 		vecFile = open("%s_raw.p"%vecFileName, "rb")
 		vDict = pickle.load (vecFile)
 		self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
+		self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)
 
 	def runEvaluationTask(self):
 		summaryMethodID = 2 
