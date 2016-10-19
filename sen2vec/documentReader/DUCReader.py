@@ -244,7 +244,7 @@ class DUCReader(DocumentReader):
 		rPDict['-l'] = str(100)
 		rPDict['-c'] = str(0.99)
 
-		evaluation = RankingEvaluation(topics = [self.duc_topic], models = [20], systems = [1,2,3,4,5,6,7,8,9,10,11,12,21])
+		evaluation = RankingEvaluation(topics = [self.duc_topic], models = [20], systems = [1,2,3,4,5,6,7,8,9,10,11,21])
 		evaluation._prepareFiles()
 		evaluation._getRankingEvaluation(rPDict, rougeInstance)
 
