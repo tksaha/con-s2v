@@ -64,6 +64,7 @@ export DUC_PATH=~/Documents/sen2vec/Data/DUC_merged
 export DUC_LAMBDA=1.0
 export DUC_DIVERSITY=0
 export DUC_TOPIC=2001
+export DUC_EVAL='TEST'
 
 export REGSEN2VECREPRFILE=~/Documents/sen2vec/Data/reg_sent
 export REGSEN2VECEXE=~/Documents/sen2vec/sen2vec/word2vec/reg_sen2vec_net
@@ -75,8 +76,4 @@ export REG_BETA_UNW=1.0
 export REG_BETA_W=1.0
 export ITERUPDATE_ALPHA=1.0
 export N2VBETA=1.0
-export DICTREGDICT=frameNet.txt
-
-
-
-
+export DICTREGDICT=wordnet-synonyms.txt

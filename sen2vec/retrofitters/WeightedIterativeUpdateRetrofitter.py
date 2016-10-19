@@ -14,7 +14,7 @@ class WeightedIterativeUpdateRetrofitter:
       self.numIters = kwargs['numIter']
       self.nx_Graph = kwargs['nx_Graph']
 
-    def retrofitWithIterUpdate(self, sen2vec, alpha=-1):
+    def retrofitWithIterUpdate(self, sen2vec, alpha=-1.0):
       """
       If alpha is initialized to negative, then we assume 
       the value is not initialized and initialized it 

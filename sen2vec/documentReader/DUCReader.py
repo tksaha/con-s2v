@@ -278,6 +278,8 @@ class DUCReader(DocumentReader):
 			diversity = True 
 
 		# createValidationSet() Need to implement this function
+
+		os.environ['DUC_EVAL']='VALID'
 		
 		recalls = {}
 		window_opt = None #var for the optimal window
@@ -285,7 +287,8 @@ class DUCReader(DocumentReader):
 			Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
 			self.postgres_recorder.truncateSummaryTable()
 			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			paraBaseline.prepareData(pd)
+			if 	window=="8":  
+				paraBaseline.prepareData(pd)
 			paraBaseline.runTheBaseline(rbase,latent_space_size, window)
 			paraBaseline.generateSummary(gs,\
 				lambda_val=self.lambda_val, diversity=diversity)
@@ -298,7 +301,6 @@ class DUCReader(DocumentReader):
 		Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
 		self.postgres_recorder.truncateSummaryTable()
 		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-		paraBaseline.prepareData(pd)
 		paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
 		paraBaseline.doHouseKeeping()
 		
@@ -309,7 +311,8 @@ class DUCReader(DocumentReader):
 			self.postgres_recorder.truncateSummaryTable()
 			n2vBaseline = Node2VecRunner(self.dbstring)
 			n2vBaseline.mybeta = beta #reinitializing mybeta
-			n2vBaseline.prepareData(pd)
+			if beta=="0.3":
+			   n2vBaseline.prepareData(pd)
 			n2vBaseline.runTheBaseline(rbase, latent_space_size)
 			n2vBaseline.generateSummary(gs, 5, "_retrofit",\
 				 lambda_val=self.lambda_val, diversity=diversity)
@@ -320,20 +323,18 @@ class DUCReader(DocumentReader):
 		beta_opt = max(recalls, key=recalls.get) #get the beta for the max recall
 
 		Logger.logr.info("Starting Running Node2vec Baseline for Optimal Beta = %s" %beta_opt)
-		self.postgres_recorder.truncateSummaryTable()
-		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.mybeta = beta_opt #reinitializing mybeta
-		n2vBaseline.prepareData(pd) #We need the graph created with the optimal beta
-		n2vBaseline.doHouseKeeping()
+		
+		
 		
 		recalls = {}
 		alpha_opt = None #var for the optimal beta
-		for alpha in ["0.3", "0.6", "0.9"]:
+		for alpha in [0.3, 0.6, 0.9]:
 			Logger.logr.info("Starting Running Iterative Baseline for Alpha = %s" %alpha)
 			self.postgres_recorder.truncateSummaryTable()
 			iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
 			iterrunner.myalpha = alpha #reinitializing myalpha
-			iterrunner.prepareData(pd)
+			if alpha==0.3:
+				iterrunner.prepareData(pd)
 			iterrunner.runTheBaseline(rbase)
 			iterrunner.generateSummary(gs, 7, "_weighted",\
 				lambda_val=self.lambda_val, diversity=diversity)
@@ -348,13 +349,14 @@ class DUCReader(DocumentReader):
 		unw_recalls = {}
 		w_opt = None
 		unw_opt = None
-		for beta in ["0.3", "0.6", "0.9"]:
+		for beta in [0.3, 0.6, 0.9]:
 			Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
 			self.postgres_recorder.truncateSummaryTable()
 			regs2v = RegularizedSen2VecRunner(self.dbstring)
 			regs2v.regBetaW = beta
 			regs2v.regBetaUNW = beta
-			regs2v.prepareData(pd)
+			if beta==0.3:
+				regs2v.prepareData(pd)
 			regs2v.runTheBaseline(rbase, latent_space_size)
 			regs2v.generateSummary(gs,9,"_neighbor_w",\
 				 lambda_val=self.lambda_val, diversity=diversity)
@@ -374,13 +376,14 @@ class DUCReader(DocumentReader):
 		unw_recalls = {}
 		w_opt = None
 		unw_opt = None
-		for beta in ["0.3", "0.6", "0.9"]:
+		for beta in [0.3, 0.6, 0.9]:
 			Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
 			self.postgres_recorder.truncateSummaryTable()
 			dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
 			dictregs2v.dictregBetaW = beta
 			dictregs2v.dictregBetaUNWW = beta
-			dictregs2v.prepareData(pd)
+			if beta==0.3:
+				dictregs2v.prepareData(pd)
 			dictregs2v.runTheBaseline(rbase, latent_space_size)
 			dictregs2v.generateSummary(gs,11,"_neighbor_w",\
 				 lambda_val=self.lambda_val, diversity=diversity)
@@ -396,5 +399,5 @@ class DUCReader(DocumentReader):
 		unw_opt = max(unw_recalls, key=unw_recalls.get)
 		Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNWW=%s" %(w_opt, unw_opt))
 
-
-#		self.__runCombinedEvaluation()
+		os.environ[DUC_EVAL]='TEST'
+		self.__runCombinedEvaluation()

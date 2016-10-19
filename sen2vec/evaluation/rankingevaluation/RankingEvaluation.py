@@ -37,15 +37,59 @@ class RankingEvaluation:
 		self.summary_dir = os.environ["SUMMARYFOLDER"]
 		self.models_dir = os.environ["MODELSUMMARYFOLDER"]
 		self.systems_dir = os.environ["SYSTEMSUMMARYFOLDER"]
-		
+		self.evaluation_ON = os.environ["DUC_EVAL"] # TEST or VALID for validation
 		self.dbstring = os.environ["DUC_DBSTRING"]
 		self.postgresConnection = PostgresPythonConnector(self.dbstring)
 		self.postgresConnection.connectDatabase()
 		self.config_file_name = ""
-		
+		self.filename_dict = {}
 		self.evalsDict = {}
+
+	def __createValidationFile(self, total_fetch, valid_file_):
+		"""
+		select filename from document order by random() limit 98
+		"""
+		for result in self.postgresConnection.memoryEfficientSelect(\
+			['filename'],['document'],[],[],['random() limit %i'%total_fetch]):
+			for row_id in range(0, len(result)):
+				self.filename_dict[result[row_id][0]] = 1
+				valid_file_.write("%s%s"%(result[row_id][0],os.linesep))
+
+
+	def __prepareValidationIDFile(self):
+		"""
+		fields = [], tables = [], where = [], 
+		groupby = [], orderby = []
+		"""
+		self.duc_topic = os.environ['DUC_TOPIC']
+		total_doc = 0
+		for result in self.postgresConnection.memoryEfficientSelect(\
+			['count(*)'], ['document'],[],[],[]):
+			total_doc = int(result[0][0])
+		valid_doc = int (total_doc * 0.20)
+		self.filename_dict = {}
+
+		valid_file_ = os.path.join(self.summary_dir,"%s_valid.txt"%self.duc_topic)
+		if os.path.exists(valid_file_):
+			for line in open(valid_file_):
+				self.filename_dict[line.strip()] = 1
+			if len(self.filename_dict) == valid_doc:
+				return 0
+			else:
+				valid_file_ = open(valid_file_, "w")
+				self.__createValidationFile(valid_doc, valid_file_)
+		else:
+			valid_file_ = open(valid_file_, "w")
+			self.__createValidationFile(valid_doc, valid_file_)
+
+
+
 	
 	def __prepareConfigurationFile(self):
+
+		
+		self.__prepareValidationIDFile()
+
 		config_file_name = ""
 		for model in self.models:
 			config_file_name += str(model)+"_"
@@ -58,6 +102,13 @@ class RankingEvaluation:
 			f.write('<ROUGE-EVAL version="1.5.5">%s' %os.linesep)
 
 			for eval_ in self.evalsDict:
+				if self.evaluation_ON == 'TEST':
+					if eval_ in self.filename_dict:
+						continue 
+				else:
+					if eval_ not in self.filename_dict:
+						continue 
+
 				f.write('<EVAL ID="%s">%s' %(eval_, os.linesep))
 				
 				f.write('<PEER-ROOT>%s</PEER-ROOT>%s' %(self.systems_dir, os.linesep))
