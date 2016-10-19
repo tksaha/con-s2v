@@ -152,7 +152,7 @@ class Node2VecRunner(BaselineRunner):
 		pickle.dump(n2vec_dict_raw, node2vecFile_Raw)
 
 
-	def runTheBaseline(self, rbase, latent_space_size):
+	def runTheBaseline(self, rbase, latent_space_size, generate_walk=False):
 		"""
 		This will run for both case: one with initialization 
 		and another without initialization from para2vec
@@ -170,7 +170,10 @@ class Node2VecRunner(BaselineRunner):
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
 			 num_walks=10, walk_length=10, p=0.4, q=0.5)
-		node2vecInstance.getWalkFile(nx_G, walkInputFileName)
+
+		if 	generate_walk==True:
+			Logger.logr.info("Generating Walk File")
+			node2vecInstance.getWalkFile(nx_G, walkInputFileName)
 
 
 		############################# Working with Node2Vec with initialization ####
