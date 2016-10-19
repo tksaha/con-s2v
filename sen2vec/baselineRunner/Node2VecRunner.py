@@ -169,7 +169,7 @@ class Node2VecRunner(BaselineRunner):
 		initFile = "%s_raw"%self.p2vReprFile
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			 num_walks=10, walk_length=5, p=0.4, q=0.5)
+			 num_walks=10, walk_length=10, p=0.4, q=0.5)
 		node2vecInstance.getWalkFile(nx_G, walkInputFileName)
 
 

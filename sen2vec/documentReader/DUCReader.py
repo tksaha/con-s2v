@@ -242,7 +242,6 @@ class DUCReader(DocumentReader):
 		"""
 
 		"""
-		if rbase <= 0: return 0
 		latent_space_size = 300
 
 		diversity = False
