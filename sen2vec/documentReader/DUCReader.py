@@ -281,7 +281,6 @@ class DUCReader(DocumentReader):
 					diversity = True 
 
 				# createValidationSet() Need to implement this function
-
 				os.environ['DUC_EVAL']='VALID'
 		
 				recalls = {}
@@ -315,9 +314,11 @@ class DUCReader(DocumentReader):
 					self.postgres_recorder.truncateSummaryTable()
 					n2vBaseline = Node2VecRunner(self.dbstring)
 					n2vBaseline.mybeta = beta #reinitializing mybeta
+					generate_walk = False
 					if beta=="0.3":
 					   n2vBaseline.prepareData(pd)
-					n2vBaseline.runTheBaseline(rbase, latent_space_size)
+					   generate_walk = True 
+					n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
 					n2vBaseline.generateSummary(gs, 5, "_retrofit",\
 						 lambda_val=self.lambda_val, diversity=diversity)
 					n2vBaseline.doHouseKeeping()
@@ -329,7 +330,7 @@ class DUCReader(DocumentReader):
 		
 				recalls = {}
 				alpha_opt = None #var for the optimal beta
-				for alpha in [0.3, 0.6, 0.9]:
+				for alpha in [0.3, 0.6, 0.8, 1.0]:
 					Logger.logr.info("Starting Running Iterative Baseline for Alpha = %s" %alpha)
 					self.postgres_recorder.truncateSummaryTable()
 					iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
@@ -351,7 +352,7 @@ class DUCReader(DocumentReader):
 				unw_recalls = {}
 				w_opt = None
 				unw_opt = None
-				for beta in [0.3, 0.6, 0.9]:
+				for beta in [0.3, 0.6, 0.8, 1.0]:
 					Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
 					self.postgres_recorder.truncateSummaryTable()
 					regs2v = RegularizedSen2VecRunner(self.dbstring)
@@ -370,9 +371,9 @@ class DUCReader(DocumentReader):
 					unw_recalls[beta] = self.__getRecall(method_id=10, models = [20], systems = [9, 10])
 					Logger.logr.info("W_Recall for %s = %s" %(beta, w_recalls[beta]))
 					Logger.logr.info("UNW_Recall for %s = %s" %(beta, unw_recalls[beta]))
-				w_opt = max(w_recalls, key=w_recalls.get)
-				unw_opt = max(unw_recalls, key=unw_recalls.get)
-				Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt, unw_opt))
+				w_opt_reg = max(w_recalls, key=w_recalls.get)
+				unw_opt_reg = max(unw_recalls, key=unw_recalls.get)
+				Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt_reg, unw_opt_reg))
 				f.write("REG BetaW Recalls: %s%s" %(w_recalls, os.linesep))
 				f.write("REG BetaUNW Recalls: %s%s" %(unw_recalls, os.linesep))
 
@@ -380,7 +381,7 @@ class DUCReader(DocumentReader):
 				unw_recalls = {}
 				w_opt = None
 				unw_opt = None
-				for beta in [0.3, 0.6, 0.9]:
+				for beta in [0.3, 0.6, 0.8, 1.0]:
 					Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
 					self.postgres_recorder.truncateSummaryTable()
 					dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
@@ -399,11 +400,80 @@ class DUCReader(DocumentReader):
 					unw_recalls[beta] = self.__getRecall(method_id=12, models = [20], systems = [11, 12])
 					Logger.logr.info("W_Recall for %s = %s" %(beta, w_recalls[beta]))
 					Logger.logr.info("UNW_Recall for %s = %s" %(beta, unw_recalls[beta]))
-				w_opt = max(w_recalls, key=w_recalls.get)
-				unw_opt = max(unw_recalls, key=unw_recalls.get)
-				Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNW=%s" %(w_opt, unw_opt))
+				w_opt_dict_reg = max(w_recalls, key=w_recalls.get)
+				unw_opt_dict_reg = max(unw_recalls, key=unw_recalls.get)
+				Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNW=%s" %(w_opt_dict_reg, unw_opt_dict_reg))
 				f.write("DCT BetaW Recalls: %s%s" %(w_recalls, os.linesep))
 				f.write("DCT BetaUNW Recalls: %s%s" %(unw_recalls, os.linesep))
 
-#		os.environ[DUC_EVAL]='TEST'
-#		self.__runCombinedEvaluation()
+				os.environ[DUC_EVAL]='TEST'
+				
+				self.postgres_recorder.truncateSummaryTable()
+				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+				paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
+				paraBaseline.generateSummary(gs,\
+						lambda_val=self.lambda_val, diversity=diversity)
+				paraBaseline.doHouseKeeping()
+
+				n2vBaseline = Node2VecRunner(self.dbstring)
+				n2vBaseline.mybeta = beta_opt
+				n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
+				n2vBaseline.generateSummary(gs, 3, "",\
+					 lambda_val=self.lambda_val, diversity=diversity)
+				n2vBaseline.generateSummary(gs, 4, "_init",\
+					 lambda_val=self.lambda_val, diversity=diversity)
+				n2vBaseline.generateSummary(gs, 5, "_retrofit",\
+					 lambda_val=self.lambda_val, diversity=diversity)
+				n2vBaseline.doHouseKeeping()
+
+				iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+				iterrunner.myalpha = alpha_opt #reinitializing myalpha
+				iterrunner.runTheBaseline(rbase)
+				iterrunner.generateSummary(gs, 6, "_unweighted",\
+						lambda_val=self.lambda_val, diversity=diversity)
+				iterrunner.generateSummary(gs, 7, "_weighted",\
+						lambda_val=self.lambda_val, diversity=diversity)
+				iterrunner.doHouseKeeping()
+
+
+				regs2v = RegularizedSen2VecRunner(self.dbstring)
+				regs2v.regBetaW = w_opt_reg 
+				regs2v.regBetaUNW = unw_opt_reg
+				regs2v.runTheBaseline(rbase, latent_space_size)
+				regs2v.generateSummary(gs,8,"_neighbor_w",\
+					 lambda_val=self.lambda_val, diversity=diversity)
+				regs2v.generateSummary(gs,9,"_neighbor_unw",\
+					 lambda_val=self.lambda_val, diversity=diversity)
+				regs2v.doHouseKeeping()
+
+
+
+				dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
+				dictregs2v.dictregBetaW = w_opt_dict_reg
+				dictregs2v.dictregBetaUNWW = unw_opt_dict_reg
+				dictregs2v.runTheBaseline(rbase, latent_space_size)
+				dictregs2v.generateSummary(gs,10,"_neighbor_w",\
+					 lambda_val=self.lambda_val, diversity=diversity)
+				dictregs2v.generateSummary(gs,11,"_neighbor_unw",\
+					 lambda_val=self.lambda_val, diversity=diversity)
+				dictregs2v.doHouseKeeping()
+				
+				self.__runCombinedEvaluation()
+
+				#20__1_2_3_4_5_6_7_8_9_10_11_12_21_output_100.txt
+				#20__1_2_3_4_5_6_7_8_9_10_11_12_21_output_10.txt
+				f.write ("%s%s"%"#########################Running for Test (100) ###########################################", os.linesep)
+				file_ = "~/Documents/sen2vec/Data/Summary/20__1_2_3_4_5_6_7_8_9_10_11_12_21_output_100.txt"
+				for line in open(file_):
+					f.write(line)
+
+				f.write ("%s%s"%"#########################Running for Test (10) ###########################################", os.linesep)
+				file_ = "~/Documents/sen2vec/Data/Summary/20__1_2_3_4_5_6_7_8_9_10_11_12_21_output_10.txt"
+				for line in open(file_):
+					f.write(line)
+
+				f.write("%s%s"%(os.linesep, os.linesep))
+
+
+
+
