@@ -273,7 +273,7 @@ class DUCReader(DocumentReader):
 		"""
 		for i in range(0,5):
 			with open('%s%s%s' %(os.environ["TRTESTFOLDER"],"/","hyperparameters.txt"), 'w') as f:
-				f.write("###### Iteration: %s ######%s", %(i, os.linesep))
+				f.write("###### Iteration: %s ######%s" %(i, os.linesep))
 				latent_space_size = 300
 
 				diversity = False
