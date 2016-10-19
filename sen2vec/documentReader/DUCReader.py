@@ -300,6 +300,7 @@ class DUCReader(DocumentReader):
 					Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
 				window_opt = max(recalls, key=recalls.get) #get the window for the max recall
 				f.write("P2V Window Recalls: %s%s" %(recalls, os.linesep))
+				f.flush()
 
 				Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
 				self.postgres_recorder.truncateSummaryTable()
@@ -327,6 +328,7 @@ class DUCReader(DocumentReader):
 					Logger.logr.info("Recall for %s = %s" %(beta, recalls[beta]))
 				beta_opt = max(recalls, key=recalls.get) #get the beta for the max recall
 				f.write("N2V Beta Recalls: %s%s" %(recalls, os.linesep))
+				f.flush()
 		
 				recalls = {}
 				alpha_opt = None #var for the optimal beta
@@ -347,6 +349,7 @@ class DUCReader(DocumentReader):
 				alpha_opt = max(recalls, key=recalls.get) #get the alpha for the max recall
 				Logger.logr.info("Optimal Alpha=%s" %alpha_opt)
 				f.write("ITR Alpha Recalls: %s%s" %(recalls, os.linesep))
+				f.flush()
 
 				w_recalls = {}
 				unw_recalls = {}
@@ -376,6 +379,7 @@ class DUCReader(DocumentReader):
 				Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt_reg, unw_opt_reg))
 				f.write("REG BetaW Recalls: %s%s" %(w_recalls, os.linesep))
 				f.write("REG BetaUNW Recalls: %s%s" %(unw_recalls, os.linesep))
+				f.flush()
 
 				w_recalls = {}
 				unw_recalls = {}
@@ -405,6 +409,7 @@ class DUCReader(DocumentReader):
 				Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNW=%s" %(w_opt_dict_reg, unw_opt_dict_reg))
 				f.write("DCT BetaW Recalls: %s%s" %(w_recalls, os.linesep))
 				f.write("DCT BetaUNW Recalls: %s%s" %(unw_recalls, os.linesep))
+				f.flush()
 
 				os.environ[DUC_EVAL]='TEST'
 				
@@ -473,6 +478,7 @@ class DUCReader(DocumentReader):
 					f.write(line)
 
 				f.write("%s%s"%(os.linesep, os.linesep))
+				f.flush()
 
 
 
