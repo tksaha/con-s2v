@@ -61,7 +61,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 			str_ ="%s %0.3f"%(str_,val)
 		return str_
 
-	def runTheBaseline(self, rbase, latent_space_size):
+	def runTheBaseline(self, rbase, latent_space_size, window):
 		"""
 		We run the para2vec Model and then store sen2vec as pickled 
 		dictionaries into the output file. 
@@ -75,6 +75,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		wPDict["cbow"], wPDict["sentence-vectors"],wPDict["min-count"] = str(0), str(0), str(0)
 		wPDict["train"], wPDict["output"] = "%s.txt"%self.sentsFile, self.doc2vecOut
 		wPDict["size"], wPDict["sentence-vectors"] = str(300), str(1)
+		wPDict["window"] = window
 		args = wordDoc2Vec.buildArgListforW2V(wPDict)
 		self._runProcess(args)
 		sent2vecModel = Doc2Vec.load_word2vec_format(self.doc2vecOut, binary=False)
