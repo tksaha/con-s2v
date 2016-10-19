@@ -271,133 +271,139 @@ class DUCReader(DocumentReader):
 		"""
 
 		"""
-		latent_space_size = 300
+		for i in range(0,5):
+			with open('%s%s%s' %(os.environ["TRTESTFOLDER"],"/","hyperparameters.txt"), 'w') as f:
+				f.write("###### Iteration: %s ######%s", %(i, os.linesep))
+				latent_space_size = 300
 
-		diversity = False
-		if self.diversity == str(1):
-			diversity = True 
+				diversity = False
+				if self.diversity == str(1):
+					diversity = True 
 
-		# createValidationSet() Need to implement this function
+				# createValidationSet() Need to implement this function
 
-		os.environ['DUC_EVAL']='VALID'
+				os.environ['DUC_EVAL']='VALID'
 		
-		recalls = {}
-		window_opt = None #var for the optimal window
-		for window in ["8", "10", "12"]:
-			Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
-			self.postgres_recorder.truncateSummaryTable()
-			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			if 	window=="8":  
-				paraBaseline.prepareData(pd)
-			paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-			paraBaseline.generateSummary(gs,\
-				lambda_val=self.lambda_val, diversity=diversity)
-			paraBaseline.doHouseKeeping()			
-			self.__runSpecificEvaluation(models = [20], systems = [2]) #Running Rouge for method_id = 2 only
-			recalls[window] = self.__getRecall(method_id=2, models = [20], systems = [2])
-			Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
-		window_opt = max(recalls, key=recalls.get) #get the window for the max recall
+				recalls = {}
+				window_opt = None #var for the optimal window
+				for window in ["8", "10", "12"]:
+					Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
+					self.postgres_recorder.truncateSummaryTable()
+					paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+					if 	window=="8":  
+						paraBaseline.prepareData(pd)
+					paraBaseline.runTheBaseline(rbase,latent_space_size, window)
+					paraBaseline.generateSummary(gs,\
+						lambda_val=self.lambda_val, diversity=diversity)
+					paraBaseline.doHouseKeeping()			
+					self.__runSpecificEvaluation(models = [20], systems = [2]) #Running Rouge for method_id = 2 only
+					recalls[window] = self.__getRecall(method_id=2, models = [20], systems = [2])
+					Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
+				window_opt = max(recalls, key=recalls.get) #get the window for the max recall
+				f.write("P2V Window Recalls: %s%s" %(recalls, os.linesep))
 
-		Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
-		self.postgres_recorder.truncateSummaryTable()
-		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-		paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
-		paraBaseline.doHouseKeeping()
+				Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
+				self.postgres_recorder.truncateSummaryTable()
+				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+				paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
+				paraBaseline.doHouseKeeping()
 		
-		recalls = {}
-		beta_opt = None #var for the optimal beta
-		for beta in ["0.3", "0.6", "0.9"]:
-			Logger.logr.info("Starting Running Node2vec Baseline for Beta = %s" %beta)
-			self.postgres_recorder.truncateSummaryTable()
-			n2vBaseline = Node2VecRunner(self.dbstring)
-			n2vBaseline.mybeta = beta #reinitializing mybeta
-			if beta=="0.3":
-			   n2vBaseline.prepareData(pd)
-			n2vBaseline.runTheBaseline(rbase, latent_space_size)
-			n2vBaseline.generateSummary(gs, 5, "_retrofit",\
-				 lambda_val=self.lambda_val, diversity=diversity)
-			n2vBaseline.doHouseKeeping()
-			self.__runSpecificEvaluation(models = [20], systems = [5]) #Running Rouge for method_id = 5 only
-			recalls[beta] = self.__getRecall(method_id=5, models = [20], systems = [5])
-			Logger.logr.info("Recall for %s = %s" %(beta, recalls[beta]))
-		beta_opt = max(recalls, key=recalls.get) #get the beta for the max recall
-
-		Logger.logr.info("Starting Running Node2vec Baseline for Optimal Beta = %s" %beta_opt)
+				recalls = {}
+				beta_opt = None #var for the optimal beta
+				for beta in ["0.3", "0.6", "0.9"]:
+					Logger.logr.info("Starting Running Node2vec Baseline for Beta = %s" %beta)
+					self.postgres_recorder.truncateSummaryTable()
+					n2vBaseline = Node2VecRunner(self.dbstring)
+					n2vBaseline.mybeta = beta #reinitializing mybeta
+					if beta=="0.3":
+					   n2vBaseline.prepareData(pd)
+					n2vBaseline.runTheBaseline(rbase, latent_space_size)
+					n2vBaseline.generateSummary(gs, 5, "_retrofit",\
+						 lambda_val=self.lambda_val, diversity=diversity)
+					n2vBaseline.doHouseKeeping()
+					self.__runSpecificEvaluation(models = [20], systems = [5]) #Running Rouge for method_id = 5 only
+					recalls[beta] = self.__getRecall(method_id=5, models = [20], systems = [5])
+					Logger.logr.info("Recall for %s = %s" %(beta, recalls[beta]))
+				beta_opt = max(recalls, key=recalls.get) #get the beta for the max recall
+				f.write("N2V Beta Recalls: %s%s" %(recalls, os.linesep))
 		
-		
-		
-		recalls = {}
-		alpha_opt = None #var for the optimal beta
-		for alpha in [0.3, 0.6, 0.9]:
-			Logger.logr.info("Starting Running Iterative Baseline for Alpha = %s" %alpha)
-			self.postgres_recorder.truncateSummaryTable()
-			iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-			iterrunner.myalpha = alpha #reinitializing myalpha
-			if alpha==0.3:
-				iterrunner.prepareData(pd)
-			iterrunner.runTheBaseline(rbase)
-			iterrunner.generateSummary(gs, 7, "_weighted",\
-				lambda_val=self.lambda_val, diversity=diversity)
-			iterrunner.doHouseKeeping()
-			self.__runSpecificEvaluation(models = [20], systems = [7])
-			recalls[alpha] = self.__getRecall(method_id=7, models = [20], systems = [7])
-			Logger.logr.info("Recall for %s = %s" %(alpha, recalls[alpha]))
-		alpha_opt = max(recalls, key=recalls.get) #get the alpha for the max recall
-		Logger.logr.info("Optimal Alpha=%s" %alpha_opt)	
+				recalls = {}
+				alpha_opt = None #var for the optimal beta
+				for alpha in [0.3, 0.6, 0.9]:
+					Logger.logr.info("Starting Running Iterative Baseline for Alpha = %s" %alpha)
+					self.postgres_recorder.truncateSummaryTable()
+					iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+					iterrunner.myalpha = alpha #reinitializing myalpha
+					if alpha==0.3:
+						iterrunner.prepareData(pd)
+					iterrunner.runTheBaseline(rbase)
+					iterrunner.generateSummary(gs, 7, "_weighted",\
+						lambda_val=self.lambda_val, diversity=diversity)
+					iterrunner.doHouseKeeping()
+					self.__runSpecificEvaluation(models = [20], systems = [7])
+					recalls[alpha] = self.__getRecall(method_id=7, models = [20], systems = [7])
+					Logger.logr.info("Recall for %s = %s" %(alpha, recalls[alpha]))
+				alpha_opt = max(recalls, key=recalls.get) #get the alpha for the max recall
+				Logger.logr.info("Optimal Alpha=%s" %alpha_opt)
+				f.write("ITR Alpha Recalls: %s%s" %(recalls, os.linesep))
 
-		w_recalls = {}
-		unw_recalls = {}
-		w_opt = None
-		unw_opt = None
-		for beta in [0.3, 0.6, 0.9]:
-			Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
-			self.postgres_recorder.truncateSummaryTable()
-			regs2v = RegularizedSen2VecRunner(self.dbstring)
-			regs2v.regBetaW = beta
-			regs2v.regBetaUNW = beta
-			if beta==0.3:
-				regs2v.prepareData(pd)
-			regs2v.runTheBaseline(rbase, latent_space_size)
-			regs2v.generateSummary(gs,9,"_neighbor_w",\
-				 lambda_val=self.lambda_val, diversity=diversity)
-			regs2v.generateSummary(gs,10,"_neighbor_unw",\
-				 lambda_val=self.lambda_val, diversity=diversity)
-			regs2v.doHouseKeeping()
-			self.__runSpecificEvaluation(models = [20], systems = [9, 10])
-			w_recalls[beta] = self.__getRecall(method_id=9, models = [20], systems = [9, 10])
-			unw_recalls[beta] = self.__getRecall(method_id=10, models = [20], systems = [9, 10])
-			Logger.logr.info("W_Recall for %s = %s" %(beta, w_recalls[beta]))
-			Logger.logr.info("UNW_Recall for %s = %s" %(beta, unw_recalls[beta]))
-		w_opt = max(w_recalls, key=w_recalls.get)
-		unw_opt = max(unw_recalls, key=unw_recalls.get)
-		Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt, unw_opt))
+				w_recalls = {}
+				unw_recalls = {}
+				w_opt = None
+				unw_opt = None
+				for beta in [0.3, 0.6, 0.9]:
+					Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
+					self.postgres_recorder.truncateSummaryTable()
+					regs2v = RegularizedSen2VecRunner(self.dbstring)
+					regs2v.regBetaW = beta
+					regs2v.regBetaUNW = beta
+					if beta==0.3:
+						regs2v.prepareData(pd)
+					regs2v.runTheBaseline(rbase, latent_space_size)
+					regs2v.generateSummary(gs,9,"_neighbor_w",\
+						 lambda_val=self.lambda_val, diversity=diversity)
+					regs2v.generateSummary(gs,10,"_neighbor_unw",\
+						 lambda_val=self.lambda_val, diversity=diversity)
+					regs2v.doHouseKeeping()
+					self.__runSpecificEvaluation(models = [20], systems = [9, 10])
+					w_recalls[beta] = self.__getRecall(method_id=9, models = [20], systems = [9, 10])
+					unw_recalls[beta] = self.__getRecall(method_id=10, models = [20], systems = [9, 10])
+					Logger.logr.info("W_Recall for %s = %s" %(beta, w_recalls[beta]))
+					Logger.logr.info("UNW_Recall for %s = %s" %(beta, unw_recalls[beta]))
+				w_opt = max(w_recalls, key=w_recalls.get)
+				unw_opt = max(unw_recalls, key=unw_recalls.get)
+				Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt, unw_opt))
+				f.write("REG BetaW Recalls: %s%s" %(w_recalls, os.linesep))
+				f.write("REG BetaUNW Recalls: %s%s" %(unw_recalls, os.linesep))
 
-		w_recalls = {}
-		unw_recalls = {}
-		w_opt = None
-		unw_opt = None
-		for beta in [0.3, 0.6, 0.9]:
-			Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
-			self.postgres_recorder.truncateSummaryTable()
-			dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
-			dictregs2v.dictregBetaW = beta
-			dictregs2v.dictregBetaUNWW = beta
-			if beta==0.3:
-				dictregs2v.prepareData(pd)
-			dictregs2v.runTheBaseline(rbase, latent_space_size)
-			dictregs2v.generateSummary(gs,11,"_neighbor_w",\
-				 lambda_val=self.lambda_val, diversity=diversity)
-			dictregs2v.generateSummary(gs,12,"_neighbor_unw",\
-				 lambda_val=self.lambda_val, diversity=diversity)
-			dictregs2v.doHouseKeeping()
-			self.__runSpecificEvaluation(models = [20], systems = [11, 12])
-			w_recalls[beta] = self.__getRecall(method_id=11, models = [20], systems = [11, 12])
-			unw_recalls[beta] = self.__getRecall(method_id=12, models = [20], systems = [11, 12])
-			Logger.logr.info("W_Recall for %s = %s" %(beta, w_recalls[beta]))
-			Logger.logr.info("UNW_Recall for %s = %s" %(beta, unw_recalls[beta]))
-		w_opt = max(w_recalls, key=w_recalls.get)
-		unw_opt = max(unw_recalls, key=unw_recalls.get)
-		Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNWW=%s" %(w_opt, unw_opt))
+				w_recalls = {}
+				unw_recalls = {}
+				w_opt = None
+				unw_opt = None
+				for beta in [0.3, 0.6, 0.9]:
+					Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
+					self.postgres_recorder.truncateSummaryTable()
+					dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
+					dictregs2v.dictregBetaW = beta
+					dictregs2v.dictregBetaUNWW = beta
+					if beta==0.3:
+						dictregs2v.prepareData(pd)
+					dictregs2v.runTheBaseline(rbase, latent_space_size)
+					dictregs2v.generateSummary(gs,11,"_neighbor_w",\
+						 lambda_val=self.lambda_val, diversity=diversity)
+					dictregs2v.generateSummary(gs,12,"_neighbor_unw",\
+						 lambda_val=self.lambda_val, diversity=diversity)
+					dictregs2v.doHouseKeeping()
+					self.__runSpecificEvaluation(models = [20], systems = [11, 12])
+					w_recalls[beta] = self.__getRecall(method_id=11, models = [20], systems = [11, 12])
+					unw_recalls[beta] = self.__getRecall(method_id=12, models = [20], systems = [11, 12])
+					Logger.logr.info("W_Recall for %s = %s" %(beta, w_recalls[beta]))
+					Logger.logr.info("UNW_Recall for %s = %s" %(beta, unw_recalls[beta]))
+				w_opt = max(w_recalls, key=w_recalls.get)
+				unw_opt = max(unw_recalls, key=unw_recalls.get)
+				Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNW=%s" %(w_opt, unw_opt))
+				f.write("DCT BetaW Recalls: %s%s" %(w_recalls, os.linesep))
+				f.write("DCT BetaUNW Recalls: %s%s" %(unw_recalls, os.linesep))
 
-		os.environ[DUC_EVAL]='TEST'
-		self.__runCombinedEvaluation()
+#		os.environ[DUC_EVAL]='TEST'
+#		self.__runCombinedEvaluation()
