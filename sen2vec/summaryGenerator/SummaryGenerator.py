@@ -56,7 +56,7 @@ class SummaryGenerator:
 				sumSentID = idMap [sumSentID]
 			if  position > len(self.sentenceDict) or\
 				  position > math.ceil(len(self.sentenceDict) * self.topNSummary):
-				Logger.logr.info("Dumped %i sentence as summary from %i sentence in total" %(position-1, len(self.sentenceDict)))
+				#Logger.logr.info("Dumped %i sentence as summary from %i sentence in total" %(position-1, len(self.sentenceDict)))
 				break
 
 			self.postgresConnection.insert ([doc_id, methodID, sumSentID, position], "summary",\

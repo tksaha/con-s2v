@@ -152,14 +152,20 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		For example. validation set or unsup set
 		"""
 		summaryMethodID = 2
-		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
-		s2vDict = pickle.load (sent2vecFile)
-		self._runClassification(summaryMethodID, self.latReprName, s2vDict)
-
+		# sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
+		# s2vDict = pickle.load (sent2vecFile)
+		# self._runClassification(summaryMethodID, self.latReprName, s2vDict)
 		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
 		s2vDict_raw = pickle.load(sent2vecFile_raw)
-		self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
+
+		if os.environ['CLASS_EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
+			self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
+		elif os.environ['CLASS_EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
+			self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
+		elif os.environ['CLASS_EVAL']=='TEST' and os.environ['VALID_FOR']=='CLASS':	
+			self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
+		else:
+			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
 		
 
 	def doHouseKeeping(self):

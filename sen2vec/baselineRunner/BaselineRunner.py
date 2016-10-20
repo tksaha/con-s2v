@@ -33,6 +33,16 @@ class BaselineRunner:
 			Logger.logr.info(err)
 			sys.exit(1)
 
+	def _runClassificationValidation(self, summaryMethodID,  reprName, vDict):
+		classeval = ClassificationEvaluation(postgres_connection=self.postgresConnection)
+		classeval.generateDataValidation(summaryMethodID, reprName, vDict)
+		classeval.runClassificationTask(summaryMethodID, reprName)
+
+	def _runClusteringValidation(self, summaryMethodID, reprName, vDict):
+		clusterEval = ClusteringEvaluation(postgres_connection=self.postgresConnection)
+		clusterEval.generateDataValidation(summaryMethodID, reprName, vDict)
+		clusterEval.runClusteringTask(summaryMethodID, reprName)
+
 	def _runClassification(self, summaryMethodID,  reprName, vDict):
 		classeval = ClassificationEvaluation(postgres_connection=self.postgresConnection)
 		classeval.generateData(summaryMethodID, reprName, vDict)

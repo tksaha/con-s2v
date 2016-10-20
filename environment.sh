@@ -38,14 +38,14 @@ export P2VECSENTDOC2VECOUT=~/Documents/sen2vec/Data/sentCEXE_repr
 export TRTESTFOLDER=~/Documents/sen2vec/Data
 
 export N2VOUTFILE=~/Documents/sen2vec/Data/node_repr
-export GINTERTHR=0.6
-export GINTRATHR=0.4
+export GINTERTHR=0.8
+export GINTRATHR=0.5
 
 export GTHRSUMTFIDF=0.1
 export GTHRSUMLAT=0.1
 export DUMPFACTOR=0.85
 # TOPNSUMMARY should be set to 0.2 for classification tasks and to 1.0 for ranking tasks
-export TOPNSUMMARY=1.0
+export TOPNSUMMARY=0.2
 export KNEIGHBOR=20
 
 export ITERUPDATESEN2VECFILE=~/Documents/sen2vec/Data/retrofitted_repr

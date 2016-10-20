@@ -93,8 +93,8 @@ class ClassificationEvaluation:
 
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
-			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"],\
-			 	["sentence.topic","<>","'unsup'"] ], [], []):
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"]\
+			 	 ], [], []):
 				self.__writeClassificationData (result, trainFileToWrite, vecDict)
 
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
@@ -102,7 +102,24 @@ class ClassificationEvaluation:
 			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'NO'"] ], [], []):
 			 	self.__writeClassificationData (result, testFileToWrite, vecDict)
 
-	
+	def generateDataValidation(self, summaryMethodID, latReprName, vecDict):
+		trainFileToWrite = open("%s/%strain_%i.csv"%(self.trainTestFolder,\
+			 latReprName, summaryMethodID), "w")
+		testFileToWrite = open("%s/%stest_%i.csv"%(self.trainTestFolder,\
+			 latReprName, summaryMethodID), "w")
+
+		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"]\
+			 	 ], [], []):
+				self.__writeClassificationData (result, trainFileToWrite, vecDict)
+
+		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'VALID'"] ], [], []):
+			 	self.__writeClassificationData (result, testFileToWrite, vecDict)
+
+
 	def runClassificationTask(self, summaryMethodID, latReprName):
 		"""
 		This function uses the generated train and test 
@@ -154,9 +171,9 @@ class ClassificationEvaluation:
 
 		
 ###################### Dummy Classifier () ######################################################
-		dummyClf = DummyClassifier(strategy='stratified',random_state=0)
-		dummyClf.fit(train_X, train_Y)
-		self.predicted_values = dummyClf.predict(test_X)
-		self.__writeClassificationReport(evaluationResultFile, 'Stratified')
+		# dummyClf = DummyClassifier(strategy='stratified',random_state=0)
+		# dummyClf.fit(train_X, train_Y)
+		# self.predicted_values = dummyClf.predict(test_X)
+		# self.__writeClassificationReport(evaluationResultFile, 'Stratified')
 
 
