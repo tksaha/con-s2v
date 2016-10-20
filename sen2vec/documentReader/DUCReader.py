@@ -429,7 +429,7 @@ class DUCReader(DocumentReader):
 ######## Test ########################################
 			os.environ["DUC_EVAL"]='TEST'
 
-			niter = 1
+			niter = 3
 			for i in range(0,niter):
 				f.write("###### Iteration: %s ######%s" %(i, os.linesep))
 				f.write("Optimal Window: %s%s" %(window_opt, os.linesep))				
