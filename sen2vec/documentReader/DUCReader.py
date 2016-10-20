@@ -390,7 +390,7 @@ class DUCReader(DocumentReader):
 					self.postgres_recorder.truncateSummaryTable()
 					dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
 					dictregs2v.dictregBetaW = beta
-					dictregs2v.dictregBetaUNWW = beta
+					dictregs2v.dictregBetaUNW = beta
 					if beta==0.3:
 						dictregs2v.prepareData(pd)
 					dictregs2v.runTheBaseline(rbase, latent_space_size)
@@ -411,7 +411,7 @@ class DUCReader(DocumentReader):
 				f.write("DCT BetaUNW Recalls: %s%s" %(unw_recalls, os.linesep))
 				f.flush()
 
-				os.environ[DUC_EVAL]='TEST'
+				os.environ["DUC_EVAL"]='TEST'
 				
 				self.postgres_recorder.truncateSummaryTable()
 				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
