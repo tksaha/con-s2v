@@ -63,7 +63,7 @@ export DUC_PATH=~/Documents/sen2vec/Data/DUC_merged
 
 export DUC_LAMBDA=1.0
 export DUC_DIVERSITY=0
-export DUC_TOPIC=2001
+export DUC_TOPIC=2002
 export DUC_EVAL='TEST'
 
 export REGSEN2VECREPRFILE=~/Documents/sen2vec/Data/reg_sent
