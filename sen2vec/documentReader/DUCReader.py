@@ -429,7 +429,7 @@ class DUCReader(DocumentReader):
 ######## Test ########################################
 			os.environ["DUC_EVAL"]='TEST'
 
-			niter = 3
+			niter = 5
 			for i in range(0,niter):
 				f.write("###### Iteration: %s ######%s" %(i, os.linesep))
 				f.write("Optimal Window: %s%s" %(window_opt, os.linesep))				
@@ -500,13 +500,13 @@ class DUCReader(DocumentReader):
 				#20__1_2_3_4_5_6_7_9_10_11_12_21_output_100.txt
 				#20__1_2_3_4_5_6_7_9_10_11_12_21_output_10.txt
 				f.write ("%s%s"%("#########################Running for Test (100) ###########################################", os.linesep))
-				file_ = "/home/tanay/Documents/sen2vec/Data/Summary/20__1_2_3_4_5_6_7_9_10_11_12_21_output_100.txt"
+				file_ = os.path.join(os.environ["SUMMARYFOLDER"],"20__1_2_3_4_5_6_7_9_10_11_12_21_output_100.txt")
 				for line in open(file_):
 					f.write(line)
 				f.flush()
 
 				f.write ("%s%s"%("#########################Running for Test (10) ###########################################", os.linesep))
-				file_ = "/home/tanay/Documents/sen2vec/Data/Summary/20__1_2_3_4_5_6_7_9_10_11_12_21_output_10.txt"
+				file_ = os.path.join(os.environ["SUMMARYFOLDER"], "20__1_2_3_4_5_6_7_9_10_11_12_21_output_10.txt")
 				for line in open(file_):
 					f.write(line)
 
