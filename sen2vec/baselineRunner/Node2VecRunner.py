@@ -177,20 +177,22 @@ class Node2VecRunner(BaselineRunner):
 
 
 		############################# Working with Node2Vec with initialization ####
-		reprFile = "%s_init"%self.n2vReprFile
-		node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
-		node2vecFile_Raw = open("%s_init_raw.p"%(self.n2vReprFile),"wb")
+		if os.environ['EVAL'] !='VALID':
+			reprFile = "%s_init"%self.n2vReprFile
+			node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
+			node2vecFile_Raw = open("%s_init_raw.p"%(self.n2vReprFile),"wb")
 
-		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=0, beta=0)
-		self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
+			node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=0, beta=0)
+			self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
 
 		############################# Run Node2vec Default #############
-		reprFile = self.n2vReprFile
-		node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
-		node2vecFile_Raw = open("%s_raw.p"%(self.n2vReprFile),"wb")
+		if os.environ['EVAL']!= 'VALID':
+			reprFile = self.n2vReprFile
+			node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
+			node2vecFile_Raw = open("%s_raw.p"%(self.n2vReprFile),"wb")
 
-		node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile, retrofit=0, beta=0)
-		self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
+			node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile, retrofit=0, beta=0)
+			self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
 
 		############################# Run Node2vec Retrofit ############
 		reprFile = "%s_retrofit"%self.n2vReprFile
@@ -215,14 +217,21 @@ class Node2VecRunner(BaselineRunner):
 
 
 	def __runEval(self, summaryMethodID, node2vecFileName, reprName):
-		node2vecFile = open("%s.p"%node2vecFileName,"rb")
-		n2vDict = pickle.load (node2vecFile)
-		self._runClassification(summaryMethodID, reprName, n2vDict)
+		# node2vecFile = open("%s.p"%node2vecFileName,"rb")
+		# n2vDict = pickle.load (node2vecFile)
+		# self._runClassification(summaryMethodID, reprName, n2vDict)
 
 		node2vecFile = open("%s_raw.p"%node2vecFileName, "rb")
 		n2vDict = pickle.load (node2vecFile)
-		self._runClassification(summaryMethodID, "%s_raw"%reprName, n2vDict)
-		self._runClustering(summaryMethodID, "%s_raw"%reprName, n2vDict)
+
+		if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
+			self._runClassificationValidation(summaryMethodID, "%s_raw"%reprName, n2vDict)
+		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
+			self._runClusteringValidation(summaryMethodID, "%s_raw"%reprName, n2vDict)
+		elif os.environ['EVAL']=='TEST' and os.environ['VALID_FOR']=='CLASS':
+			self._runClassification(summaryMethodID, "%s_raw"%reprName, n2vDict)
+		else:
+			self._runClustering(summaryMethodID, "%s_raw"%reprName, n2vDict)
 
 	def runEvaluationTask(self):
 		"""
@@ -235,18 +244,25 @@ class Node2VecRunner(BaselineRunner):
 		"""
 
 		summaryMethodID = 2
-		node2vecFileName = "%s"%(self.n2vReprFile)
-		reprName = "%s"%self.latReprName
-		self.__runEval(summaryMethodID, node2vecFileName, reprName)
 
-		node2vecFileName ="%s_init"%(self.n2vReprFile)
-		reprName = "%s_init"%self.latReprName
-		self.__runEval(summaryMethodID, node2vecFileName, reprName)
+		if os.environ['EVAL'] != 'VALID':
+			node2vecFileName = "%s"%(self.n2vReprFile)
+			reprName = "%s"%self.latReprName
+			self.__runEval(summaryMethodID, node2vecFileName, reprName)
 
-		
-		node2vecFileName = "%s_retrofit"%(self.n2vReprFile)
-		reprName = "%s_retrofit"%self.latReprName
-		self.__runEval(summaryMethodID, node2vecFileName, reprName)
+			node2vecFileName ="%s_init"%(self.n2vReprFile)
+			reprName = "%s_init"%self.latReprName
+			self.__runEval(summaryMethodID, node2vecFileName, reprName)
+
+			
+			node2vecFileName = "%s_retrofit"%(self.n2vReprFile)
+			reprName = "%s_retrofit"%self.latReprName
+			self.__runEval(summaryMethodID, node2vecFileName, reprName)
+
+		else:
+			node2vecFileName = "%s_retrofit"%(self.n2vReprFile)
+			reprName = "%s_retrofit"%self.latReprName
+			self.__runEval(summaryMethodID, node2vecFileName, reprName)
 		
 
 	def doHouseKeeping(self):

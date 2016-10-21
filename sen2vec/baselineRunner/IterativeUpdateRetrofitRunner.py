@@ -49,13 +49,13 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 
 
 		Logger.logr.info("Dictionary has %i objects" % len(self.sen2Vec))
-
-		retrofitter = IterativeUpdateRetrofitter(numIter=20, nx_Graph = self.Graph) 
-		retrofitted_dict, normalized_retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
-		iterupdatevecFile = open("%s_unweighted.p"%(self.retrofittedsen2vReprFile),"wb")
-		iterupdatevecFile_Raw = open("%s_unweighted_raw.p"%(self.retrofittedsen2vReprFile),"wb")
-		pickle.dump(retrofitted_dict, iterupdatevecFile)
-		pickle.dump(normalized_retrofitted_dict, iterupdatevecFile_Raw)
+		if os.environ['EVAL']!= 'VALID':
+			retrofitter = IterativeUpdateRetrofitter(numIter=20, nx_Graph = self.Graph) 
+			retrofitted_dict, normalized_retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
+			iterupdatevecFile = open("%s_unweighted.p"%(self.retrofittedsen2vReprFile),"wb")
+			iterupdatevecFile_Raw = open("%s_unweighted_raw.p"%(self.retrofittedsen2vReprFile),"wb")
+			pickle.dump(retrofitted_dict, iterupdatevecFile)
+			pickle.dump(normalized_retrofitted_dict, iterupdatevecFile_Raw)
 
 
 		wretrofitter = WeightedIterativeUpdateRetrofitter(numIter=20, nx_Graph = self.Graph)
@@ -66,12 +66,12 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		pickle.dump(normalized_retrofitted_dict, iterupdatevecFile_Raw)
 
 
-		randomwalkretrofitter = RandomWalkIterativeUpdateRetrofitter(numIter=10)
-		rand_retrofitted_dict, normalized_retrofitted_dict = randomwalkretrofitter.retrofitWithIterUpdate(self.sen2Vec)
-		rand_iterupdateFile = open("%s_randomwalk.p"%(self.retrofittedsen2vReprFile),"wb")
-		rand_iterupdateFile_Raw = open("%s_randomwalk_raw.p"%(self.retrofittedsen2vReprFile),"wb")
-		pickle.dump(rand_retrofitted_dict, rand_iterupdateFile)
-		pickle.dump(normalized_retrofitted_dict, rand_iterupdateFile_Raw)
+		# randomwalkretrofitter = RandomWalkIterativeUpdateRetrofitter(numIter=10)
+		# rand_retrofitted_dict, normalized_retrofitted_dict = randomwalkretrofitter.retrofitWithIterUpdate(self.sen2Vec)
+		# rand_iterupdateFile = open("%s_randomwalk.p"%(self.retrofittedsen2vReprFile),"wb")
+		# rand_iterupdateFile_Raw = open("%s_randomwalk_raw.p"%(self.retrofittedsen2vReprFile),"wb")
+		# pickle.dump(rand_retrofitted_dict, rand_iterupdateFile)
+		# pickle.dump(normalized_retrofitted_dict, rand_iterupdateFile_Raw)
 
 
 	def generateSummary(self, gs, methodId, filePrefix, lambda_val=1.0, diversity=False):
@@ -82,18 +82,23 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		summGen = SummaryGenerator (diverse_summ=diversity,\
 			 postgres_connection = self.postgresConnection,\
 			 lambda_val = lambda_val)
-
 		summGen.populateSummary(methodId, itupdatevDict)
 	
 	def __runEval(self, summaryMethodID, vecFileName, reprName):
-		vecFile = open("%s.p"%vecFileName,"rb")
-		vDict = pickle.load (vecFile)
-		self._runClassification(summaryMethodID, reprName, vDict)
+		# vecFile = open("%s.p"%vecFileName,"rb")
+		# vDict = pickle.load (vecFile)
+		# self._runClassification(summaryMethodID, reprName, vDict)
 
 		vecFile = open("%s_raw.p"%vecFileName, "rb")
 		vDict = pickle.load (vecFile)
-		self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
-		self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)
+		if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
+			self._runClassificationValidation(summaryMethodID, "%s_raw"%reprName, vDict)
+		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
+			self._runClusteringValidation(summaryMethodID, "%s_raw"%reprName, vDict)
+		elif os.environ['EVAL']=='TEST' and os.environ['VALID_FOR']=='CLASS':
+			self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
+		else:
+			self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)
 
 	def runEvaluationTask(self):
 		"""
@@ -106,18 +111,18 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 		"""
 
 		summaryMethodID = 2 
-
-		vecFile = "%s_unweighted"%self.retrofittedsen2vReprFile
-		reprName = "%s_unweighted"%self.latReprName
-		self.__runEval(summaryMethodID, vecFile, reprName)
-		
+		if  os.environ['EVAL']!= 'VALID':
+			vecFile = "%s_unweighted"%self.retrofittedsen2vReprFile
+			reprName = "%s_unweighted"%self.latReprName
+			self.__runEval(summaryMethodID, vecFile, reprName)
+			
 		vecFile = "%s_weighted"%self.retrofittedsen2vReprFile
 		reprName = "%s_weighted"%self.latReprName
 		self.__runEval(summaryMethodID, vecFile, reprName)
 		
-		vecFile = "%s_randomwalk"%self.retrofittedsen2vReprFile
-		reprName = "%s_randomwalk"%self.latReprName
-		self.__runEval(summaryMethodID, vecFile, reprName)
+		# vecFile = "%s_randomwalk"%self.retrofittedsen2vReprFile
+		# reprName = "%s_randomwalk"%self.latReprName
+		# self.__runEval(summaryMethodID, vecFile, reprName)
 
 	def doHouseKeeping(self):
 		"""
