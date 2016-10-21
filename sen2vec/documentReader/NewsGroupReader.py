@@ -7,6 +7,7 @@ from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from log_manager.log_config import Logger
 import re
+import numpy as np 
 from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
 from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
@@ -83,9 +84,9 @@ class NewsGroupReader(DocumentReader):
 		return self._getTopics(rootDir)
 
 	def stripDocContent(self, doc_content):
-		doc_content = self.__strip_newsgroup_header(doc_content)
-		doc_content = self.__strip_newsgroup_footer(doc_content)
-		return self.__strip_newsgroup_quoting(doc_content)
+		doc_content = self.__stripNewsgroupHeader(doc_content)
+		doc_content = self.__stripNewsgroupFooter(doc_content)
+		return self.__stripNewsgroupQuoting(doc_content)
 
 	def __createValidationSet(self, document_ids):
 
@@ -98,7 +99,7 @@ class NewsGroupReader(DocumentReader):
 		for id_ in valid_list:
 			self.validationDict[id_] = 1
 
-	def __readAPass(load=0):
+	def __readAPass(self, load=0):
 		topic_names = self.readTopic()
 		train_doc_ids = []
 		document_id = 0
