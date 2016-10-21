@@ -200,14 +200,23 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 		summGen.populateSummary(methodId, dictregsentvDict)
 		
 	def __runEval(self, summaryMethodID, vecFileName, reprName):
-		vecFile = open("%s.p"%vecFileName,"rb")
-		vDict = pickle.load (vecFile)
-		self._runClassification(summaryMethodID, reprName, vDict)
+		# vecFile = open("%s.p"%vecFileName,"rb")
+		# vDict = pickle.load (vecFile)
+		# self._runClassification(summaryMethodID, reprName, vDict)
 
 		vecFile = open("%s_raw.p"%vecFileName, "rb")
 		vDict = pickle.load (vecFile)
-		self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
-		self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)
+
+		if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
+			self._runClassificationValidation(summaryMethodID, "%s_raw"%reprName, vDict)
+		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
+			self._runClusteringValidation(summaryMethodID, "%s_raw"%reprName, vDict)
+		elif os.environ['EVAL']=='TEST' and os.environ['VALID_FOR']=='CLASS':
+			self._runClassificationValidation(summaryMethodID, "%s_raw"%reprName, vDict)
+		else:
+			self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)	
+
+
 
 	def runEvaluationTask(self):
 		summaryMethodID = 2 

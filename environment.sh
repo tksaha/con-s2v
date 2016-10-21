@@ -1,7 +1,7 @@
 #!/bin/bash
 # Path to Reuters data
 #export REUTERS_PATH=~/Documents/sen2vec/Data/reuter21578_temp
-export REUTERS_PATH=~/Dropbox/Journey_to_IUPUI/NLP/data_collection/nlp_data/reuters/reuters21578
+export REUTERS_PATH=~/Documents/sen2vec/Data/reuters21578
 
 
 
