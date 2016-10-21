@@ -28,6 +28,7 @@ class NewsGroupReader(DocumentReader):
 		self.dbstring = os.environ["NEWSGROUP_DBSTRING"]
 		self.postgres_recorder = PostgresDataRecorder(self.dbstring)
 		self.folderPath = os.environ['NEWSGROUP_PATH']
+		self.validationDict = {}
 
 
 
@@ -86,20 +87,20 @@ class NewsGroupReader(DocumentReader):
 		doc_content = self.__strip_newsgroup_footer(doc_content)
 		return self.__strip_newsgroup_quoting(doc_content)
 
-	
-	def readDocument(self, ld): 
-		"""
-		Stripping is by default inactive. For future reference it has been 
-		imported from scikit-learn newsgroup reader package. 
+	def __createValidationSet(self, document_ids):
 
-		
-		"""
-		if ld <= 0: return 0 			
-		self.postgres_recorder.trucateTables()
-		self.postgres_recorder.alterSequences()
+		total_doc = len(document_ids)
+		nvalid_doc = float(total_doc * 0.20)
+
+		np.random.seed(2000)
+		valid_list = np.random.choice(document_ids, nvalid_doc, replace=False).tolist()
+
+		for id_ in valid_list:
+			self.validationDict[id_] = 1
+
+	def __readAPass(load=0):
 		topic_names = self.readTopic()
-		
-
+		train_doc_ids = []
 		document_id = 0
 		for first_level_folder in os.listdir(self.folderPath):
 			if not(DocumentReader._folderISHidden(self, first_level_folder)):
@@ -111,6 +112,8 @@ class NewsGroupReader(DocumentReader):
 						doc_content = self._getTextFromFile("%s%s%s%s%s%s%s" \
 							%(self.folderPath, "/", first_level_folder, "/", topic, "/", file_))
 						
+						doc_content = self.stripDocContent(doc_content)
+
 						document_id += 1
 						title, metadata, istrain = None, None, None 						
 						try:
@@ -119,24 +122,50 @@ class NewsGroupReader(DocumentReader):
 							istrain = 'YES' if (trainortest.lower() == 'train') else 'NO'
 						except:
 							Logger.logr.info("NO MetaData or Train Test Tag")
+
+						if istrain=='YES':
+							train_doc_ids.append(document_id)
+
+						if document_id in self.validationDict:
+							istrain = 'VALID'
+
 							
-						self.postgres_recorder.insertIntoDocTable(document_id, title, \
-									doc_content, file_, metadata) 
-						category = topic.split('.')[0]
-						self.postgres_recorder.insertIntoDocTopTable(document_id, \
-									[topic], [category]) 		
-						self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder, topic, istrain)
+						if load ==1:
+							self.postgres_recorder.insertIntoDocTable(document_id, title, \
+										doc_content, file_, metadata) 
+							category = topic.split('.')[0]
+							self.postgres_recorder.insertIntoDocTopTable(document_id, \
+										[topic], [category]) 		
+							self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder, topic, istrain)
 					
 					
-		Logger.logr.info("Document reading complete.")
+		Logger.logr.info("A pass of the document reading complete.")
+		return  train_doc_ids
+	
+	def readDocument(self, ld): 
+		"""
+		Stripping is by default inactive. For future reference it has been 
+		imported from scikit-learn newsgroup reader package. 
+
+		
+		"""
+		if ld <= 0: return 0 			
+		self.postgres_recorder.trucateTables()
+		self.postgres_recorder.alterSequences()
+
+		train_doc_ids = self.__readAPass(0)
+		self.__createValidationSet(train_doc_ids)
+		self.__readAPass(1)
 		return 1
 	
 	
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		latent_space_size = 300
-	
+		optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
+		self.doTesting(optDict, "news", rbase, pd, gs, True)
+		optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
+		self.doTesting(optDict, "news", rbase, pd, gs, False)
 		
 		
 
