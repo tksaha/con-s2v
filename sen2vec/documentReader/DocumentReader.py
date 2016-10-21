@@ -395,7 +395,7 @@ class DocumentReader:
 			w_opt = None
 			unw_opt = None
 			for beta in [0.3, 0.6, 0.8, 1.0]:
-			for beta in [0.3]:
+			#for beta in [0.3]:
 				Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
 				dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
 				dictregs2v.dictregBetaW = beta
