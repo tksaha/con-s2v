@@ -100,13 +100,14 @@ class NewsGroupReader(DocumentReader):
 			self.validationDict[id_] = 1
 
 	def __readAPass(self, load=0):
-		topic_names = self.readTopic()
+		if load == 0:
+			topic_names = self.readTopic()
 		train_doc_ids = []
 		document_id = 0
 		for first_level_folder in os.listdir(self.folderPath):
 			if not(DocumentReader._folderISHidden(self, first_level_folder)):
 				for topic in topic_names:					
-					if topic not in ['rec.sport.baseball', 'talk.politics.guns', 'comp.graphics']:
+					if topic not in ['rec.sport.baseball', 'talk.politics.guns', 'comp.graphics', 'sci.space', 'soc.religion.christian']:
 						continue
 					for file_ in os.listdir("%s%s%s%s%s" %(self.folderPath, "/", \
 											first_level_folder, "/", topic)):
@@ -116,7 +117,7 @@ class NewsGroupReader(DocumentReader):
 						doc_content = self.stripDocContent(doc_content)
 
 						document_id += 1
-						title, metadata, istrain = None, None, None 						
+						title, metadata, istrain = None, None, None
 						try:
 							trainortest = first_level_folder.split('-')[-1]
 							metadata = "SPLIT:%s"%trainortest
