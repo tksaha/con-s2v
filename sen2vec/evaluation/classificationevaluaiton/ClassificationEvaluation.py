@@ -108,17 +108,24 @@ class ClassificationEvaluation:
 		testFileToWrite = open("%s/%stest_%i.csv"%(self.trainTestFolder,\
 			 latReprName, summaryMethodID), "w")
 
+
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
 			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"]\
 			 	 ], [], []):
 				self.__writeClassificationData (result, trainFileToWrite, vecDict)
+				
 
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
 			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'VALID'"] ], [], []):
 			 	self.__writeClassificationData (result, testFileToWrite, vecDict)
 
+		
+		trainFileToWrite.flush()
+		testFileToWrite.flush()
+		trainFileToWrite.close()
+		testFileToWrite.close()
 
 	def runClassificationTask(self, summaryMethodID, latReprName):
 		"""

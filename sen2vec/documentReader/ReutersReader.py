@@ -141,10 +141,10 @@ class ReutersReader(DocumentReader):
 						continue 
 					topic = self._getTopic(document_id, doc)					
 
-					#if topic in ['wheat', 'corn', 'other']:
-					 	#continue
-					if topic not in ['acq','crude']:
-						continue				
+					if topic in ['wheat', 'corn', 'other']:
+					   continue
+					#if topic not in ['ship','interest']:
+					#	continue				
 						
 					istrain = 'YES' if doc['lewissplit'].lower() == 'train' else 'NO'
 					if document_id in self.validationDict:
@@ -180,7 +180,7 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		self.__runClassificationValidation(pd, rbase, gs)
-		self.doTesting()
-		self.__runClusteringValidation(pd, rbase, gs)
-		self.doTesting()
+		optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
+		self.doTesting(optDict, "reuter", rbase, pd, gs, True)
+		optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
+		self.doTesting(optDict, "reuter", rbase, pd, gs, False)

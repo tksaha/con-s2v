@@ -137,9 +137,10 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 			 postgres_connection = self.postgresConnection,\
 			 lambda_val = lambda_val)
 
-		summGen.populateSummary(1, {})
+		
 		summGen.populateSummary(2, s2vDict)
 		summGen.populateSummary(21, {})
+		summGen.populateSummary(1, {})
 
 
 	def runEvaluationTask(self):
@@ -162,7 +163,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 			self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
 		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
 			self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL']=='TEST' and os.environ['VALID_FOR']=='CLASS':	
+		elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':	
 			self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
 		else:
 			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)

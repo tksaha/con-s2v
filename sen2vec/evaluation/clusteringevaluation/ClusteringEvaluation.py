@@ -41,9 +41,21 @@ class ClusteringEvaluation:
 		
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
-			 	["summary.method_id", "=", summaryMethodID],\
-			 	["sentence.topic","<>","'unsup'"] ], [], []):
+			 	["summary.method_id", "=", summaryMethodID]\
+			 	 ], [], []):
 				self.__writeClusteringData (result, datafileToWrite, vecDict)
+
+
+	def generateDataValidation(self, summaryMethodID, latReprName, vecDict):
+		datafileToWrite = open("%s/%sclusterData_%i.csv"%(self.dataFolder,\
+			 latReprName, summaryMethodID), "w")
+		
+		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", summaryMethodID],\
+			 	["sentence.istrain","=","'VALID'"] ], [], []):
+				self.__writeClusteringData (result, datafileToWrite, vecDict)
+
 
 	def __getXY(self, data):
 		"""
@@ -70,6 +82,7 @@ class ClusteringEvaluation:
 
 		evaluationResultFile = open("%s/%sclustereval_%i.txt"%(self.dataFolder,\
 				latReprName, summaryMethodID), "w")
+		evaluationResultFile.write("#######%s#############%s"%(latReprName,os.linesep))
 		evaluationResultFile.write("HomoGeneity:%0.3f   Completeness%.3f "\
 			"  v_measure:%.3f   Adjusted Mutual Info Score:%.3f %s"\
     		% (mt.homogeneity_score(Y, estimator.labels_),\
