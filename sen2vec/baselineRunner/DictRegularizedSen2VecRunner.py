@@ -212,7 +212,7 @@ class DictRegularizedSen2VecRunner(BaselineRunner):
 		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
 			self._runClusteringValidation(summaryMethodID, "%s_raw"%reprName, vDict)
 		elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':
-			self._runClassificationValidation(summaryMethodID, "%s_raw"%reprName, vDict)
+			self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
 		else:
 			self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)	
 

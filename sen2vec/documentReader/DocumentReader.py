@@ -479,9 +479,9 @@ class DocumentReader:
 			regs2v.regBetaW = optPDict['w_opt_reg']
 			regs2v.regBetaUNW = optPDict['unw_opt_reg']
 			regs2v.runTheBaseline(rbase, latent_space_size)
+			regs2v.runEvaluationTask()
 			self.__writeResult("%s_neighbor_w"%regs2v.latReprName, f)
 			self.__writeResult("%s_neighbor_unw"%regs2v.latReprName, f)
-			regs2v.runEvaluationTask()
 			regs2v.doHouseKeeping()
 			f.flush()
 
