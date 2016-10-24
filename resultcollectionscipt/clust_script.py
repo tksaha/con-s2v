@@ -13,7 +13,7 @@ for method in method_names:
 	for metric in metric_names:
 		d[(method, metric)] = []
 
-with open('./Data/reuter_testresults_CLUST.txt', 'r') as f:
+with open('../Data/news_testresults_CLUST.txt', 'r') as f:
 	f = f.read()
 	f = f.replace("Completeness", "Completeness:")
 	runs = re.compile("###### Iteration.*######").split(f)

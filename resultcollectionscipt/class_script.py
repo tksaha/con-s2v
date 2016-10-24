@@ -14,7 +14,7 @@ for method in method_names:
 	for metric in metric_names:
 		d[(method, metric)] = []
 
-with open('./Data/reuter_testresults_CLASS.txt', 'r') as f:
+with open('../Data/news_testresults_CLASS.txt', 'r') as f:
 	f = f.read()
 	runs = re.compile("###### Iteration.*######").split(f)
 	
