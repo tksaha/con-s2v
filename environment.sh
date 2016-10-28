@@ -49,7 +49,7 @@ export TOPNSUMMARY=0.2
 export KNEIGHBOR=20
 
 export ITERUPDATESEN2VECFILE=~/Documents/sen2vec/Data/retrofitted_repr
-export GRAPHFILE=~/Documents/sen2vec/Data/graph_0.6_0.4
+export GRAPHFILE=~/Documents/sen2vec/Data/graph_0.8_0.5
 
 export ROUGE=~/Documents/sen2vec/sen2vec/rouge/ROUGE-1.5.5.pl
 export ROUGE_EVAL_HOME=~/Documents/sen2vec/sen2vec/rouge/data
