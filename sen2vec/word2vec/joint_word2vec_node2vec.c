@@ -95,26 +95,27 @@ void InitUnigramTable() {
   }
 }
 
+// I observe that, the probability is not normalized. 
+// The use of long long data type for train_word_pow
+// makes it un normailzed===>
 void InitUnigramTableN2V() {
   int a, i;
   long long train_words_pow = 0;
   real d1, power = 0.75;
   table_n2v = (int *)malloc(table_size * sizeof(int));
   for (a = 0; a < vocab_size; a++) train_words_pow += pow(n2vvocab[a].cn, power);
+  printf("%lld\n",train_words_pow);
   i = 0;
-  d1 = pow(vocab[i].cn, power) / (real)train_words_pow;
+  d1 = pow(n2vvocab[i].cn, power) / (real)train_words_pow;
+  printf("%d --- %lld -- %lf\n", i,n2vvocab[i].index, d1);
+
   for (a = 0; a < table_size; a++) {
-    if (d1 <= 0) {
-      i++;
-      a = 0; 
-      d1 += pow(vocab[i].cn, power) / (real)train_words_pow;
-      continue;
-    } 
-    table_n2v[a] = n2vvocab[a].index;
+    table_n2v[a] = n2vvocab[i].index;
     if (a / (real)table_size > d1) {
       i++;
-      d1 += pow(vocab[i].cn, power) / (real)train_words_pow;
+      d1 += pow(n2vvocab[i].cn, power) / (real)train_words_pow;
     }
+    //printf("%d --- %lld -- %lf\n", a,n2vvocab[i].index, d1);
     if (i >= vocab_size) i = vocab_size - 1;
   }
 }
@@ -196,6 +197,12 @@ int AddWordToVocab(char *word) {
 int VocabCompare(const void *a, const void *b) {
     return ((struct vocab_word *)b)->cn - ((struct vocab_word *)a)->cn;
 }
+
+// Used later for sorting by word counts
+int VocabCompareN2V(const void *a, const void *b) {
+    return ((struct n2vword *)b)->cn - ((struct n2vword *)a)->cn;
+}
+
 
 // https://github.com/dav/word2vec/blob/master/src/word2vec.c
 void DestroyVocab() {
@@ -456,6 +463,7 @@ void InitNet() {
     for (a = 0; a < vocab_size; a++)
     {
       n2vvocab[a].index = a; 
+      n2vvocab[a].cn = 0; 
 
       for (b = 0; b < max_neighbors; b++)
       {
@@ -503,8 +511,11 @@ void InitNet() {
     free(word);
   }
 
-  qsort(&n2vvocab[0], vocab_size-1, sizeof(struct n2vword), VocabCompare);
+  if (debug_mode > 3) printf("Before sorting\n");
+  qsort(&n2vvocab[0], vocab_size, sizeof(struct n2vword), VocabCompareN2V);
+  if (debug_mode > 3) printf("After sorting\n");
   InitUnigramTableN2V();
+  
 
   for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
       next_random = next_random * (unsigned long long)25214903917 + 11;
@@ -715,6 +726,8 @@ void *TrainModelThread(void *id) {
       {
             //target
             nbrindex = nbrs[l1n+nbr]; 
+            if (nbrindex < 0) break; 
+
             if (negative > 0) for (d = 0; d < negative + 1; d++) {
               if (d == 0) {
                  target = nbrindex;
