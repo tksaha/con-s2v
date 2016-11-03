@@ -530,13 +530,12 @@ void InitNet() {
 
     fclose(finit);
     free(word);
-  }
 
-  if (debug_mode > 3) printf("Before sorting\n");
-  qsort(&n2vvocab[0], vocab_size, sizeof(struct n2vword), VocabCompareN2V);
-  if (debug_mode > 3) printf("After sorting\n");
-  InitUnigramTableN2V();
-  
+    if (debug_mode > 3) printf("Before sorting\n");
+    qsort(&n2vvocab[0], vocab_size, sizeof(struct n2vword), VocabCompareN2V);
+    if (debug_mode > 3) printf("After sorting\n");
+    InitUnigramTableN2V();
+  }
 
   for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
       next_random = next_random * (unsigned long long)25214903917 + 11;
@@ -770,6 +769,7 @@ void *TrainModelThread(void *id) {
               for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
               for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * syn0[c + l1];
           }
+          // Need to take into account the beta factor
           for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
       }
       sentence_length = 0;
