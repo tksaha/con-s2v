@@ -638,9 +638,13 @@ void *TrainModelThread(void *id) {
         if (sentence_vectors) if (a >= window * 2 + sentence_vectors - b) c = 0;
         if (c < 0) continue;
         if (c >= sentence_length) continue;
+
+
         last_word = sen[c];
         if (last_word == -1) continue;
         l1 = last_word * layer1_size;
+
+        
         for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
         // HIERARCHICAL SOFTMAX
         if (hs) for (d = 0; d < vocab[word].codelen; d++) {

@@ -95,9 +95,9 @@ void InitUnigramTable() {
   }
 }
 
-// I observe that, the probability is not normalized. 
+// Tanay: I observe that, the probability is not normalized. 
 // The use of long long data type for train_word_pow
-// makes it un normailzed===>
+// makes it un normailzed===> It does not sum up to 1.0
 void InitUnigramTableN2V() {
   int a, i;
   long long train_words_pow = 0;
@@ -447,11 +447,12 @@ void InitNet() {
   if (neighborFile[0]!=0)
   {
     char *word; int b; 
-    long long index1, index2, it, nnodes;
+    long long index1, index2, it, nnodes, xb, num_walk, walk_length;
     word = (char*)malloc(MAX_STRING* sizeof(char));
     FILE *finit = fopen(neighborFile, "rb");
 
-    fscanf(finit, "%lld %lld", &nnodes, &max_neighbors);
+    fscanf(finit, "%lld %lld %lld", &nnodes, &num_walk, &walk_length);
+    max_neighbors = num_walk * walk_length;
     printf("nnodes = %lld  max_neighbors= %lld\n", nnodes, max_neighbors);
     a = posix_memalign((void **)&nbrs, 128, (long long)vocab_size * max_neighbors *sizeof(long long));
     if (nbrs == NULL){printf("Memory allocation failed\n"); exit(1);}
@@ -482,14 +483,21 @@ void InitNet() {
       if (index1 < 0) {
         printf("[nbr] Vocabulary does not exist \n");
       }
-      for (b=0; b<max_neighbors; b++)
+      xb = 0; 
+      for (; xb<max_neighbors; xb++)
+      {
+          //printf("nbr%lld\n",nbrs[xb + index1*max_neighbors]);
+          if (nbrs[xb + index1*max_neighbors]==-1) break ;
+      }
+
+      for (b=0; b<walk_length; b++)
       {
         fscanf(finit,"%s",word);
         if (debug_mode > 3) printf("[nbr] word=%s \n",word);
 
         if (strcmp(word,"-1")==0)
         {
-          continue; 
+          continue;
         }
         index2 = SearchVocab(word);
         if (index2 < 0) {
@@ -499,12 +507,25 @@ void InitNet() {
 
         if (index1 >= 0 && index2 >= 0)
         {
-          nbrs[b + index1*max_neighbors] = index2;
+          nbrs[xb + index1*max_neighbors] = index2;
           n2vvocab[index2].cn++;
+          xb++; 
         }
-        if (debug_mode > 3) printf("[nbr] index1 =%lld, index2=%lld\n",index1, index2);
+        if (debug_mode > 3) {
+          printf("[nbr] index1 =%lld, index2=%lld\n",index1, index2);
+        }
 
       }
+
+      if (debug_mode > 3)
+      {
+        xb = 0; 
+        for (; xb<max_neighbors; xb++)
+        {
+          printf("nbr%lld\n",nbrs[xb + index1*max_neighbors]);
+        }
+      }
+
     }
 
     fclose(finit);
@@ -717,6 +738,7 @@ void *TrainModelThread(void *id) {
     }
     sentence_position++;
     if (sentence_position >= sentence_length) {
+      // Skip objective for node2vec 
       // init 
       for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
 
