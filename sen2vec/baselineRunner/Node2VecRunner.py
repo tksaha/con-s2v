@@ -30,8 +30,13 @@ class Node2VecRunner(BaselineRunner):
 		self.p2vReprFile = os.environ["P2VCEXECOUTFILE"]
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
+
+		self.num_walks = int(os.environ["NUM_WALKS"])
+		self.walk_length = int(os.environ["WALK_LENGTH"])
+
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.kneighbors = int(os.environ['KNEIGHBOR'])
+		
 		# Hyperparameter Beta
 		self.mybeta = float(os.environ['N2VBETA'])
 		self.Graph = nx.Graph()
@@ -169,7 +174,7 @@ class Node2VecRunner(BaselineRunner):
 		initFile = "%s_raw"%self.p2vReprFile
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			 num_walks=10, walk_length=10, p=0.4, q=0.5)
+			 num_walks=self.num_walks, walk_length=self.walk_length+1, p=0.4, q=0.5)
 
 		if 	generate_walk==True:
 			Logger.logr.info("Generating Walk File")
