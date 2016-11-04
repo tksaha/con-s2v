@@ -13,6 +13,7 @@ class WordDoc2Vec:
 		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
 		self.retrofitOneExe = os.environ['RETROFITONEEXE']
 		self.regularizeSen2Vec = os.environ['REGSEN2VECEXE']
+		self.jointLearner = os.environ['JOINTLEXE']
 		self.cores = multiprocessing.cpu_count()
 
 	def buildWordDoc2VecParamDict(self):
@@ -30,7 +31,7 @@ class WordDoc2Vec:
 		self.wordParamDict["threads"] = str(self.cores * 10)
 		self.wordParamDict["binary"] = str(0)
 		self.wordParamDict["iter"] = str(20)
-		self.wordParamDict["min-count"]= str(1)
+		self.wordParamDict["min-count"]= str(0)
 		self.wordParamDict["sentence-vectors"] = str(0)
 		if self.wordParamDict["cbow"]== str(1):
 			self.wordParamDict["alpha"] = str(0.05)
@@ -41,10 +42,12 @@ class WordDoc2Vec:
 	def buildArgListforW2V(self, wPDict, retrofit=0):
 		if retrofit == 0:
 			exeFile = self.doc2vecMIKOLOVExecutableDir
-		elif retrofit==1:
+		elif retrofit == 1:
 			exeFile = self.retrofitOneExe
-		elif retrofit ==2:
+		elif retrofit == 2:
 			exeFile = self.regularizeSen2Vec
+		elif retrofit == 3:
+			exeFile = self.jointLearner
 
 		args = [exeFile, "-train",wPDict["train"],\
 		    "-output",wPDict["output"],\

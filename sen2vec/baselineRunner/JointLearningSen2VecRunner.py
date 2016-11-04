@@ -5,6 +5,7 @@ import sys
 import networkx as nx 
 from gensim.models import Word2Vec
 from log_manager.log_config import Logger 
+from gensim.models import Doc2Vec
 from baselineRunner.BaselineRunner import BaselineRunner
 import pickle
 import math 
@@ -23,13 +24,12 @@ class JointLearningSen2VecRunner(BaselineRunner):
 
 	def __init__(self, *args, **kwargs):
 		BaselineRunner.__init__(self, *args, **kwargs)
-		self.regsen2vReprFile = os.environ["JOINTS2VRPRFILE"]
+		self.jointReprFile = os.environ["JOINTS2VRPRFILE"]
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
 		self.num_walks = int(os.environ["NUM_WALKS"])
 		self.walk_length = int(os.environ["WALK_LENGTH"])
 		self.jointregBetaUNW = float(os.environ['JOINT_BETA'])
-
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.graphFile = os.environ["GRAPHFILE"]
@@ -93,26 +93,75 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
 		wPDict["cbow"] = str(0) 
+		wPDict["output"] = "%s_raw_DBOW"%self.latReprName
 		wPDict["sentence-vectors"] = str(1)
 		wPDict["min-count"] = str(0)
 		wPDict["train"] = "%s.txt"%self.sentsFile
+		wPDict["beta"] = str(1.0)
 		
 		wPDict["size"]= str(latent_space_size)
 		args = []
+		neighborFile = os.path.join(self.dataDir,"%s_nbr"%(self.latReprName)
+		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 4)
+		self._runProcess(args)
+		jointvecModel = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)
 
+
+		wPDict["cbow"] = str(1) 
+		wPDict["output"] = "%s_raw_DM"%self.latReprName
+		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 4)
+		self._runProcess(args)
+		jointvecModelDM = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)	
+
+		jointvecFile = open("%s.p"%(self.jointReprFile),"wb")
+		jointvec_dict = {}
+
+		jointvecFile_raw = open("%s_raw.p"%(self.jointReprFile),"wb")
+		jointvec_raw_dict = {}
+
+		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
+			 ["sentence"], [], [], ["id"]):
+			for row_id in range(0,len(result)):
+				id_ = result[row_id][0]	
+				vec1 = jointvecModel[label_sent(id_)]
+				vec2 = jointvecModelDM[label_sent(id_)]
+				vec = np.hstack((vec1,vec2))
+				jointvec_raw_dict[id_] = vec 		
+				vec_str = self.convert_to_str(vec)
+				jointvec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
+				
+		Logger.logr.info("Total Number of Sentences written=%i", len(sent2vec_dict))			
+		pickle.dump(jointvec_dict, jointvecFile)	
+		pickle.dump(jointvec_raw_dict, jointvecFile_raw)	
+
+		jointvecFile_raw.close()	
+		jointvecFile.close()
 
 	def generateSummary(self, gs, methodId, filePrefix,\
 		 lambda_val=1.0, diversity=False):
 		if gs <= 0: return 0
-		
-		
+		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
+		s2vDict = pickle.load (sent2vecFile)
 
-	def __runEval(self, summaryMethodID, vecFileName, reprName):
-		
+		summGen = SummaryGenerator (diverse_summ=diversity,\
+			 postgres_connection = self.postgresConnection,\
+			 lambda_val = lambda_val)
 
+		# Need a method id for the joint 
+	
 	def runEvaluationTask(self):
 		summaryMethodID = 2 
-		
+		jointvecFile_raw = open("%s_raw.p"%(self.jointReprFile),"rb")
+		js2vDict_raw = pickle.load(jointvecFile_raw)
+
+		if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
+			self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
+			self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+		elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':	
+			self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+		else:
+			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
 		
 	def doHouseKeeping(self):
 		"""
