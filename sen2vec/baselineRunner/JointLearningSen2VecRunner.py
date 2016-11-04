@@ -32,7 +32,6 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		self.jointregBetaUNW = float(os.environ['JOINT_BETA'])
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
-		self.graphFile = os.environ["GRAPHFILE"]
 		self.latReprName = "joint_s2v"
 
 		self.postgresConnection.connectDatabase()
@@ -54,7 +53,6 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		neighbor.
 		"""
 		if pd <= 0: return 0 
-		self.Graph = nx.read_gpickle(self.graphFile)
 		walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt"))
 		joint_nbr_file  = open(os.path.join(self.dataDir,"%s_nbr"%(self.latReprName)), "w")
 
@@ -63,24 +61,22 @@ class JointLearningSen2VecRunner(BaselineRunner):
 			line_count = line_count + 1 
 
 		joint_nbr_file.write("%s %s %s"%(str(line_count),str(self.num_walks),str(self.walk_length)))
+		joint_nbr_file.write(os.linesep)
 
 		walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt")) # reset position 
 		for line in walkinputFile:
 			line_elems = line.strip().split(" ")
 
-			for pos in range(0, self.walk_length):
+			for pos in range(0, self.walk_length+1):
 				if pos >= len(line_elems):
 					joint_nbr_file.write("-1 ")
 				else:
-					joint_nbr_file.write("%s "%line_elems[pos])
+					joint_nbr_file.write("%s "%label_sent(line_elems[pos]))
 
 			joint_nbr_file.write(os.linesep)
 			joint_nbr_file.flush()
 		joint_nbr_file.close()
 
-	def __dumpVecs(self, reprFile, vecFile, vecRawFile):
-
-		
 
 	def runTheBaseline(self, rbase, latent_space_size):
 		"""
@@ -88,7 +84,6 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		"""
 		if rbase <= 0: return 0 
 
-		self.Graph = nx.read_gpickle(self.graphFile)
 
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
@@ -101,15 +96,16 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		
 		wPDict["size"]= str(latent_space_size)
 		args = []
-		neighborFile = os.path.join(self.dataDir,"%s_nbr"%(self.latReprName)
-		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 4)
+		neighborFile = os.path.join(self.dataDir,"%s_nbr"%(self.latReprName))
+		wPDict["neighborFile"] = neighborFile
+		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 3)
 		self._runProcess(args)
 		jointvecModel = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)
 
 
 		wPDict["cbow"] = str(1) 
 		wPDict["output"] = "%s_raw_DM"%self.latReprName
-		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 4)
+		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 3)
 		self._runProcess(args)
 		jointvecModelDM = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)	
 

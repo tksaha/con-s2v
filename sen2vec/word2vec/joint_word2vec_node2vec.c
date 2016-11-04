@@ -499,6 +499,7 @@ void InitNet() {
         {
           continue;
         }
+        
         index2 = SearchVocab(word);
         if (index2 < 0) {
           printf("[nbr] Vocabulary does not exist \n");

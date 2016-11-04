@@ -74,6 +74,7 @@ class WordDoc2Vec:
 		args.append("-beta")
 		args.append(wPDict["beta"])
 		return args 
+	
 
 
 
