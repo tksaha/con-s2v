@@ -57,7 +57,7 @@ real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0;
 
 // All synapses and exponential table
 // Initembedding for retrofitting
-real *syn0, *syn1, *syn1neg, *initembed, *expTable; 
+real *syn0, *syn0temp, *temp,  *syn1, *syn1neg, *initembed, *expTable; 
 long long  *nbrs;
 
 
@@ -429,6 +429,15 @@ void InitNet() {
   unsigned long long next_random = 1;
   a = posix_memalign((void **)&syn0, 128, (long long)vocab_size * layer1_size * sizeof(real));
   if (syn0 == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
+
+  a = posix_memalign((void **)&temp, 128, (long long)1 * layer1_size * sizeof(real));
+  if (temp == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
+  a = posix_memalign((void **)&syn0temp, 128, (long long)1 * layer1_size * sizeof(real));
+  if (syn0temp == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
+
   if (hs) {
     a = posix_memalign((void **)&syn1, 128, (long long)vocab_size * layer1_size * sizeof(real));
     if (syn1 == NULL) {printf("Memory allocation failed\n"); exit(1);}
@@ -561,6 +570,14 @@ void DestroyNet() {
   if (nbrs != NULL){
     free(nbrs);
   }
+  if(syn0temp!=NULL)
+  {
+    free(syn0temp);
+  }
+  if(temp!=NULL)
+  {
+    free(temp);
+  }
 }
 
 void *TrainModelThread(void *id) {
@@ -610,6 +627,8 @@ void *TrainModelThread(void *id) {
         if (sentence_length >= MAX_SENTENCE_LENGTH) break;
       }
       sentence_position = 0;
+      //save the syn0
+      for (c=0 ; c<layer1_size; c++) syn0temp[c] = syn0[c+sen[0]*layer1_size];
     }
     if (feof(fi) || (word_count > train_words / num_threads)) {
       word_count_actual += word_count - last_word_count;
@@ -752,6 +771,12 @@ void *TrainModelThread(void *id) {
         }
       }
 
+      for (c=0 ; c<layer1_size; c++)
+      {
+        temp[c] = syn0temp[c];
+      }
+
+    
       for (nbr =  0; nbr< max_neighbors; nbr++)
       {
             //target
@@ -771,20 +796,29 @@ void *TrainModelThread(void *id) {
               }
               l2 = target * layer1_size;
               f = 0;
-              for (c = 0; c < layer1_size; c++) f += syn0[c + l1] * syn1neg[c + l2];
+              for (c = 0; c < layer1_size; c++) f += temp[c] * syn1neg[c + l2];
               if (f > MAX_EXP) g = (label - 1) * alpha;
               else if (f < -MAX_EXP) g = (label - 0) * alpha;
               else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
               for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
-              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * syn0[c + l1];
+              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * temp[c];
           }
           // Need to take into account the beta factor
           if  (debug_mode>3)
           {
             printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
           }
-          for (c = 0; c < layer1_size; c++) syn0[c + l1] = syn0[c+l1] + (beta/(xb))* neu1e[c];
+          for (c = 0; c < layer1_size; c++) temp[c] += neu1e[c];
       }
+
+      if (xb >0) {
+        for (c=0 ; c<layer1_size; c++)
+        {
+          syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c]) ) + ((1-beta)*(temp[c] -syn0temp[c]));
+        }
+
+      }
+
       sentence_length = 0;
       continue;
     }
