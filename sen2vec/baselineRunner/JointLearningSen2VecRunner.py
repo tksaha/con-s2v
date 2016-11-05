@@ -29,7 +29,7 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
 		self.num_walks = int(os.environ["NUM_WALKS"])
 		self.walk_length = int(os.environ["WALK_LENGTH"])
-		self.jointregBetaUNW = float(os.environ['JOINT_BETA'])
+		self.jointbeta= float(os.environ['JOINT_BETA'])
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
 		self.latReprName = "joint_s2v"
@@ -77,6 +77,12 @@ class JointLearningSen2VecRunner(BaselineRunner):
 			joint_nbr_file.flush()
 		joint_nbr_file.close()
 
+	def convert_to_str(self, vec):
+		str_ = ""
+		for val in vec: 
+			str_ ="%s %0.3f"%(str_,val)
+		return str_
+
 
 	def runTheBaseline(self, rbase, latent_space_size):
 		"""
@@ -88,13 +94,13 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
 		wPDict["cbow"] = str(0) 
-		wPDict["output"] = "%s_raw_DBOW"%self.latReprName
+		wPDict["output"] = os.path.join(self.dataDir , "%s_raw_DBOW"%self.latReprName)
 		wPDict["sentence-vectors"] = str(1)
 		wPDict["min-count"] = str(0)
 		wPDict["train"] = "%s.txt"%self.sentsFile
-		wPDict["beta"] = str(1.0)
+		wPDict["beta"] = str(self.jointbeta)
 		
-		wPDict["size"]= str(latent_space_size)
+		wPDict["size"]= str(latent_space_size*2)
 		args = []
 		neighborFile = os.path.join(self.dataDir,"%s_nbr"%(self.latReprName))
 		wPDict["neighborFile"] = neighborFile
@@ -103,14 +109,14 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		jointvecModel = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)
 
 
-		wPDict["cbow"] = str(1) 
-		wPDict["output"] = "%s_raw_DM"%self.latReprName
-		args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 3)
-		self._runProcess(args)
-		jointvecModelDM = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)	
+		# wPDict["cbow"] = str(1) 
+		# wPDict["output"] = os.path.join(self.dataDir,"%s_raw_DM"%self.latReprName)
+		# args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 3)
+		# self._runProcess(args)
+		# jointvecModelDM = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)	
 
-		jointvecFile = open("%s.p"%(self.jointReprFile),"wb")
-		jointvec_dict = {}
+		# jointvecFile = open("%s.p"%(self.jointReprFile),"wb")
+		# jointvec_dict = {}
 
 		jointvecFile_raw = open("%s_raw.p"%(self.jointReprFile),"wb")
 		jointvec_raw_dict = {}
@@ -120,18 +126,18 @@ class JointLearningSen2VecRunner(BaselineRunner):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]	
 				vec1 = jointvecModel[label_sent(id_)]
-				vec2 = jointvecModelDM[label_sent(id_)]
-				vec = np.hstack((vec1,vec2))
-				jointvec_raw_dict[id_] = vec 		
-				vec_str = self.convert_to_str(vec)
-				jointvec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
+				#vec2 = jointvecModelDM[label_sent(id_)]
+				#vec = np.hstack((vec1,vec2))
+				#jointvec_raw_dict[id_] = vec 		
+				jointvec_raw_dict[id_] = vec1 
+				#jointvec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
 				
-		Logger.logr.info("Total Number of Sentences written=%i", len(sent2vec_dict))			
-		pickle.dump(jointvec_dict, jointvecFile)	
+		Logger.logr.info("Total Number of Sentences written=%i", len(jointvec_raw_dict))			
+		#pickle.dump(jointvec_dict, jointvecFile)	
 		pickle.dump(jointvec_raw_dict, jointvecFile_raw)	
 
 		jointvecFile_raw.close()	
-		jointvecFile.close()
+		#jointvecFile.close()
 
 	def generateSummary(self, gs, methodId, filePrefix,\
 		 lambda_val=1.0, diversity=False):

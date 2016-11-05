@@ -499,7 +499,7 @@ void InitNet() {
         {
           continue;
         }
-        
+
         index2 = SearchVocab(word);
         if (index2 < 0) {
           printf("[nbr] Vocabulary does not exist \n");
@@ -568,6 +568,7 @@ void *TrainModelThread(void *id) {
   long long word_count = 0, last_word_count = 0, sen[MAX_SENTENCE_LENGTH + 1];
   long long l1, l2,l1n, nbrindex, c, target, label, local_iter = iter;
   unsigned long long next_random = (long long)id;
+  int xb; 
   real f, g;
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
@@ -740,16 +741,23 @@ void *TrainModelThread(void *id) {
     if (sentence_position >= sentence_length) {
       // Skip objective for node2vec 
       // init 
-      for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
-
       l1n = sen[0] * max_neighbors;
       l1  = sen[0] * layer1_size; //src
+      xb = 0;
+      for ( ; xb<max_neighbors; xb++)
+      {
+        if (nbrs[xb+l1n]<0)
+        {
+          break;
+        }
+      }
+
       for (nbr =  0; nbr< max_neighbors; nbr++)
       {
             //target
             nbrindex = nbrs[l1n+nbr]; 
             if (nbrindex < 0) break; 
-
+            for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
             if (negative > 0) for (d = 0; d < negative + 1; d++) {
               if (d == 0) {
                  target = nbrindex;
@@ -771,7 +779,11 @@ void *TrainModelThread(void *id) {
               for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * syn0[c + l1];
           }
           // Need to take into account the beta factor
-          for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
+          if  (debug_mode>3)
+          {
+            printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
+          }
+          for (c = 0; c < layer1_size; c++) syn0[c + l1] = syn0[c+l1] + (beta/(xb))* neu1e[c];
       }
       sentence_length = 0;
       continue;
