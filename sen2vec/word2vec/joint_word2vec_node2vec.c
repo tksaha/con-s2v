@@ -810,12 +810,6 @@ void *TrainModelThread(void *id) {
           break;
         }
       }
-
-      for (c=0 ; c<layer1_size; c++)
-      {
-        temp[c] = syn0temp[c];
-      }
-
     
       for (nbr =  0; nbr< max_neighbors; nbr++)
       {
@@ -836,27 +830,21 @@ void *TrainModelThread(void *id) {
               }
               l2 = target * layer1_size;
               f = 0;
-              for (c = 0; c < layer1_size; c++) f += temp[c] * syn1neg[c + l2];
+              for (c = 0; c < layer1_size; c++) f += syn0[c+l1] * syn1neg[c + l2];
               if (f > MAX_EXP) g = (label - 1) * alpha;
               else if (f < -MAX_EXP) g = (label - 0) * alpha;
               else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
               for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
-              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] +=  g * temp[c];
+              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] +=  g * syn0[c];
           }
           // Need to take into account the beta factor
           if  (debug_mode>3)
           {
             printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
           }
-          for (c = 0; c < layer1_size; c++) temp[c] +=  neu1e[c];
+          for (c = 0; c < layer1_size; c++) syn0[c+l1] +=  neu1e[c];
       }
 
-     
-      for (c=0 ; c<layer1_size; c++)
-      {
-        syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c]))  + ((1.0 - beta)*(temp[c] -syn0temp[c]));
-      }
-    
       sentence_length = 0;
       continue;
     }
