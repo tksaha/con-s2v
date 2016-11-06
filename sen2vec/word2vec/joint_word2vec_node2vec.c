@@ -57,7 +57,7 @@ real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0;
 
 // All synapses and exponential table
 // Initembedding for retrofitting
-real *syn0, *syn0temp, *temp,  *syn1, *syn1neg, *initembed, *expTable; 
+real *syn0, *syn0temp, *syn1negtemp, *tempneg,  *temp,  *syn1, *syn1neg, *initembed, *expTable; 
 long long  *nbrs;
 
 
@@ -437,6 +437,12 @@ void InitNet() {
   a = posix_memalign((void **)&syn0temp, 128, (long long)1 * layer1_size * sizeof(real));
   if (syn0temp == NULL) {printf("Memory allocation failed\n"); exit(1);}
 
+  a = posix_memalign((void **)&tempneg, 128, (long long)1 * layer1_size * sizeof(real));
+  if (tempneg == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
+  a = posix_memalign((void **)&syn1negtemp, 128, (long long)1 * layer1_size * sizeof(real));
+  if (syn1negtemp == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
 
   if (hs) {
     a = posix_memalign((void **)&syn1, 128, (long long)vocab_size * layer1_size * sizeof(real));
@@ -595,6 +601,9 @@ void *TrainModelThread(void *id) {
   printf("Num threads =%d\n", num_threads);
 
   fseek(fi, file_size / (long long)num_threads * (long long)id, SEEK_SET);
+
+
+
   while (1) {
     if (word_count - last_word_count > 10000) {
       word_count_actual += word_count - last_word_count;
@@ -609,6 +618,8 @@ void *TrainModelThread(void *id) {
       alpha = starting_alpha * (1 - word_count_actual / (real)(iter * train_words + 1));
       if (alpha < starting_alpha * 0.0001) alpha = starting_alpha * 0.0001;
     }
+
+
     if (sentence_length == 0) {
       while (1) {
         word = ReadWordIndex(fi);
@@ -628,7 +639,10 @@ void *TrainModelThread(void *id) {
       }
       sentence_position = 0;
       //save the syn0
-      for (c=0 ; c<layer1_size; c++) syn0temp[c] = syn0[c+sen[0]*layer1_size];
+      for (c=0 ; c<layer1_size; c++){
+        syn0temp[c] = syn0[c+sen[0]*layer1_size];
+        syn1negtemp[c] = syn1neg[c+sen[0]*layer1_size];
+      } 
     }
     if (feof(fi) || (word_count > train_words / num_threads)) {
       word_count_actual += word_count - last_word_count;
@@ -667,21 +681,21 @@ void *TrainModelThread(void *id) {
       }
       if (cw) {
         for (c = 0; c < layer1_size; c++) neu1[c] /= cw;
-        if (hs) for (d = 0; d < vocab[word].codelen; d++) {
-          f = 0;
-          l2 = vocab[word].point[d] * layer1_size;
-          // Propagate hidden -> output
-          for (c = 0; c < layer1_size; c++) f += neu1[c] * syn1[c + l2];
-          if (f <= -MAX_EXP) continue;
-          else if (f >= MAX_EXP) continue;
-          else f = expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))];
-          // 'g' is the gradient multiplied by the learning rate
-          g = (1 - vocab[word].code[d] - f) * alpha;
-          // Propagate errors output -> hidden
-          for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1[c + l2];
-          // Learn weights hidden -> output
-          for (c = 0; c < layer1_size; c++) syn1[c + l2] += g * neu1[c];
-        }
+        // if (hs) for (d = 0; d < vocab[word].codelen; d++) {
+        //   f = 0;
+        //   l2 = vocab[word].point[d] * layer1_size;
+        //   // Propagate hidden -> output
+        //   for (c = 0; c < layer1_size; c++) f += neu1[c] * syn1[c + l2];
+        //   if (f <= -MAX_EXP) continue;
+        //   else if (f >= MAX_EXP) continue;
+        //   else f = expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))];
+        //   // 'g' is the gradient multiplied by the learning rate
+        //   g = (1 - vocab[word].code[d] - f) * alpha;
+        //   // Propagate errors output -> hidden
+        //   for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1[c + l2];
+        //   // Learn weights hidden -> output
+        //   for (c = 0; c < layer1_size; c++) syn1[c + l2] += g * neu1[c];
+        // }
         // NEGATIVE SAMPLING
         if (negative > 0) for (d = 0; d < negative + 1; d++) {
           if (d == 0) {
@@ -694,30 +708,41 @@ void *TrainModelThread(void *id) {
             if (target == word) continue;
             label = 0;
           }
+
+
           l2 = target * layer1_size;
           f = 0;
           for (c = 0; c < layer1_size; c++) f += neu1[c] * syn1neg[c + l2];
           if (f > MAX_EXP) g = (label - 1) * alpha;
           else if (f < -MAX_EXP) g = (label - 0) * alpha;
           else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
+
+
           for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
           for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * neu1[c];
+
+
         }
         // hidden -> in
         for (a = b; a < window * 1 + 1 - b; a++) if (a != window) {
           c = sentence_position - window + a;
           if (c < 0) continue;
           if (c >= sentence_length) continue;
-          if (sentence_vectors && (c == 0)) continue;
+          if (sentence_vectors && (c == 0)) continue; // for sentence
           last_word = sen[c];
           if (last_word == -1) continue;
           for (c = 0; c < layer1_size; c++) syn0[c + last_word * layer1_size] += neu1e[c];
         }
+
+
+
         if (sentence_vectors) {
           last_word = sen[0];
           if (last_word == -1) continue;
           for (c = 0; c < layer1_size; c++) syn0[c + last_word * layer1_size] += neu1e[c];
         }
+
+
       }
     } else {  //train skip-gram
       for (a = b; a < window * 2 + 1 + sentence_vectors - b; a++) if (a != window) {
@@ -725,13 +750,21 @@ void *TrainModelThread(void *id) {
         if (sentence_vectors) if (a >= window * 2 + sentence_vectors - b) c = 0;
         if (c < 0) continue;
         if (c >= sentence_length) continue;
+
+
         last_word = sen[c];
+
+
         if (last_word == -1) continue;
         l1 = last_word * layer1_size;
+
+
         for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
         // HIERARCHICAL SOFTMAX
         // Code omitted 
         // NEGATIVE SAMPLING
+
+
         if (negative > 0) for (d = 0; d < negative + 1; d++) {
           if (d == 0) {
             target = word;
@@ -743,14 +776,21 @@ void *TrainModelThread(void *id) {
             if (target == word) continue;
             label = 0;
           }
+
+
+
           l2 = target * layer1_size;
+
+
           f = 0;
           for (c = 0; c < layer1_size; c++) f += syn0[c + l1] * syn1neg[c + l2];
           if (f > MAX_EXP) g = (label - 1) * alpha;
           else if (f < -MAX_EXP) g = (label - 0) * alpha;
           else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
+
+
           for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
-          for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * syn0[c + l1];
+          for (c = 0; c < layer1_size; c++) syn1neg[c + l2] +=  g * syn0[c + l1];
         }
         // Learn embedding
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
@@ -801,24 +841,22 @@ void *TrainModelThread(void *id) {
               else if (f < -MAX_EXP) g = (label - 0) * alpha;
               else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
               for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
-              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * temp[c];
+              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] +=  g * temp[c];
           }
           // Need to take into account the beta factor
           if  (debug_mode>3)
           {
             printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
           }
-          for (c = 0; c < layer1_size; c++) temp[c] += neu1e[c];
+          for (c = 0; c < layer1_size; c++) temp[c] +=  neu1e[c];
       }
 
-      if (xb >0) {
-        for (c=0 ; c<layer1_size; c++)
-        {
-          syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c]) ) + ((1-beta)*(temp[c] -syn0temp[c]));
-        }
-
+     
+      for (c=0 ; c<layer1_size; c++)
+      {
+        syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c]))  + ((1.0 - beta)*(temp[c] -syn0temp[c]));
       }
-
+    
       sentence_length = 0;
       continue;
     }
