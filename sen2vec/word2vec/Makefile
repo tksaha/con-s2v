@@ -15,8 +15,8 @@ retrofit_word2vec_one: retrofit_word2vec.c
 	$(CC) retrofit_word2vec.c -o retrofit_word2vec_one $(CFLAGS)
 reg_sen2vec_net: regularized_sen2vec_net.c 
 	$(CC) regularized_sen2vec_net.c -o  reg_sen2vec_net $(CFLAGS)
-joint_word_node2vec: joint_word2vec_node2vec.c 
-	$(CC) joint_word2vec_node2vec.c -o  joint_word_node2vec $(CFLAGS)
+joint_word_node2vec: joint_learner_unsupervised.c 
+	$(CC) joint_learner_unsupervised.c -o  joint_word_node2vec $(CFLAGS)
 
 
 

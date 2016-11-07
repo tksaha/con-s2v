@@ -189,7 +189,7 @@ class ReutersReader(DocumentReader):
 		os.environ['EVAL'] = 'TEST'
 		os.environ['TEST_FOR'] = 'CLASS'
 		jointL = JointLearningSen2VecRunner(self.dbstring)
-		jointL.jointbeta = 1.0
+		jointL.jointbeta = 0.91
 		#jointL.prepareData(pd)
 		jointL.runTheBaseline(rbase, 300)
 		jointL.runEvaluationTask()
