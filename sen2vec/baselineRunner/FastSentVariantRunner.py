@@ -32,14 +32,20 @@ class FastSentVariantRunner(BaselineRunner):
 		self.latReprName = "fsent_s2v"
 		self.cores = multiprocessing.cpu_count()
 		self.postgresConnection.connectDatabase()
+		self.sentenceList = []
 
-	def isnertNeighbors(sentenceList, nbr_file):
+	def insertNeighbors(self, sentenceList, nbr_file):
 		for pos in range(0, len(sentenceList)):
 			nbr_file.write("%s "%str(sentenceList[pos]))
 			if pos -1 >= 0:
 				nbr_file.write("%s "%str(sentenceList[pos-1]))
+			else:
+				nbr_file.write("%s "%("-1"))
+
 			if pos+1 < len(sentenceList):
 				nbr_file.write("%s "%str(sentenceList[pos+1]))
+			else:
+				nbr_file.write("%s "%("-1"))
 			nbr_file.write(os.linesep)
 	
 
@@ -49,27 +55,27 @@ class FastSentVariantRunner(BaselineRunner):
 		google's fast sent idea or idea from Felix Hill's 
 		sentence representation paper. 
 		"""		
-		nbr_file = open(os.path.join(self.dataDir, self.latReprName, "_nbr.txt"));
+		nbr_file = open(os.path.join(self.dataDir, "%s%s"%(self.latReprName,"_nbr")), "w")
 
 		nSent = 0
 		for result in self.postgresConnection.memoryEfficientSelect(["count(*)"],\
 			['sentence'], [], [], []):
 			nSent = int (result[0][0])
 
-		nbr_file.write("%s 2%s"%(str(nSent),os.linesep))
+		nbr_file.write("%s 1 2%s"%(str(nSent),os.linesep))
 
 		for doc_result in self.postgresConnection.memoryEfficientSelect(["id"],\
 			["document"], [], [], ["id"]):
 			for row_id in range(0,len(doc_result)):
 				document_id = doc_result[row_id][0]
-				Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
+				#Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
 				self.sentenceList = []
 				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
 					['id'],['sentence'],[["doc_id","=",document_id]],[],['id']):
 					for inrow_id in range(0, len(sentence_result)):
 						sentence_id = int(sentence_result[inrow_id][0])
 						self.sentenceList.append(sentence_id)
-				self.insertNeighbors(sentenceList, nbr_file)
+				self.insertNeighbors(self.sentenceList, nbr_file)
 
 
 	def convert_to_str(self, vec):
@@ -93,7 +99,7 @@ class FastSentVariantRunner(BaselineRunner):
 		wPDict["sentence-vectors"] = str(1)
 		wPDict["min-count"] = str(0)
 		wPDict["train"] = "%s.txt"%self.sentsFile
-		wPDict["beta"] = str(self.jointbeta)
+		wPDict["beta"] = str(self.fastsentbeta)
 		
 		wPDict["size"]= str(latent_space_size)
 		args = []
@@ -110,10 +116,10 @@ class FastSentVariantRunner(BaselineRunner):
 		self._runProcess(args)
 		jointvecModelDM = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)	
 
-		jointvecFile = open("%s.p"%(self.jointReprFile),"wb")
+		jointvecFile = open("%s.p"%(self.fastsentReprFile),"wb")
 		jointvec_dict = {}
 
-		jointvecFile_raw = open("%s_raw.p"%(self.jointReprFile),"wb")
+		jointvecFile_raw = open("%s_raw.p"%(self.fastsentReprFile),"wb")
 		jointvec_raw_dict = {}
 
 		for result in self.postgresConnection.memoryEfficientSelect(["id"],\

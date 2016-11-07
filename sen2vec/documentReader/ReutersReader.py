@@ -15,6 +15,7 @@ from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
 from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
 from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRunner
 from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
+from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 
@@ -188,8 +189,14 @@ class ReutersReader(DocumentReader):
 
 		os.environ['EVAL'] = 'TEST'
 		os.environ['TEST_FOR'] = 'CLASS'
-		jointL = JointLearningSen2VecRunner(self.dbstring)
-		jointL.jointbeta = 0.91
-		#jointL.prepareData(pd)
-		jointL.runTheBaseline(rbase, 300)
-		jointL.runEvaluationTask()
+		# jointL = JointLearningSen2VecRunner(self.dbstring)
+		# jointL.jointbeta = 0.91
+		# #jointL.prepareData(pd)
+		# jointL.runTheBaseline(rbase, 300)
+		# jointL.runEvaluationTask()
+
+		frunner = FastSentVariantRunner(self.dbstring)
+		frunner.fastsentbeta = 0.3
+		frunner.prepareData(pd)
+		frunner.runTheBaseline(rbase, 300)
+		frunner.runEvaluationTask()
