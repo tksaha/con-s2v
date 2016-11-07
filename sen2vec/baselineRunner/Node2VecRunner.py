@@ -118,18 +118,18 @@ class Node2VecRunner(BaselineRunner):
 			["document"], [], [], ["id"]):
 			for row_id in range(0,len(doc_result)):
 				document_id = doc_result[row_id][0]
-				Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
+				#Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
 				self.sentenceDict.clear()
-				Logger.logr.info("Number of sentence in sentence"\
-					 "dictionary is %i"%len(self.sentenceDict))
+				#Logger.logr.info("Number of sentence in sentence"\
+				#	 "dictionary is %i"%len(self.sentenceDict))
 				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
 					['id','content'],['sentence'],[["doc_id","=",document_id]],[],[]):
 					for inrow_id in range(0, len(sentence_result)):
 						sentence_id = int(sentence_result[inrow_id][0])
 						sentence = sentence_result[inrow_id][1]
 						self.sentenceDict[sentence_id] = sentence
-				Logger.logr.info("Number of sentence in sentence"\
-					 "dictionary is %i"%len(self.sentenceDict))
+				#Logger.logr.info("Number of sentence in sentence"\
+				#		 "dictionary is %i"%len(self.sentenceDict))
 				self.insertGraphEdges() 
 					
 		nx.write_gpickle(self.Graph, self.graphFile)

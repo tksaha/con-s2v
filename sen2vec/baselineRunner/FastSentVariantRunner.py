@@ -20,61 +20,57 @@ from summaryGenerator.SummaryGenerator import SummaryGenerator
 label_sent = lambda id_: 'SENT_%s' %(id_)
 
 
-class JointLearningSen2VecRunner(BaselineRunner): 
+class FastSentVariantRunner(BaselineRunner): 
 
 	def __init__(self, *args, **kwargs):
 		BaselineRunner.__init__(self, *args, **kwargs)
-		self.jointReprFile = os.environ["JOINTS2VRPRFILE"]
+		self.fastsentReprFile = os.environ["FASTS2VRPRFILE"]
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
-		self.num_walks = int(os.environ["NUM_WALKS"])
-		self.walk_length = int(os.environ["WALK_LENGTH"])
-		self.jointbeta= float(os.environ['JOINT_BETA'])
+		self.fastsentbeta= float(os.environ['FSENT_BETA'])
 		self.cores = multiprocessing.cpu_count()
-		self.latReprName = "joint_s2v"
-
+		self.latReprName = "fsent_s2v"
+		self.cores = multiprocessing.cpu_count()
 		self.postgresConnection.connectDatabase()
+
+	def isnertNeighbors(sentenceList, nbr_file):
+		for pos in range(0, len(sentenceList)):
+			nbr_file.write("%s "%str(sentenceList[pos]))
+			if pos -1 >= 0:
+				nbr_file.write("%s "%str(sentenceList[pos-1]))
+			if pos+1 < len(sentenceList):
+				nbr_file.write("%s "%str(sentenceList[pos+1]))
+			nbr_file.write(os.linesep)
 	
 
 	def prepareData(self, pd):
 		"""
-		It will prepare neighbor data for joint learning.
-		Sample neighbor file will look like: 
-		2 2 4
-		SENT_1  SENT_2 SENT_3 SENT_4 SENT_5
-		SENT_1  SENT_3 SENT_4  -1 -1
-		
-		The very first line gives information about number of 
-		lines to read, number of walks and walk_length. 
+		This function will generate the context based on the 
+		google's fast sent idea or idea from Felix Hill's 
+		sentence representation paper. 
+		"""		
+		nbr_file = open(os.path.join(self.dataDir, self.latReprName, "_nbr.txt"));
 
-		If a particular node does not have any neighbor in the 
-		walk, then it will have -1 as neighbor which will indicate no 
-		neighbor.
-		"""
-		if pd <= 0: return 0 
-		walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt"))
-		joint_nbr_file  = open(os.path.join(self.dataDir,"%s_nbr"%(self.latReprName)), "w")
+		nSent = 0
+		for result in self.postgresConnection.memoryEfficientSelect(["count(*)"],\
+			['sentence'], [], [], []):
+			nSent = int (result[0][0])
 
-		line_count = 0 
-		for line in walkinputFile: 
-			line_count = line_count + 1 
+		nbr_file.write("%s 2%s"%(str(nSent),os.linesep))
 
-		joint_nbr_file.write("%s %s %s"%(str(line_count),str(self.num_walks),str(self.walk_length)))
-		joint_nbr_file.write(os.linesep)
+		for doc_result in self.postgresConnection.memoryEfficientSelect(["id"],\
+			["document"], [], [], ["id"]):
+			for row_id in range(0,len(doc_result)):
+				document_id = doc_result[row_id][0]
+				Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
+				self.sentenceList = []
+				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
+					['id'],['sentence'],[["doc_id","=",document_id]],[],['id']):
+					for inrow_id in range(0, len(sentence_result)):
+						sentence_id = int(sentence_result[inrow_id][0])
+						self.sentenceList.append(sentence_id)
+				self.insertNeighbors(sentenceList, nbr_file)
 
-		walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt")) # reset position 
-		for line in walkinputFile:
-			line_elems = line.strip().split(" ")
-
-			for pos in range(0, self.walk_length+1):
-				if pos >= len(line_elems):
-					joint_nbr_file.write("-1 ")
-				else:
-					joint_nbr_file.write("%s "%label_sent(line_elems[pos]))
-
-			joint_nbr_file.write(os.linesep)
-			joint_nbr_file.flush()
-		joint_nbr_file.close()
 
 	def convert_to_str(self, vec):
 		str_ = ""
@@ -140,8 +136,8 @@ class JointLearningSen2VecRunner(BaselineRunner):
 	def generateSummary(self, gs, methodId, filePrefix,\
 		 lambda_val=1.0, diversity=False):
 		if gs <= 0: return 0
-		jointvecFile = open("%s.p"%(self.jointReprFile),"rb")
-		j2vDict = pickle.load (jointvecFile)
+		fastsentvecFile = open("%s.p"%(self.fastsentReprFile),"rb")
+		fastsentvDict = pickle.load (fastsentvecFile)
 
 		summGen = SummaryGenerator (diverse_summ=diversity,\
 			 postgres_connection = self.postgresConnection,\
@@ -151,17 +147,17 @@ class JointLearningSen2VecRunner(BaselineRunner):
 	
 	def runEvaluationTask(self):
 		summaryMethodID = 2 
-		jointvecFile_raw = open("%s_raw.p"%(self.jointReprFile),"rb")
-		js2vDict_raw = pickle.load(jointvecFile_raw)
+		fastsentvecFile_raw = open("%s_raw.p"%(self.fastsentReprFile),"rb")
+		fastsentvDict_raw = pickle.load(fastsentvecFile_raw)
 
 		if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
-			self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+			self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, fastsentvDict_raw)
 		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
-			self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+			self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, fastsentvDict_raw)
 		elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':	
-			self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+			self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, fastsentvDict_raw)
 		else:
-			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, fastsentvDict_raw)
 		
 	def doHouseKeeping(self):
 		"""
