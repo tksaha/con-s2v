@@ -107,7 +107,7 @@ void InitUnigramTableN2V() {
   real d1, power = 0.75;
   table_n2v = (int *)malloc(table_size * sizeof(int));
   for (a = 0; a < vocab_size; a++) train_words_pow += pow(n2vvocab[a].cn, power);
-  printf("%lld\n",train_words_pow);
+  //printf("%lld\n",train_words_pow);
   i = 0;
   d1 = pow(n2vvocab[i].cn, power) / (real)train_words_pow;
   printf("%d --- %lld -- %lf\n", i,n2vvocab[i].index, d1);
@@ -224,6 +224,9 @@ void DestroyVocab() {
   }
   free(vocab[vocab_size].word);
   free(vocab);
+
+  // free n2vvocab 
+  free(n2vvocab);
 }
 
 
@@ -522,7 +525,7 @@ void loadLabelFile()
 
   char *word;
   long long a;   
-  int labelval; 
+  long long labelval; 
   long long index, it; 
   long long nnodes; 
 
@@ -537,16 +540,23 @@ void loadLabelFile()
 
   FILE *finit = fopen(labelFile, "rb");
   fscanf(finit, "%lld %d", &nnodes, &nlabels);
+  printf("nnodes=%lld, nlabels=%d\n", nnodes, nlabels);
+
   for (it=0; it<nnodes; it++)
   {
     fscanf(finit,"%s",word);
     index = SearchVocab(word);
-    fscanf(finit,"%d",&labelval);
+    if (index <= 0)
+    {
+      printf("sentence not on the list");
+    }
+    fscanf(finit,"%lld",&labelval);
+    printf("index=%lld label=%lld\n",index, labelval);
     label_sent[index] = labelval; 
   }
 
   free(word); 
-  free(finit);
+  fclose(finit);
 }
 
 
@@ -582,20 +592,21 @@ void InitNet() {
     if (syn1neg == NULL) {printf("Memory allocation failed\n"); exit(1);}
     for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++)
      syn1neg[a * layer1_size + b] = 0;
-
-    // for labels
-    a = posix_memalign((void **)&syn1label, 128, (long long)nlabels * layer1_size * sizeof(real));
-    if (syn1label == NULL) {printf("Memory allocation failed\n"); exit(1);}
-    for (a = 0; a < nlabels; a++) for (b = 0; b < layer1_size; b++)
-     syn1label[a * layer1_size + b] = 0;
   }
+
+  // for labels
+  printf("nlabels =%d\n",nlabels);
+  a = posix_memalign((void **)&syn1label, 128, (long long)nlabels * layer1_size * sizeof(real));
+  if (syn1label == NULL) {printf("Memory allocation failed\n"); exit(1);}
+  for (a = 0; a < nlabels; a++) for (b = 0; b < layer1_size; b++)
+     syn1label[a * layer1_size + b] = 0;
   
   for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
       next_random = next_random * (unsigned long long)25214903917 + 11;
       syn0[a * layer1_size + b] = (((next_random & 0xFFFF) / (real)65536) - 0.5) / layer1_size;
   }
   CreateBinaryTree();
-  printf("End of loading neighbors\n");
+  
 }
 
 
@@ -621,6 +632,14 @@ void DestroyNet() {
   {
     free(temp);
   }
+  if(templabel!=NULL)
+  {
+    free(templabel);
+  }
+  if(syn1label!=NULL)
+  {
+    free(syn1label);
+  }
 }
 
 void *TrainModelThread(void *id) {
@@ -628,7 +647,8 @@ void *TrainModelThread(void *id) {
   long long word_count = 0, last_word_count = 0, sen[MAX_SENTENCE_LENGTH + 1];
   long long l1, l2,l1n, nbrindex, c, target, label, local_iter = iter;
   unsigned long long next_random = (long long)id;
-  int xb, sentence_label, nlab; 
+  int xb, nlab; 
+  long long sentence_label;
   real f, g;
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
@@ -847,7 +867,7 @@ void *TrainModelThread(void *id) {
               for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
               for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * temp[c];
           }
-          // Need to take into account the beta factor
+         
           if  (debug_mode>3)
           {
             printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
@@ -860,15 +880,16 @@ void *TrainModelThread(void *id) {
 
       if (sentence_label < 0)
       {
-        if (xb >0 )
+        if (xb > 0 )
         {
           for (c=0 ; c<layer1_size; c++)
           {
-             syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c]) ) + ((1-beta)*(temp[c] -syn0temp[c]));
+             syn0[c+l1] = syn0temp[c] + ((beta + beta_label)* (syn0[c+l1]- syn0temp[c]) ) + ((1.0-beta-beta_label)*(temp[c] -syn0temp[c]));
           }
         }
       }else
       {
+        if (debug_mode> 3) printf("Working for label %lld\n", sentence_label);
         for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
         for (nlab =  0; nlab < nlabels; nlab++)
         {
@@ -880,7 +901,7 @@ void *TrainModelThread(void *id) {
           {
             label = 0; 
           }
-          l2 = nlab; 
+          l2 = nlab*layer1_size; 
           
           f = 0;
           for (c = 0; c < layer1_size; c++) f += templabel[c] * syn1label[c + l2];
@@ -904,9 +925,8 @@ void *TrainModelThread(void *id) {
         {
           for (c=0 ; c<layer1_size; c++)
           {
-            syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c]) ) + ((1.0 - beta)*(templabel[c] -syn0temp[c]));
+            syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c])) + ((1.0 - beta)*(templabel[c] - syn0temp[c]));
           }
-
         }
       }
 
@@ -914,10 +934,13 @@ void *TrainModelThread(void *id) {
       continue;
     }
   }
+  //printf("Closing file\n");
   fclose(fi);
   free(neu1);
   free(neu1e);
+  //printf("Exiting\n");
   pthread_exit(NULL);
+
 }
 
 void TrainModel() {
@@ -931,22 +954,23 @@ void TrainModel() {
 
   if (output_file[0] == 0) {printf("Please provide an output file"); return;}
   if (neighborFile[0]!= 0) {
-    loadNeighbors();
-    //if (debug_mode > 3) printf("Before sorting\n");
-    qsort(&n2vvocab[0], vocab_size, sizeof(struct n2vword), VocabCompareN2V);
-    //if (debug_mode > 3) printf("After sorting\n");
-    InitUnigramTableN2V();
+     printf("Loading neighbors\n");
+     loadNeighbors();
   }
 
   if (labelFile[0]!=0)
   {
+    printf("Loading labels\n");
     loadLabelFile();
   }
 
-
   InitNet();
+  if (negative>0)  InitUnigramTable();
+  qsort(&n2vvocab[0], vocab_size, sizeof(struct n2vword), VocabCompareN2V);
+  InitUnigramTableN2V();
 
-  if (negative > 0) InitUnigramTable();
+  
+  //printf("Finished Initializing Network\n");
 
   start = clock();
   for (a = 0; a < num_threads; a++) pthread_create(&pt[a], NULL, TrainModelThread, (void *)a);
@@ -1007,6 +1031,7 @@ void TrainModel() {
   }
   fclose(fo);
   free(table);
+  free(table_n2v);
   free(pt);
   DestroyVocab();
 }

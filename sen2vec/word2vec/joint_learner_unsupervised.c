@@ -221,6 +221,9 @@ void DestroyVocab() {
   }
   free(vocab[vocab_size].word);
   free(vocab);
+
+  // free vocabulary
+  free(n2vvocab);
 }
 
 
@@ -578,6 +581,7 @@ void DestroyNet() {
   {
     free(temp);
   }
+
 }
 
 void *TrainModelThread(void *id) {
@@ -903,6 +907,7 @@ void TrainModel() {
   }
   fclose(fo);
   free(table);
+  free(table_n2v);
   free(pt);
   DestroyVocab();
 }

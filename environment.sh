@@ -86,3 +86,8 @@ export JOINTLEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_word_node2vec
 
 export FASTS2VRPRFILE=~/Documents/sen2vec/Data/fast_sent
 export FSENT_BETA=0.9
+
+export SJOINTS2VRPRFILE=~/Documents/sen2vec/Data/joint_sup_sent
+export JOINT_SENT_BETA=0.8
+export JOINT_SENT_LBETA=0.2
+export JOINTSUPEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_supervised 
