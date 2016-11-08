@@ -540,19 +540,22 @@ void loadLabelFile()
 
   FILE *finit = fopen(labelFile, "rb");
   fscanf(finit, "%lld %d", &nnodes, &nlabels);
-  printf("nnodes=%lld, nlabels=%d\n", nnodes, nlabels);
+  if (debug_mode > 3) printf("nnodes=%lld, nlabels=%d\n", nnodes, nlabels);
 
   for (it=0; it<nnodes; it++)
   {
     fscanf(finit,"%s",word);
     index = SearchVocab(word);
+    fscanf(finit,"%lld",&labelval);
     if (index <= 0)
     {
-      printf("sentence not on the list");
+      if (debug_mode > 3) printf("sentence not on the list");
     }
-    fscanf(finit,"%lld",&labelval);
-    printf("index=%lld label=%lld\n",index, labelval);
-    label_sent[index] = labelval; 
+    else
+    {
+      if (debug_mode > 3) printf("index=%lld label=%lld\n",index, labelval);
+      label_sent[index] = labelval; 
+    }  
   }
 
   free(word); 
@@ -649,7 +652,7 @@ void *TrainModelThread(void *id) {
   unsigned long long next_random = (long long)id;
   int xb, nlab; 
   long long sentence_label;
-  real f, g;
+  real f, g, class_w;
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
   real *neu1e = (real *)calloc(layer1_size, sizeof(real));
@@ -891,26 +894,30 @@ void *TrainModelThread(void *id) {
       {
         if (debug_mode> 3) printf("Working for label %lld\n", sentence_label);
         for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
+
+        // calculating the loss of a particular instance
+        f = 0.0; 
         for (nlab =  0; nlab < nlabels; nlab++)
         {
-          if(nlab == sentence_label)
-          {
-            label = 1;
-          }
-          else
-          {
-            label = 0; 
-          }
-          l2 = nlab*layer1_size; 
-          
-          f = 0;
-          for (c = 0; c < layer1_size; c++) f += templabel[c] * syn1label[c + l2];
-          if (f > MAX_EXP) g = (label - 1) * alpha;
-          else if (f < -MAX_EXP) g = (label - 0) * alpha;
-          else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
+          class_w = 0.0 ; 
+          for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);
+          f = f + exp(class_w);
+        }
+
+
+        for (nlab = 0; nlab <nlabels; nlab++)
+        {
+          if (nlab == sentence_label) label = 1.0; 
+          else label = 0.0; 
+          class_w = 0.0;
+          for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);
+
+          l2 = nlab * layer1_size; 
+          g = (label - (class_w / f)) * alpha; 
           for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
           for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * templabel[c];
         }
+
         for (c = 0; c < layer1_size; c++) templabel[c] += neu1e[c];
 
         if (xb >0)
@@ -925,7 +932,8 @@ void *TrainModelThread(void *id) {
         {
           for (c=0 ; c<layer1_size; c++)
           {
-            syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c])) + ((1.0 - beta)*(templabel[c] - syn0temp[c]));
+
+            syn0[c+l1] = syn0temp[c] + ((beta + (1.0 - beta - beta_label)) * (syn0[c+l1]- syn0temp[c])) + (beta_label*(templabel[c] - syn0temp[c]));
           }
         }
       }
