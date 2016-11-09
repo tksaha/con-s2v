@@ -14,6 +14,9 @@ from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofit
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
 from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
 from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRunner
+from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
+from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
+from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
 
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 
@@ -180,7 +183,26 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
-		self.doTesting(optDict, "reuter", rbase, pd, gs, True)
-		optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
-		self.doTesting(optDict, "reuter", rbase, pd, gs, False)
+		# optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
+		# self.doTesting(optDict, "reuter", rbase, pd, gs, True)
+		# optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
+		# self.doTesting(optDict, "reuter", rbase, pd, gs, False)
+
+		os.environ['EVAL'] = 'TEST'
+		os.environ['TEST_FOR'] = 'CLASS'
+		# jointL = JointLearningSen2VecRunner(self.dbstring)
+		# jointL.jointbeta = 0.91
+		# #jointL.prepareData(pd)
+		# jointL.runTheBaseline(rbase, 300)
+		# jointL.runEvaluationTask()
+
+		# frunner = FastSentVariantRunner(self.dbstring)
+		# frunner.fastsentbeta = 0.3
+		# frunner.prepareData(pd)
+		# frunner.runTheBaseline(rbase, 300)
+		# frunner.runEvaluationTask()
+
+		jsrunner = JointSupervisedRunner(self.dbstring)
+		jsrunner.prepareData(pd)
+		jsrunner.runTheBaseline(rbase, 300)
+		jsrunner.runEvaluationTask()

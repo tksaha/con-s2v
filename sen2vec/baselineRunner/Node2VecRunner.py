@@ -30,8 +30,13 @@ class Node2VecRunner(BaselineRunner):
 		self.p2vReprFile = os.environ["P2VCEXECOUTFILE"]
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
+
+		self.num_walks = int(os.environ["NUM_WALKS"])
+		self.walk_length = int(os.environ["WALK_LENGTH"])
+
 		self.dataDir = os.environ['TRTESTFOLDER']
 		self.kneighbors = int(os.environ['KNEIGHBOR'])
+		
 		# Hyperparameter Beta
 		self.mybeta = float(os.environ['N2VBETA'])
 		self.Graph = nx.Graph()
@@ -113,18 +118,18 @@ class Node2VecRunner(BaselineRunner):
 			["document"], [], [], ["id"]):
 			for row_id in range(0,len(doc_result)):
 				document_id = doc_result[row_id][0]
-				Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
+				#Logger.logr.info("Working for Document id =%i", doc_result[row_id][0])
 				self.sentenceDict.clear()
-				Logger.logr.info("Number of sentence in sentence"\
-					 "dictionary is %i"%len(self.sentenceDict))
+				#Logger.logr.info("Number of sentence in sentence"\
+				#	 "dictionary is %i"%len(self.sentenceDict))
 				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
 					['id','content'],['sentence'],[["doc_id","=",document_id]],[],[]):
 					for inrow_id in range(0, len(sentence_result)):
 						sentence_id = int(sentence_result[inrow_id][0])
 						sentence = sentence_result[inrow_id][1]
 						self.sentenceDict[sentence_id] = sentence
-				Logger.logr.info("Number of sentence in sentence"\
-					 "dictionary is %i"%len(self.sentenceDict))
+				#Logger.logr.info("Number of sentence in sentence"\
+				#		 "dictionary is %i"%len(self.sentenceDict))
 				self.insertGraphEdges() 
 					
 		nx.write_gpickle(self.Graph, self.graphFile)
@@ -169,7 +174,7 @@ class Node2VecRunner(BaselineRunner):
 		initFile = "%s_raw"%self.p2vReprFile
 		walkInputFileName = "%s/node2vecwalk.txt"%(self.dataDir)
 		node2vecInstance = Node2Vec (dimension=latent_space_size*2, window_size=10,\
-			 num_walks=10, walk_length=10, p=0.4, q=0.5)
+			 num_walks=self.num_walks, walk_length=self.walk_length+1, p=0.4, q=0.5)
 
 		if 	generate_walk==True:
 			Logger.logr.info("Generating Walk File")

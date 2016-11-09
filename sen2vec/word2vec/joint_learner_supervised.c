@@ -34,31 +34,42 @@ struct vocab_word {
   char *word, *code, codelen;
 };
 
+struct n2vword {
+  long long cn;
+  long long index; 
+};
+
 
 char train_file[MAX_STRING], output_file[MAX_STRING];
 char save_vocab_file[MAX_STRING], read_vocab_file[MAX_STRING];
 char initfromFile[MAX_STRING];
 char neighborFile[MAX_STRING];
+char labelFile[MAX_STRING];
+
 struct vocab_word *vocab;
+struct n2vword *n2vvocab; 
+
 long long  max_neighbors;
-int binary = 0, cbow = 1, debug_mode = 2, window = 5, min_count = 5, num_threads = 12, min_reduce = 1;
-int regularize_by_nbr_emb = 0, regularize_by_init_embed = 0; 
+int binary = 0, cbow = 1, debug_mode = 2, window = 5, min_count = 5, num_threads = 12, min_reduce = 1; 
 int *vocab_hash;
 long long vocab_max_size = 1000, vocab_size = 0, layer1_size = 100, sentence_vectors = 0;
 long long train_words = 0, word_count_actual = 0, iter = 5, file_size = 0, classes = 0;
-real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0;
+real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0, beta_label = 0.0;
 
 // All synapses and exponential table
 // Initembedding for retrofitting
-real *syn0, *syn1, *syn1neg, *initembed, *expTable; 
+real *syn0, *syn0temp, *temp,  *syn1, *syn1neg, *initembed, *expTable, *templabel, *syn1label; 
 long long  *nbrs;
-real  *nbr_weights;  
+long long  *label_sent; 
+int nlabels; 
+
 
 clock_t start;
 
 int hs = 0, negative = 5;
 const int table_size = 1e8;
 int *table;
+int *table_n2v; 
 
 
 /* http://qwone.com/~jason/writing/unigram.pdf
@@ -86,6 +97,33 @@ void InitUnigramTable() {
     if (i >= vocab_size) i = vocab_size - 1;
   }
 }
+
+// Tanay: I observe that, the probability is not normalized. 
+// The use of long long data type for train_word_pow
+// makes it un normailzed===> It does not sum up to 1.0
+void InitUnigramTableN2V() {
+  int a, i;
+  long long train_words_pow = 0;
+  real d1, power = 0.75;
+  table_n2v = (int *)malloc(table_size * sizeof(int));
+  for (a = 0; a < vocab_size; a++) train_words_pow += pow(n2vvocab[a].cn, power);
+  //printf("%lld\n",train_words_pow);
+  i = 0;
+  d1 = pow(n2vvocab[i].cn, power) / (real)train_words_pow;
+  printf("%d --- %lld -- %lf\n", i,n2vvocab[i].index, d1);
+
+  for (a = 0; a < table_size; a++) {
+    table_n2v[a] = n2vvocab[i].index;
+    if (a / (real)table_size > d1) {
+      i++;
+      d1 += pow(n2vvocab[i].cn, power) / (real)train_words_pow;
+    }
+    //printf("%d --- %lld -- %lf\n", a,n2vvocab[i].index, d1);
+    if (i >= vocab_size) i = vocab_size - 1;
+  }
+}
+
+
 
 // Reads a single word from a file, assuming space + tab + EOL to be word boundaries
 void ReadWord(char *word, FILE *fin) {
@@ -163,6 +201,12 @@ int VocabCompare(const void *a, const void *b) {
     return ((struct vocab_word *)b)->cn - ((struct vocab_word *)a)->cn;
 }
 
+// Used later for sorting by word counts
+int VocabCompareN2V(const void *a, const void *b) {
+    return ((struct n2vword *)b)->cn - ((struct n2vword *)a)->cn;
+}
+
+
 // https://github.com/dav/word2vec/blob/master/src/word2vec.c
 void DestroyVocab() {
   int a;
@@ -180,6 +224,9 @@ void DestroyVocab() {
   }
   free(vocab[vocab_size].word);
   free(vocab);
+
+  // free n2vvocab 
+  free(n2vvocab);
 }
 
 
@@ -212,6 +259,9 @@ void SortVocab() {
     vocab[a].point = (int *)calloc(MAX_CODE_LENGTH, sizeof(int));
   }
 }
+
+
+
 
 // Reduces the vocabulary by removing infrequent tokens
 void ReduceVocab() {
@@ -380,11 +430,160 @@ void ReadVocab() {
   printf("Finished reading vocabulary");
 }
 
+void loadNeighbors() 
+{
+    char *word; int b; 
+    long long a; 
+    long long index1, index2, it, nnodes, xb, num_walk, walk_length;
+    word = (char*)malloc(MAX_STRING* sizeof(char));
+    FILE *finit = fopen(neighborFile, "rb");
+
+    fscanf(finit, "%lld %lld %lld", &nnodes, &num_walk, &walk_length);
+    max_neighbors = num_walk * walk_length;
+    printf("nnodes = %lld  max_neighbors= %lld\n", nnodes, max_neighbors);
+    a = posix_memalign((void **)&nbrs, 128, (long long)vocab_size * max_neighbors *sizeof(long long));
+    if (nbrs == NULL){printf("Memory allocation failed\n"); exit(1);}
+  
+    a = posix_memalign((void **)&n2vvocab, 128, (long long)vocab_size * 1 * sizeof(struct n2vword));
+    if (n2vvocab==NULL){printf("Memory allocation failed\n");}
+  
+    
+    for (a = 0; a < vocab_size; a++)
+    {
+      n2vvocab[a].index = a; 
+      n2vvocab[a].cn = 0; 
+
+      for (b = 0; b < max_neighbors; b++)
+      {
+        nbrs[a * max_neighbors + b] = -1;
+      }
+    }
+
+    for (it=0; it<nnodes; it++)
+    {
+      fscanf(finit,"%s",word);
+      index1 = SearchVocab(word);
+      n2vvocab[index1].cn++; 
+
+      if (debug_mode > 3) printf("word = %s, index=%lld \n",word, index1);
+
+      if (index1 < 0) {
+        printf("[nbr] Vocabulary does not exist \n");
+      }
+      xb = 0; 
+      for (; xb<max_neighbors; xb++)
+      {
+          //printf("nbr%lld\n",nbrs[xb + index1*max_neighbors]);
+          if (nbrs[xb + index1*max_neighbors]==-1) break ;
+      }
+
+      for (b=0; b<walk_length; b++)
+      {
+        fscanf(finit,"%s",word);
+        if (debug_mode > 3) printf("[nbr] word=%s \n",word);
+
+        if (strcmp(word,"-1")==0)
+        {
+          continue;
+        }
+
+        index2 = SearchVocab(word);
+        if (index2 < 0) {
+          printf("[nbr] Vocabulary does not exist \n");
+          continue;
+        }
+
+        if (index1 >= 0 && index2 >= 0)
+        {
+          nbrs[xb + index1*max_neighbors] = index2;
+          n2vvocab[index2].cn++;
+          xb++; 
+        }
+        if (debug_mode > 3) {
+          printf("[nbr] index1 =%lld, index2=%lld\n",index1, index2);
+        }
+
+      }
+
+      if (debug_mode > 3)
+      {
+        xb = 0; 
+        for (; xb<max_neighbors; xb++)
+        {
+          printf("nbr%lld\n",nbrs[xb + index1*max_neighbors]);
+        }
+      }
+
+    }
+
+    fclose(finit);
+    free(word);
+}
+
+void loadLabelFile()
+{
+
+  char *word;
+  long long a;   
+  long long labelval; 
+  long long index, it; 
+  long long nnodes; 
+
+  word = (char*)malloc(MAX_STRING* sizeof(char));
+
+  a = posix_memalign((void **)&label_sent, 128, (long long)vocab_size * 1 *sizeof(long long));
+  if (label_sent == NULL){printf("Memory allocation failed\n"); exit(1);}
+  for (a = 0; a < vocab_size; a++)
+  {
+    label_sent[a] = -1;
+  }
+
+  FILE *finit = fopen(labelFile, "rb");
+  fscanf(finit, "%lld %d", &nnodes, &nlabels);
+  if (debug_mode > 3) printf("nnodes=%lld, nlabels=%d\n", nnodes, nlabels);
+
+  for (it=0; it<nnodes; it++)
+  {
+    fscanf(finit,"%s",word);
+    index = SearchVocab(word);
+    fscanf(finit,"%lld",&labelval);
+    if (index <= 0)
+    {
+      if (debug_mode > 3) printf("sentence not on the list");
+    }
+    else
+    {
+      if (debug_mode > 3) printf("index=%lld label=%lld\n",index, labelval);
+      label_sent[index] = labelval; 
+    }  
+  }
+
+  free(word); 
+  fclose(finit);
+}
+
+
+
+
+
 void InitNet() {
   long long a, b;
   unsigned long long next_random = 1;
   a = posix_memalign((void **)&syn0, 128, (long long)vocab_size * layer1_size * sizeof(real));
   if (syn0 == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
+// Modification for neighbor 
+  a = posix_memalign((void **)&temp, 128, (long long)1 * layer1_size * sizeof(real));
+  if (temp == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
+  a = posix_memalign((void **)&syn0temp, 128, (long long)1 * layer1_size * sizeof(real));
+  if (syn0temp == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
+// Modification for label 
+  a = posix_memalign((void **)&templabel, 128, (long long)1 * layer1_size * sizeof(real));
+  if (templabel == NULL) {printf("Memory allocation failed\n"); exit(1);}
+
+
   if (hs) {
     a = posix_memalign((void **)&syn1, 128, (long long)vocab_size * layer1_size * sizeof(real));
     if (syn1 == NULL) {printf("Memory allocation failed\n"); exit(1);}
@@ -398,79 +597,19 @@ void InitNet() {
      syn1neg[a * layer1_size + b] = 0;
   }
 
+  // for labels
+  printf("nlabels =%d\n",nlabels);
+  a = posix_memalign((void **)&syn1label, 128, (long long)nlabels * layer1_size * sizeof(real));
+  if (syn1label == NULL) {printf("Memory allocation failed\n"); exit(1);}
+  for (a = 0; a < nlabels; a++) for (b = 0; b < layer1_size; b++)
+     syn1label[a * layer1_size + b] = 0;
   
-  // Tanay's Modification 
-  if (neighborFile[0]!=0)
-  {
-    char *word; int b; 
-    long long index1, index2, it, nnodes;
-    double weight; 
-    word = (char*)malloc(MAX_STRING* sizeof(char));
-    FILE *finit = fopen(neighborFile, "rb");
-
-    fscanf(finit, "%lld %lld", &nnodes, &max_neighbors);
-    printf("nnodes = %lld  max_neighbors= %lld\n", nnodes, max_neighbors);
-    a = posix_memalign((void **)&nbrs, 128, (long long)vocab_size * max_neighbors *sizeof(long long));
-    if (nbrs == NULL){printf("Memory allocation failed\n"); exit(1);}
-    a = posix_memalign((void **)&nbr_weights, 128, (long long)vocab_size * max_neighbors *sizeof(real));
-    if (nbr_weights == NULL){printf("Memory allocation failed\n"); exit(1);}
-
-    
-    for (a = 0; a < vocab_size; a++)
-    {
-      for (b = 0; b < max_neighbors; b++)
-      {
-        nbrs[a * max_neighbors + b] = -1;
-        nbr_weights[a * max_neighbors + b] = 0.0;
-      }
-    }
-
-    for (it=0; it<nnodes; it++)
-    {
-      fscanf(finit,"%s",word);
-      index1 = SearchVocab(word);
-
-      if (debug_mode > 3) printf("word = %s, index=%lld \n",word, index1);
-
-      if (index1 < 0) {
-        printf("[nbr] Vocabulary does not exist \n");
-      }
-      for (b=0; b<max_neighbors; b++)
-      {
-        fscanf(finit,"%s",word);
-        fscanf(finit,"%lf",&weight);
-        if (debug_mode > 3) printf("[nbr] word=%s weight= %lf\n",word,weight);
-
-        if (strcmp(word,"-1")==0)
-        {
-          continue; 
-        }
-        index2 = SearchVocab(word);
-        if (index2 < 0) {
-          printf("[nbr] Vocabulary does not exist \n");
-          continue;
-        }
-
-        if (index1 >= 0 && index2 >= 0)
-        {
-          nbrs[b + index1*max_neighbors] = index2;
-          nbr_weights[b + index1*max_neighbors] = weight; 
-        }
-        if (debug_mode > 3) printf("[nbr] index1 =%lld, index2=%lld, weight=%lf\n",index1, index2, weight);
-
-      }
-    }
-
-    fclose(finit);
-    free(word);
-  }
-
   for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
       next_random = next_random * (unsigned long long)25214903917 + 11;
       syn0[a * layer1_size + b] = (((next_random & 0xFFFF) / (real)65536) - 0.5) / layer1_size;
   }
   CreateBinaryTree();
-  printf("End of loading neighbors\n");
+  
 }
 
 
@@ -488,20 +627,32 @@ void DestroyNet() {
   if (nbrs != NULL){
     free(nbrs);
   }
-  if (nbr_weights!=NULL)
+  if(syn0temp!=NULL)
   {
-    free(nbr_weights);
+    free(syn0temp);
+  }
+  if(temp!=NULL)
+  {
+    free(temp);
+  }
+  if(templabel!=NULL)
+  {
+    free(templabel);
+  }
+  if(syn1label!=NULL)
+  {
+    free(syn1label);
   }
 }
 
 void *TrainModelThread(void *id) {
-  long long a, b, d, cw, word, last_word, sentence_length = 0, sentence_position = 0;
+  long long a, b, d, nbr, cw, word, last_word, sentence_length = 0, sentence_position = 0;
   long long word_count = 0, last_word_count = 0, sen[MAX_SENTENCE_LENGTH + 1];
-  long long l1, l2, lnbr, c, target, label, local_iter = iter;
-  long long l1n, nbrid, nbr; 
-  real diff, nbrwgt; 
+  long long l1, l2,l1n, nbrindex, c, target, label, local_iter = iter;
   unsigned long long next_random = (long long)id;
-  real f, g;
+  int xb, nlab; 
+  long long sentence_label;
+  real f, g, class_w;
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
   real *neu1e = (real *)calloc(layer1_size, sizeof(real));
@@ -542,6 +693,8 @@ void *TrainModelThread(void *id) {
         if (sentence_length >= MAX_SENTENCE_LENGTH) break;
       }
       sentence_position = 0;
+      //save the syn0
+      for (c=0 ; c<layer1_size; c++) syn0temp[c] = syn0[c+sen[0]*layer1_size];
     }
     if (feof(fi) || (word_count > train_words / num_threads)) {
       word_count_actual += word_count - last_word_count;
@@ -638,30 +791,12 @@ void *TrainModelThread(void *id) {
         if (sentence_vectors) if (a >= window * 2 + sentence_vectors - b) c = 0;
         if (c < 0) continue;
         if (c >= sentence_length) continue;
-
-
         last_word = sen[c];
         if (last_word == -1) continue;
         l1 = last_word * layer1_size;
-
-        
         for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
         // HIERARCHICAL SOFTMAX
-        if (hs) for (d = 0; d < vocab[word].codelen; d++) {
-          f = 0;
-          l2 = vocab[word].point[d] * layer1_size;
-          // Propagate hidden -> output
-          for (c = 0; c < layer1_size; c++) f += syn0[c + l1] * syn1[c + l2];
-          if (f <= -MAX_EXP) continue;
-          else if (f >= MAX_EXP) continue;
-          else f = expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))];
-          // 'g' is the gradient multiplied by the learning rate
-          g = (1 - vocab[word].code[d] - f) * alpha;
-          // Propagate errors output -> hidden
-          for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1[c + l2];
-          // Learn weights hidden -> output
-          for (c = 0; c < layer1_size; c++) syn1[c + l2] += g * syn0[c + l1];
-        }
+        // Code omitted 
         // NEGATIVE SAMPLING
         if (negative > 0) for (d = 0; d < negative + 1; d++) {
           if (d == 0) {
@@ -685,35 +820,135 @@ void *TrainModelThread(void *id) {
         }
         // Learn embedding
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
-
-        for (c = 0; c < layer1_size; c++)
-        {
-          l1n = last_word * max_neighbors;
-          diff = 0.0 ;
-          for (nbr=0; nbr < max_neighbors; nbr++)
-          {
-            nbrid = nbrs[l1n + nbr];
-            nbrwgt = nbr_weights[l1n + nbr]; 
-
-            if (nbrid < 0) break; 
-            
-            lnbr = nbrid * layer1_size;
-            diff += nbrwgt * (syn0[c + lnbr] - syn0[c+l1]);
-          }
-          if (nbr > 0) syn0[c+l1] += alpha * (beta/nbr) * diff ;    
-        }
       }
     }
     sentence_position++;
     if (sentence_position >= sentence_length) {
+      // Skip objective for node2vec 
+      // init 
+      l1n = sen[0] * max_neighbors;
+      l1  = sen[0] * layer1_size; //src
+      xb = 0;
+      for ( ; xb<max_neighbors; xb++)
+      {
+        if (nbrs[xb+l1n]<0)
+        {
+          break;
+        }
+      }
+
+      for (c=0 ; c<layer1_size; c++)
+      {
+        temp[c] = syn0temp[c];
+        templabel[c] = syn0temp[c];
+      }
+
+    
+      for (nbr =  0; nbr< max_neighbors; nbr++)
+      {
+            //target
+            nbrindex = nbrs[l1n+nbr]; 
+            if (nbrindex < 0) break; 
+            for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
+            if (negative > 0) for (d = 0; d < negative + 1; d++) {
+              if (d == 0) {
+                 target = nbrindex;
+                 label = 1;
+              } else {
+                  next_random = next_random * (unsigned long long)25214903917 + 11;
+                  target = table_n2v[(next_random >> 16) % table_size];
+                  //if (target == 0) target = next_random % (vocab_size - 1) + 1;
+                  if (target == nbrindex) continue;
+                  label = 0;
+              }
+              l2 = target * layer1_size;
+              f = 0;
+              for (c = 0; c < layer1_size; c++) f += temp[c] * syn1neg[c + l2];
+              if (f > MAX_EXP) g = (label - 1) * alpha;
+              else if (f < -MAX_EXP) g = (label - 0) * alpha;
+              else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
+              for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
+              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * temp[c];
+          }
+         
+          if  (debug_mode>3)
+          {
+            printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
+          }
+          for (c = 0; c < layer1_size; c++) temp[c] += neu1e[c];
+      }
+
+      // Start working for labels 
+      sentence_label  = label_sent[sen[0]];
+
+      if (sentence_label < 0)
+      {
+        if (xb > 0 )
+        {
+          for (c=0 ; c<layer1_size; c++)
+          {
+             syn0[c+l1] = syn0temp[c] + ((beta + beta_label)* (syn0[c+l1]- syn0temp[c]) ) + ((1.0-beta-beta_label)*(temp[c] -syn0temp[c]));
+          }
+        }
+      }else
+      {
+        if (debug_mode> 3) printf("Working for label %lld\n", sentence_label);
+        for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
+
+        // calculating the loss of a particular instance
+        f = 0.0; 
+        for (nlab =  0; nlab < nlabels; nlab++)
+        {
+          class_w = 0.0 ; 
+          for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);
+          f = f + exp(class_w);
+        }
+
+
+        for (nlab = 0; nlab <nlabels; nlab++)
+        {
+          if (nlab == sentence_label) label = 1.0; 
+          else label = 0.0; 
+          class_w = 0.0;
+          for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);
+
+          l2 = nlab * layer1_size; 
+          g = (label - (class_w / f)) * alpha; 
+          for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
+          for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * templabel[c];
+        }
+
+        for (c = 0; c < layer1_size; c++) templabel[c] += neu1e[c];
+
+        if (xb >0)
+        {
+          for (c=0 ; c<layer1_size; c++)
+          {
+            syn0[c+l1] = syn0temp[c] + (beta * (syn0[c+l1]- syn0temp[c]) ) + ((beta_label)*(templabel[c] -syn0temp[c]));
+            syn0[c+l1] = syn0[c+l1] + ((1.0 - beta - beta_label) * (temp[c] - syn0temp[c]));
+          }
+        }
+        else
+        {
+          for (c=0 ; c<layer1_size; c++)
+          {
+
+            syn0[c+l1] = syn0temp[c] + ((beta + (1.0 - beta - beta_label)) * (syn0[c+l1]- syn0temp[c])) + (beta_label*(templabel[c] - syn0temp[c]));
+          }
+        }
+      }
+
       sentence_length = 0;
       continue;
     }
   }
+  //printf("Closing file\n");
   fclose(fi);
   free(neu1);
   free(neu1e);
+  //printf("Exiting\n");
   pthread_exit(NULL);
+
 }
 
 void TrainModel() {
@@ -726,10 +961,24 @@ void TrainModel() {
   if (save_vocab_file[0] != 0) SaveVocab();
 
   if (output_file[0] == 0) {printf("Please provide an output file"); return;}
+  if (neighborFile[0]!= 0) {
+     printf("Loading neighbors\n");
+     loadNeighbors();
+  }
+
+  if (labelFile[0]!=0)
+  {
+    printf("Loading labels\n");
+    loadLabelFile();
+  }
 
   InitNet();
+  if (negative>0)  InitUnigramTable();
+  qsort(&n2vvocab[0], vocab_size, sizeof(struct n2vword), VocabCompareN2V);
+  InitUnigramTableN2V();
 
-  if (negative > 0) InitUnigramTable();
+  
+  //printf("Finished Initializing Network\n");
 
   start = clock();
   for (a = 0; a < num_threads; a++) pthread_create(&pt[a], NULL, TrainModelThread, (void *)a);
@@ -790,6 +1039,7 @@ void TrainModel() {
   }
   fclose(fo);
   free(table);
+  free(table_n2v);
   free(pt);
   DestroyVocab();
 }
@@ -822,8 +1072,10 @@ int main(int argc, char **argv) {
     printf("\t\tSet max skip length between words; default is 5\n");
 
     printf("\t-neighbor\n");
-    printf("\t\tUsed to input neighbor of words\n");
-   
+    printf("\t\tUsed to input neighbor of words/sentences\n");
+
+    printf("\t-label\n");
+    printf("\t\tUsed to input label information\n");
 
     printf("\t-sample <float>\n");
     printf("\t\tSet threshold for occurrence of words. Those that appear with higher frequency in the training data\n");
@@ -864,7 +1116,7 @@ int main(int argc, char **argv) {
     printf("\t\twith full sentence context instead of just the window. Use 1 to turn on.\n");
     printf("\t\tMaximum 30 * 0.7 = 21M words in the vocabulary. If you want more words to be in the vocabulary please change the hash size\n");
     printf("\nExamples:\n");
-    printf("./reg_sen2vec_net -train data.txt -output vec.txt  -neighbor neighborfile -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3");
+    printf("./joint_learner_supervised -train data.txt -output vec.txt  -neighbor neighborfile -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3");
     printf("-sentence-vectors 0 -beta 0.05 \n\n");
     return 0;
   }
@@ -874,6 +1126,7 @@ int main(int argc, char **argv) {
   read_vocab_file[0] = 0;
   if ((i = ArgPos((char *)"-size", argc, argv)) > 0) layer1_size = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-train", argc, argv)) > 0) strcpy(train_file, argv[i + 1]);
+
   if ((i = ArgPos((char *)"-save-vocab", argc, argv)) > 0) strcpy(save_vocab_file, argv[i + 1]);
   if ((i = ArgPos((char *)"-read-vocab", argc, argv)) > 0) strcpy(read_vocab_file, argv[i + 1]);
   if ((i = ArgPos((char *)"-debug", argc, argv)) > 0) debug_mode = atoi(argv[i + 1]);
@@ -884,12 +1137,15 @@ int main(int argc, char **argv) {
 
   if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-beta", argc, argv)) > 0) beta = atof(argv[i + 1]);
+  if ((i = ArgPos((char *)"-beta-label", argc, argv)) > 0) beta_label = atof(argv[i + 1]);
 
 
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
   if ((i = ArgPos((char *)"-window", argc, argv)) > 0) window = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-init", argc, argv)) > 0) strcpy(initfromFile, argv[i + 1]);
   if ((i = ArgPos((char *)"-neighbor", argc, argv))>0) strcpy(neighborFile, argv[i+1]);
+  if ((i = ArgPos((char *)"-label", argc, argv))>0) strcpy(labelFile, argv[i+1]);
+
 
   if ((i = ArgPos((char *)"-sample", argc, argv)) > 0) sample = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-hs", argc, argv)) > 0) hs = atoi(argv[i + 1]);

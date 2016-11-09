@@ -12,7 +12,7 @@ from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRun
 from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
-
+from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
 
 class NewsGroupReader(DocumentReader):
@@ -108,7 +108,9 @@ class NewsGroupReader(DocumentReader):
 		for first_level_folder in os.listdir(self.folderPath):
 			if not(DocumentReader._folderISHidden(self, first_level_folder)):
 				for topic in self.topic_names:					
-					if topic not in ['talk.politics.mideast', 'comp.graphics', 'soc.religion.christian', 'rec.autos', 'sci.space', 'talk.politics.guns', 'rec.sport.baseball', 'sci.med']:
+					if topic not in ['talk.politics.mideast', 'comp.graphics',\
+					 'soc.religion.christian', 'rec.autos', 'sci.space', 'talk.politics.guns',\
+					  'rec.sport.baseball', 'sci.med']:
 						continue
 					for file_ in os.listdir("%s%s%s%s%s" %(self.folderPath, "/", \
 											first_level_folder, "/", topic)):
@@ -167,5 +169,24 @@ class NewsGroupReader(DocumentReader):
 		"""
 		#optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
 		#self.doTesting(optDict, "news", rbase, pd, gs, True)
-		optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
-		self.doTesting(optDict, "news", rbase, pd, gs, False)
+		#optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
+		#self.doTesting(optDict, "news", rbase, pd, gs, False)
+
+		os.environ['EVAL'] = 'TEST'
+		os.environ['TEST_FOR'] = 'CLASS'
+		# jointL = JointLearningSen2VecRunner(self.dbstring)
+		# jointL.jointbeta = 0.91
+		# #jointL.prepareData(pd)
+		# jointL.runTheBaseline(rbase, 300)
+		# jointL.runEvaluationTask()
+
+		# frunner = FastSentVariantRunner(self.dbstring)
+		# frunner.fastsentbeta = 0.3
+		# frunner.prepareData(pd)
+		# frunner.runTheBaseline(rbase, 300)
+		# frunner.runEvaluationTask()
+
+		jsrunner = JointSupervisedRunner(self.dbstring)
+		jsrunner.prepareData(pd)
+		jsrunner.runTheBaseline(rbase, 300)
+		jsrunner.runEvaluationTask()

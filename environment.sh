@@ -77,3 +77,17 @@ export REG_BETA_W=1.0
 export ITERUPDATE_ALPHA=1.0
 export N2VBETA=1.0
 export DICTREGDICT=wordnet-synonyms.txt
+
+export JOINTS2VRPRFILE=~/Documents/sen2vec/Data/joint_sent
+export JOINT_BETA=1.0
+export NUM_WALKS=10
+export WALK_LENGTH=9
+export JOINTLEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_word_node2vec
+
+export FASTS2VRPRFILE=~/Documents/sen2vec/Data/fast_sent
+export FSENT_BETA=0.9
+
+export SJOINTS2VRPRFILE=~/Documents/sen2vec/Data/joint_sup_sent
+export JOINT_SENT_BETA=0.5
+export JOINT_SENT_LBETA=0.3
+export JOINTSUPEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_supervised 

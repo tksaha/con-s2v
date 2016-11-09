@@ -100,7 +100,6 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"wb")
 		sent2vec_dict = {}
 
-
 		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"wb")
 		sent2vec_raw_dict = {}
 
