@@ -893,7 +893,7 @@ void *TrainModelThread(void *id) {
       }else
       {
         if (debug_mode> 3) printf("Working for label %lld\n", sentence_label);
-        for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
+       
 
         // calculating the loss of a particular instance
         f = 0.0; 
@@ -904,7 +904,7 @@ void *TrainModelThread(void *id) {
           f = f + exp(class_w);
         }
 
-
+         for (c = 0; c < layer1_size; c++) neu1e[c] = 0.0;
         for (nlab = 0; nlab <nlabels; nlab++)
         {
           if (nlab == sentence_label) label = 1.0; 
