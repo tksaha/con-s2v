@@ -212,7 +212,7 @@ class DocumentReader:
 			joint_beta_opt = max(f1, key=f1.get) 
 			Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
 			f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
-			f.write("ITR Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
 			f.flush()
 			optPDict['joint-beta'] = joint_beta_opt
 			
@@ -232,7 +232,7 @@ class DocumentReader:
 			fs_beta_opt = max(f1, key=f1.get) 
 			Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
 			f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
-			f.write("ITR FS-Beta f1s: %s%s" %(f1, os.linesep))
+			f.write("FST FS-Beta f1s: %s%s" %(f1, os.linesep))
 			f.flush()
 			optPDict['fs-beta'] = fs_beta_opt
 			
@@ -381,88 +381,128 @@ class DocumentReader:
 			optPDict["beta"] = beta_opt
 			
 			adjustedMScore = {}
-			alpha_opt = None #var for the optimal beta
-			for alpha in [0.3, 0.6, 0.8, 1.0]:
-			#for alpha in [0.3]:
-				Logger.logr.info("Starting Running Iterative Baseline for Alpha = %s" %alpha)
-				iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-				iterrunner.myalpha = alpha #reinitializing myalpha
-				if 	alpha==0.3:
-					iterrunner.prepareData(pd)
-				iterrunner.runTheBaseline(rbase)	
-				iterrunner.runEvaluationTask()
-				iterrunner.doHouseKeeping()
-				adjustedMScore[alpha] = self.__getAdjustedMutulScore("%s_weighted"%iterrunner.latReprName)	
-				Logger.logr.info("Adjusted Mutual Score for %s = %s" %(alpha, adjustedMScore[alpha]))
-			alpha_opt = max(adjustedMScore, key=adjustedMScore.get) 
-			Logger.logr.info("Optimal Alpha=%s" %alpha_opt)
-			f.write("Optimal alpha is %.2f%s"%(alpha_opt, os.linesep))
-			f.write("ITR Alpha adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
+			joint_beta_opt = None #var for the optimal beta
+			for joint_beta in [0.5, 0.7, 0.8, 0.85, 0.90, 0.95]:
+				Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
+				jointL = JointLearningSen2VecRunner(self.dbstring)
+				jointL.jointbeta = joint_beta #reinitializing myalpha
+				if 	joint_beta==0.5:
+					jointL.prepareData(pd)
+				jointL.runTheBaseline(rbase, 300)	
+				jointL.runEvaluationTask()
+				jointL.doHouseKeeping()
+				adjustedMScore[joint_beta] = self.__getAdjustedMutulScore("%s"%jointL.latReprName)	
+				Logger.logr.info("Adjusted Mutual Score for %s = %s" %(joint_beta, adjustedMScore[joint_beta]))
+			joint_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
+			Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
+			f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
+			f.write("JTL Joint-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
-			optPDict["alpha"] = alpha_opt
-
-			w_adjusted = {}
-			unw_adjusted = {}
-			w_opt = None
-			unw_opt = None
-			for beta in [0.3, 0.6, 0.8, 1.0]:
-			#for beta in [0.3]:
-				Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
-				regs2v = RegularizedSen2VecRunner(self.dbstring)
-				regs2v.regBetaW = beta
-				regs2v.regBetaUNW = beta
-				if beta==0.3:
-					regs2v.prepareData(pd)
-				regs2v.runTheBaseline(rbase, latent_space_size)
-				regs2v.runEvaluationTask()
-				regs2v.doHouseKeeping()
-				w_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_w"%regs2v.latReprName)	
-				unw_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_unw"%regs2v.latReprName)	
-				Logger.logr.info("W_adjusted for %s = %s" %(beta, w_adjusted[beta]))
-				Logger.logr.info("UNW_adjusted for %s = %s" %(beta, unw_adjusted[beta]))
-			w_opt_reg = max(w_adjusted, key=w_adjusted.get)
-			unw_opt_reg = max(unw_adjusted, key=unw_adjusted.get)
-			Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt_reg, unw_opt_reg))
-			optPDict["w_opt_reg"] = w_opt_reg
-			optPDict["unw_opt_reg"] = unw_opt_reg
-
-			f.write("Optimal REG BetaW : %.2f%s" %(w_opt_reg, os.linesep))
-			f.write("Optimal REG BetaUNW : %.2f%s" %(unw_opt_reg, os.linesep))
-			f.write("REG BetaW adjusted mutual score: %s%s" %(w_adjusted, os.linesep))
-			f.write("REG BetaUNW adjusted mutual score: %s%s" %(unw_adjusted, os.linesep))
+			optPDict["joint_beta"] = joint_beta_opt
+			
+			adjustedMScore = {}
+			fs_beta_opt = None #var for the optimal joint_beta
+			for fs_beta in [0.3, 0.6, 0.8, 1.0]:
+				Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
+				frunner = FastSentVariantRunner(self.dbstring)
+				frunner.fastsentbeta = fs_beta
+				if fs_beta==0.3:
+					frunner.prepareData(pd)
+				frunner.runTheBaseline(rbase, 300)
+				frunner.runEvaluationTask()
+				frunner.doHouseKeeping()
+				adjustedMScore[fs_beta] = self.__getAdjustedMutulScore("%s"%frunner.latReprName)	
+				Logger.logr.info("Adjusted Mutual Score for %s = %s" %(fs_beta, adjustedMScore[fs_beta]))
+			fs_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
+			Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
+			f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
+			f.write("FST FS-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
+			optPDict["fs_beta"] = fs_beta_opt
+			
+#			adjustedMScore = {}
+#			alpha_opt = None #var for the optimal beta
+#			for alpha in [0.3, 0.6, 0.8, 1.0]:
+#			#for alpha in [0.3]:
+#				Logger.logr.info("Starting Running Iterative Baseline for Alpha = %s" %alpha)
+#				iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+#				iterrunner.myalpha = alpha #reinitializing myalpha
+#				if 	alpha==0.3:
+#					iterrunner.prepareData(pd)
+#				iterrunner.runTheBaseline(rbase)	
+#				iterrunner.runEvaluationTask()
+#				iterrunner.doHouseKeeping()
+#				adjustedMScore[alpha] = self.__getAdjustedMutulScore("%s_weighted"%iterrunner.latReprName)	
+#				Logger.logr.info("Adjusted Mutual Score for %s = %s" %(alpha, adjustedMScore[alpha]))
+#			alpha_opt = max(adjustedMScore, key=adjustedMScore.get) 
+#			Logger.logr.info("Optimal Alpha=%s" %alpha_opt)
+#			f.write("Optimal alpha is %.2f%s"%(alpha_opt, os.linesep))
+#			f.write("ITR Alpha adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
+#			f.flush()
+#			optPDict["alpha"] = alpha_opt
 
-			w_adjusted = {}
-			unw_adjusted = {}
-			w_opt = None
-			unw_opt = None
-			for beta in [0.3, 0.6, 0.8, 1.0]:
-			#for beta in [0.3]:
-				Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
-				dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
-				dictregs2v.dictregBetaW = beta
-				dictregs2v.dictregBetaUNW = beta
-				if beta==0.3:
-					dictregs2v.prepareData(pd)
-				dictregs2v.runTheBaseline(rbase, latent_space_size)
-				dictregs2v.runEvaluationTask()
-				dictregs2v.doHouseKeeping()
-				w_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_w"%dictregs2v.latReprName)	
-				unw_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_unw"%dictregs2v.latReprName)	
-				Logger.logr.info("W_adjusted for %s = %s" %(beta, w_adjusted[beta]))
-				Logger.logr.info("UNW_adjusted for %s = %s" %(beta, unw_adjusted[beta]))
-			w_opt_dict_reg = max(w_adjusted, key=w_adjusted.get)
-			unw_opt_dict_reg = max(unw_adjusted, key=unw_adjusted.get)
-			Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNW=%s" %(w_opt_dict_reg, unw_opt_dict_reg))
+#			w_adjusted = {}
+#			unw_adjusted = {}
+#			w_opt = None
+#			unw_opt = None
+#			for beta in [0.3, 0.6, 0.8, 1.0]:
+#			#for beta in [0.3]:
+#				Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
+#				regs2v = RegularizedSen2VecRunner(self.dbstring)
+#				regs2v.regBetaW = beta
+#				regs2v.regBetaUNW = beta
+#				if beta==0.3:
+#					regs2v.prepareData(pd)
+#				regs2v.runTheBaseline(rbase, latent_space_size)
+#				regs2v.runEvaluationTask()
+#				regs2v.doHouseKeeping()
+#				w_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_w"%regs2v.latReprName)	
+#				unw_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_unw"%regs2v.latReprName)	
+#				Logger.logr.info("W_adjusted for %s = %s" %(beta, w_adjusted[beta]))
+#				Logger.logr.info("UNW_adjusted for %s = %s" %(beta, unw_adjusted[beta]))
+#			w_opt_reg = max(w_adjusted, key=w_adjusted.get)
+#			unw_opt_reg = max(unw_adjusted, key=unw_adjusted.get)
+#			Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt_reg, unw_opt_reg))
+#			optPDict["w_opt_reg"] = w_opt_reg
+#			optPDict["unw_opt_reg"] = unw_opt_reg
 
-			optPDict["w_opt_dict_reg"] = w_opt_dict_reg 
-			optPDict["unw_opt_dict_reg"] = unw_opt_dict_reg
+#			f.write("Optimal REG BetaW : %.2f%s" %(w_opt_reg, os.linesep))
+#			f.write("Optimal REG BetaUNW : %.2f%s" %(unw_opt_reg, os.linesep))
+#			f.write("REG BetaW adjusted mutual score: %s%s" %(w_adjusted, os.linesep))
+#			f.write("REG BetaUNW adjusted mutual score: %s%s" %(unw_adjusted, os.linesep))
+#			f.flush()
 
-			f.write("DCT BetaW: %.2f%s" %(w_opt_dict_reg, os.linesep))
-			f.write("DCT BetaUNW: %.2f%s" %(unw_opt_dict_reg, os.linesep))
-			f.write("DCT BetaW adjusted mutual score: %s%s" %(w_adjusted, os.linesep))
-			f.write("DCT BetaUNW adjusted mutual score: %s%s" %(unw_adjusted, os.linesep))
-			f.flush()
+#			w_adjusted = {}
+#			unw_adjusted = {}
+#			w_opt = None
+#			unw_opt = None
+#			for beta in [0.3, 0.6, 0.8, 1.0]:
+#			#for beta in [0.3]:
+#				Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
+#				dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
+#				dictregs2v.dictregBetaW = beta
+#				dictregs2v.dictregBetaUNW = beta
+#				if beta==0.3:
+#					dictregs2v.prepareData(pd)
+#				dictregs2v.runTheBaseline(rbase, latent_space_size)
+#				dictregs2v.runEvaluationTask()
+#				dictregs2v.doHouseKeeping()
+#				w_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_w"%dictregs2v.latReprName)	
+#				unw_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_unw"%dictregs2v.latReprName)	
+#				Logger.logr.info("W_adjusted for %s = %s" %(beta, w_adjusted[beta]))
+#				Logger.logr.info("UNW_adjusted for %s = %s" %(beta, unw_adjusted[beta]))
+#			w_opt_dict_reg = max(w_adjusted, key=w_adjusted.get)
+#			unw_opt_dict_reg = max(unw_adjusted, key=unw_adjusted.get)
+#			Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNW=%s" %(w_opt_dict_reg, unw_opt_dict_reg))
+
+#			optPDict["w_opt_dict_reg"] = w_opt_dict_reg 
+#			optPDict["unw_opt_dict_reg"] = unw_opt_dict_reg
+
+#			f.write("DCT BetaW: %.2f%s" %(w_opt_dict_reg, os.linesep))
+#			f.write("DCT BetaUNW: %.2f%s" %(unw_opt_dict_reg, os.linesep))
+#			f.write("DCT BetaW adjusted mutual score: %s%s" %(w_adjusted, os.linesep))
+#			f.write("DCT BetaUNW adjusted mutual score: %s%s" %(unw_adjusted, os.linesep))
+#			f.flush()
 
 		return optPDict
 
