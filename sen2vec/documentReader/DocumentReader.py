@@ -198,7 +198,7 @@ class DocumentReader:
 			
 			f1 = {}
 			joint_beta_opt = None #var for the optimal joint_beta
-			for joint_beta in [0.5, 0.7, 0.8, 0.85, 0.90, 0.95]:
+			for joint_beta in [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]:
 				Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
 				jointL = JointLearningSen2VecRunner(self.dbstring)
 				jointL.jointbeta = joint_beta
@@ -218,7 +218,7 @@ class DocumentReader:
 			
 			f1 = {}
 			fs_beta_opt = None #var for the optimal joint_beta
-			for fs_beta in [0.3, 0.6, 0.8, 1.0]:
+			for fs_beta in [0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7]:
 				Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
 				frunner = FastSentVariantRunner(self.dbstring)
 				frunner.fastsentbeta = fs_beta
@@ -382,7 +382,7 @@ class DocumentReader:
 			
 			adjustedMScore = {}
 			joint_beta_opt = None #var for the optimal beta
-			for joint_beta in [0.5, 0.7, 0.8, 0.85, 0.90, 0.95]:
+			for joint_beta in [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]:
 				Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
 				jointL = JointLearningSen2VecRunner(self.dbstring)
 				jointL.jointbeta = joint_beta #reinitializing myalpha
@@ -402,7 +402,7 @@ class DocumentReader:
 			
 			adjustedMScore = {}
 			fs_beta_opt = None #var for the optimal joint_beta
-			for fs_beta in [0.3, 0.6, 0.8, 1.0]:
+			for fs_beta in [0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7]:
 				Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
 				frunner = FastSentVariantRunner(self.dbstring)
 				frunner.fastsentbeta = fs_beta
