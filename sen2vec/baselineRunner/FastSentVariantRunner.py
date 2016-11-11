@@ -100,7 +100,7 @@ class FastSentVariantRunner(BaselineRunner):
 		wPDict["output"] = os.path.join(self.dataDir , "%s_raw_DBOW"%self.latReprName)
 		wPDict["sentence-vectors"] = str(1)
 		wPDict["min-count"] = str(0)
-		wPDict["window"] = str(window)
+		wPDict["window"] = str(self.window)
 		wPDict["train"] = "%s.txt"%self.sentsFile
 		wPDict["beta"] = str(self.fastsentbeta)
 		

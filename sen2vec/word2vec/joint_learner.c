@@ -687,7 +687,7 @@ void *TrainModelThread(void *id) {
              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * temp[c];
           }
           if  (debug_mode>3) printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
-          for (c = 0; c < layer1_size; c++) temp[c] +=  (1.0/xb) * neu1e[c];
+          for (c = 0; c < layer1_size; c++) temp[c] +=  (1.0) * neu1e[c];
         }
       }}else{xb =0;}
 
@@ -709,7 +709,7 @@ void *TrainModelThread(void *id) {
 
           l2 = nlab * layer1_size; 
           for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);      
-          g = (label - (class_w / f)) * alpha; 
+          g = (label - (exp(class_w) / f)) * alpha; 
           for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
           for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * templabel[c];
         }

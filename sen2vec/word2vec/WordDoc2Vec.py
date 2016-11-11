@@ -48,7 +48,7 @@ class WordDoc2Vec:
 		elif retrofit == 2:
 			exeFile = self.regularizeSen2Vec
 		elif retrofit == 3:
-			exeFile = self.jointLearner
+			exeFile = self.jointSupLearner
 
 		args = [exeFile, "-train",wPDict["train"],\
 		    "-output",wPDict["output"],\

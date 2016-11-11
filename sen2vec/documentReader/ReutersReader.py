@@ -185,8 +185,8 @@ class ReutersReader(DocumentReader):
 		"""
 		optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
 		self.doTesting(optDict, "reuter", rbase, pd, gs, True)
-		optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
-		self.doTesting(optDict, "reuter", rbase, pd, gs, False)
+		#optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
+		#self.doTesting(optDict, "reuter", rbase, pd, gs, False)
 
 		# os.environ['EVAL'] = 'TEST'
 		# os.environ['TEST_FOR'] = 'CLASS'
@@ -201,10 +201,3 @@ class ReutersReader(DocumentReader):
 		# frunner.prepareData(pd)
 		# frunner.runTheBaseline(rbase, 300)
 		# frunner.runEvaluationTask()
-
-		# jsrunner = JointSupervisedRunner(self.dbstring)
-		# jsrunner.prepareData(pd)
-		# jsrunner.jointbeta =  0.90
-		# jsrunner.jointbetaLab = 0.0
-		# jsrunner.runTheBaseline(rbase, 300)
-		# jsrunner.runEvaluationTask()

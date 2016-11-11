@@ -97,7 +97,7 @@ class Node2VecRunner(BaselineRunner):
 				sim, node_id = heappop(heap)
 				self.Graph.add_edge(sentence_id, node_id, weight=sim)
 				total_edge_loaded +=1
-			Logger.logr.info("Total edge loaded for node =%i is %i"%(sentence_id, total_edge_loaded))
+			#Logger.logr.info("Total edge loaded for node =%i is %i"%(sentence_id, total_edge_loaded))
 
 							
 
@@ -182,30 +182,30 @@ class Node2VecRunner(BaselineRunner):
 
 
 		############################# Working with Node2Vec with initialization ####
-		if os.environ['EVAL'] !='VALID':
-			reprFile = "%s_init"%self.n2vReprFile
-			node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
-			node2vecFile_Raw = open("%s_init_raw.p"%(self.n2vReprFile),"wb")
+		# if os.environ['EVAL'] !='VALID':
+		# 	reprFile = "%s_init"%self.n2vReprFile
+		# 	node2vecFile = open("%s_init.p"%(self.n2vReprFile),"wb")
+		# 	node2vecFile_Raw = open("%s_init_raw.p"%(self.n2vReprFile),"wb")
 
-			node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=0, beta=0)
-			self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
+		# 	node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=0, beta=0)
+		# 	self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
 
 		############################# Run Node2vec Default #############
-		if os.environ['EVAL']!= 'VALID':
-			reprFile = self.n2vReprFile
-			node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
-			node2vecFile_Raw = open("%s_raw.p"%(self.n2vReprFile),"wb")
+		# if os.environ['EVAL']!= 'VALID':
+		# 	reprFile = self.n2vReprFile
+		# 	node2vecFile = open("%s.p"%(self.n2vReprFile),"wb")
+		# 	node2vecFile_Raw = open("%s_raw.p"%(self.n2vReprFile),"wb")
 
-			node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile, retrofit=0, beta=0)
-			self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
+		# 	node2vecInstance.learnEmbeddings(walkInputFileName, False, "",reprFile, retrofit=0, beta=0)
+		# 	self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
 
 		############################# Run Node2vec Retrofit ############
-		reprFile = "%s_retrofit"%self.n2vReprFile
-		node2vecFile = open("%s_retrofit.p"%self.n2vReprFile, "wb")
-		node2vecFile_Raw = open("%s_retrofit_raw.p"%self.n2vReprFile, "wb")
+		# reprFile = "%s_retrofit"%self.n2vReprFile
+		# node2vecFile = open("%s_retrofit.p"%self.n2vReprFile, "wb")
+		# node2vecFile_Raw = open("%s_retrofit_raw.p"%self.n2vReprFile, "wb")
 
-		node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=1, beta=self.mybeta)
-		self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
+		# node2vecInstance.learnEmbeddings(walkInputFileName, True, initFile, reprFile, retrofit=1, beta=self.mybeta)
+		# self.dumpNode2Vec(nx_G, reprFile, node2vecFile, node2vecFile_Raw)
 	
 
 	def generateSummary(self, gs, methodId, filePrefix, lambda_val=1.0, diversity=False):
