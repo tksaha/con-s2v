@@ -13,7 +13,7 @@ class WordDoc2Vec:
 		self.doc2vecMIKOLOVExecutableDir= os.environ['DOC2VECEXECDIR']
 		self.retrofitOneExe = os.environ['RETROFITONEEXE']
 		self.regularizeSen2Vec = os.environ['REGSEN2VECEXE']
-		self.jointLearner = os.environ['JOINTLEXE']
+		#self.jointLearner = os.environ['JOINTLEXE']
 		self.jointSupLearner = os.environ['JOINTSUPEXE']
 		self.cores = multiprocessing.cpu_count()
 
@@ -49,8 +49,6 @@ class WordDoc2Vec:
 			exeFile = self.regularizeSen2Vec
 		elif retrofit == 3:
 			exeFile = self.jointLearner
-		elif retrofit == 4:
-			exeFile = self.jointSupLearner
 
 		args = [exeFile, "-train",wPDict["train"],\
 		    "-output",wPDict["output"],\

@@ -30,6 +30,8 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		self.num_walks = int(os.environ["NUM_WALKS"])
 		self.walk_length = int(os.environ["WALK_LENGTH"])
 		self.jointbeta= float(os.environ['JOINT_BETA'])
+		self.window = 10
+		self.jointbeta_label = 0.0; 
 		self.cores = multiprocessing.cpu_count()
 		self.latReprName = "joint_s2v"
 
@@ -96,6 +98,7 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		wPDict["output"] = os.path.join(self.dataDir , "%s_raw_DBOW"%self.latReprName)
 		wPDict["sentence-vectors"] = str(1)
 		wPDict["min-count"] = str(0)
+		wPDict["window"] = str(self.window)
 		wPDict["train"] = "%s.txt"%self.sentsFile
 		wPDict["beta"] = str(self.jointbeta)
 		

@@ -92,8 +92,6 @@ class DocumentReader:
 		with open(file, encoding='utf-8', errors='ignore') as f:
 			return f.read()
 
-
-
 	def _getTopics(self, rootDir):
 		Logger.logr.info("Starting Reading Topic")
 		topic_names, categories = [], []
@@ -144,18 +142,20 @@ class DocumentReader:
 			latent_space_size = 300
 			os.environ['EVAL'] = 'VALID'
 			os.environ['VALID_FOR'] = 'CLASS'
+
+			generate_walk = True 
 	
 			f1 = {}
 			window_opt = None #var for the optimal window
-			for window in ["8", "10", "12"]:
+			window_size_list = ["8", "10", "12"]
+			for window in window_size_list:
 			#for window in ["8"]:
 				Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
 				self.postgres_recorder.truncateSummaryTable()
 				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-				if 	window=="8":  
+				if 	window==window_size_list[0]:  
 					paraBaseline.prepareData(pd)
 				paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-				paraBaseline.generateSummary(gs)		
 				paraBaseline.runEvaluationTask()
 				paraBaseline.doHouseKeeping()	
 				f1[window] = self.__getF1(paraBaseline.latReprName)
@@ -174,37 +174,23 @@ class DocumentReader:
 			#we need the p2v vectors created with optimal window
 			paraBaseline.doHouseKeeping()
 
-			f1 = {}
-			beta_opt = None #var for the optimal beta
-			for beta in ["0.3", "0.6", "0.9","1.0"]:
-			#for beta in ["0.3"]:
-				Logger.logr.info("Starting Running Node2vec Baseline for Beta = %s" %beta)
-				n2vBaseline = Node2VecRunner(self.dbstring)
-				n2vBaseline.mybeta = beta #reinitializing mybeta
-				generate_walk = False
-				if beta=="0.3":
-				   n2vBaseline.prepareData(pd)
-				   generate_walk = True 
-				n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
-				n2vBaseline.runEvaluationTask()
-				n2vBaseline.doHouseKeeping()
-				f1[beta] = self.__getF1("%s_retrofit"%n2vBaseline.latReprName)
-				Logger.logr.info("F1 for %s = %s" %(beta, f1[beta]))
-			beta_opt = max(f1, key=f1.get)  
-			f.write("Optimal Beta is %s%s"%(beta_opt, os.linesep))
-			f.write("N2V Beta f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['beta'] = beta_opt
+			if generate_walk == True:
+			   n2vBaseline = Node2VecRunner(self.dbstring)
+			   n2vBaseline.prepareData(pd)
+			   generate_walk = False 
+				
 			
 			f1 = {}
 			joint_beta_opt = None #var for the optimal joint_beta
-			for joint_beta in [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]:
+			jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			for joint_beta in jointbeta_list:
 				Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
 				jointL = JointLearningSen2VecRunner(self.dbstring)
+				jointL.window = optPDict["window"]
 				jointL.jointbeta = joint_beta
-				if joint_beta==0.5:
-					jointL.prepareData(pd)
-				jointL.runTheBaseline(rbase, 300)
+				if joint_beta==jointbeta_list[0]:
+				   jointL.prepareData(pd)
+				jointL.runTheBaseline(rbase, latent_space_size)
 				jointL.runEvaluationTask()
 				jointL.doHouseKeeping()
 				f1[joint_beta] = self.__getF1("%s" %jointL.latReprName)
@@ -218,13 +204,15 @@ class DocumentReader:
 			
 			f1 = {}
 			fs_beta_opt = None #var for the optimal joint_beta
-			for fs_beta in [0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7]:
+			fs_beta_list = [0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			for fs_beta in fs_beta_list:
 				Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
 				frunner = FastSentVariantRunner(self.dbstring)
+				frunner.window = optPDict["window"]
 				frunner.fastsentbeta = fs_beta
-				if fs_beta==0.3:
+				if fs_beta==fs_beta_list[0]:
 					frunner.prepareData(pd)
-				frunner.runTheBaseline(rbase, 300)
+				frunner.runTheBaseline(rbase, latent_space_size)
 				frunner.runEvaluationTask()
 				frunner.doHouseKeeping()
 				f1[fs_beta] = self.__getF1("%s" %frunner.latReprName)
@@ -235,89 +223,34 @@ class DocumentReader:
 			f.write("FST FS-Beta f1s: %s%s" %(f1, os.linesep))
 			f.flush()
 			optPDict['fs-beta'] = fs_beta_opt
+
+			f1 = {}
+			js_beta_opt = None 
+			js_beta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			js_label_beta_list = [0.3, 0.2, 0.1, 0.1, 0.5, 0.05, 0.03]
+
+			for beta in js_beta_list:
+				for beta_lab in  js_label_beta_list:
+					jsrunner = JointSupervisedRunner(self.dbstring)
+					jsrunner.window = optPDict["window"]
+					if  beta == js_beta_list[0] and beta_lab == js_label_beta_list[0]:
+						jsrunner.prepareData(pd)
+					jsrunner.jointbeta =  beta
+					jsrunner.jointbetaLab = beta_lab
+					jsrunner.runTheBaseline(rbase, latent_space_size)
+					jsrunner.runEvaluationTask()
+
+					f1[(beta, beta_lab)] = self.__getF1("%s" %jsrunner.latReprName)
+					Logger.logr.info("F1 for %s,%s = %s" %(beta, beta_lab, f1[(beta, beta_lab)]))
 			
-#			f1 = {}
-#			alpha_opt = None #var for the optimal beta
-#			for alpha in [0.3, 0.6, 0.8, 1.0]:
-#			#for alpha in [0.3]:
-#				Logger.logr.info("Starting Running Iterative Baseline for Alpha = %s" %alpha)
-#				iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-#				iterrunner.myalpha = alpha #reinitializing myalpha
-#				if alpha==0.3:
-#					iterrunner.prepareData(pd)
-#				iterrunner.runTheBaseline(rbase)	
-#				iterrunner.runEvaluationTask()
-#				iterrunner.doHouseKeeping()
-#				f1[alpha] = self.__getF1("%s_weighted"%iterrunner.latReprName)	
-#				Logger.logr.info("F1 for %s = %s" %(alpha, f1[alpha]))
-#			alpha_opt = max(f1, key=f1.get) 
-#			Logger.logr.info("Optimal Alpha=%s" %alpha_opt)
-#			f.write("Optimal alpha is %.2f%s"%(alpha_opt, os.linesep))
-#			f.write("ITR Alpha f1s: %s%s" %(f1, os.linesep))
-#			f.flush()
-#			optPDict['alpha'] = alpha_opt
+			js_beta_opt = max(f1, key=f1.get) 
+			Logger.logr.info("Optimal JS-Beta=%s" %js_beta_opt)
+			f.write("Optimal JS-Beta is: (Beta) %.2f, (Beta label) %.2f %s"%(js_beta_opt[0], js_beta_opt[1], os.linesep))
+			f.write("f1s: %s%s" %(f1, os.linesep))
+			f.flush()
+			optPDict['js-beta'] = js_beta_opt[0]
+			optPDict['js-beta-lab'] = js_beta_opt[1]
 
-#			w_f1 = {}
-#			unw_f1 = {}
-#			w_opt = None
-#			unw_opt = None
-#			for beta in [0.3, 0.6, 0.8, 1.0]:
-#			#for beta in [0.3]:
-#				Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
-#				regs2v = RegularizedSen2VecRunner(self.dbstring)
-#				regs2v.regBetaW = beta
-#				regs2v.regBetaUNW = beta
-#				if beta==0.3:
-#					regs2v.prepareData(pd)
-#				regs2v.runTheBaseline(rbase, latent_space_size)
-#				regs2v.runEvaluationTask()
-#				regs2v.doHouseKeeping()
-#				w_f1[beta] = self.__getF1("%s_neighbor_w"%regs2v.latReprName)	
-#				unw_f1[beta] = self.__getF1("%s_neighbor_unw"%regs2v.latReprName)	
-#				Logger.logr.info("W_f1 for %s = %s" %(beta, w_f1[beta]))
-#				Logger.logr.info("UNW_f1 for %s = %s" %(beta, unw_f1[beta]))
-#			w_opt_reg = max(w_f1, key=w_f1.get)
-#			unw_opt_reg = max(unw_f1, key=unw_f1.get)
-#			Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt_reg, unw_opt_reg))
-#			optPDict['w_opt_reg'] = w_opt_reg
-#			optPDict['unw_opt_reg'] = unw_opt_reg
-
-#			f.write("Optimal REG BetaW : %.2f%s" %(w_opt_reg, os.linesep))
-#			f.write("Optimal REG BetaUNW : %.2f%s" %(unw_opt_reg, os.linesep))
-#			f.write("REG BetaW f1s: %s%s" %(w_f1, os.linesep))
-#			f.write("REG BetaUNW f1s: %s%s" %(unw_f1, os.linesep))
-#			f.flush()
-
-#			w_f1 = {}
-#			unw_f1 = {}
-#			w_opt = None
-#			unw_opt = None
-#			for beta in [0.3, 0.6, 0.8, 1.0]:
-#			#for beta in [0.3]:
-#				Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
-#				dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
-#				dictregs2v.dictregBetaW = beta
-#				dictregs2v.dictregBetaUNW = beta
-#				if beta==0.3:
-#					dictregs2v.prepareData(pd)
-#				dictregs2v.runTheBaseline(rbase, latent_space_size)
-#				dictregs2v.runEvaluationTask()
-#				dictregs2v.doHouseKeeping()
-#				w_f1[beta] = self.__getF1("%s_neighbor_w"%dictregs2v.latReprName)	
-#				unw_f1[beta] = self.__getF1("%s_neighbor_unw"%dictregs2v.latReprName)	
-#				Logger.logr.info("W_f1 for %s = %s" %(beta, w_f1[beta]))
-#				Logger.logr.info("UNW_f1 for %s = %s" %(beta, unw_f1[beta]))
-#			w_opt_dict_reg = max(w_f1, key=w_f1.get)
-#			unw_opt_dict_reg = max(unw_f1, key=unw_f1.get)
-#			Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNW=%s" %(w_opt_dict_reg, unw_opt_dict_reg))
-#			optPDict['w_opt_dict_reg'] = w_opt_dict_reg
-#			optPDict['unw_opt_dict_reg'] = unw_opt_dict_reg
-
-#			f.write("DCT BetaW: %.2f%s" %(w_opt_dict_reg, os.linesep))
-#			f.write("DCT BetaUNW: %.2f%s" %(unw_opt_dict_reg, os.linesep))
-#			f.write("DCT BetaW f1s: %s%s" %(w_f1, os.linesep))
-#			f.write("DCT BetaUNW f1s: %s%s" %(unw_f1, os.linesep))
-#			f.flush()
 		return optPDict
 
 
@@ -328,19 +261,19 @@ class DocumentReader:
 			
 			latent_space_size = 300
 			os.environ['EVAL'] = 'VALID'
-			os.environ['VALID_FOR'] = 'CLUST'
-	
+			os.environ['VALID_FOR'] = 'CLUST'	
+
 			adjustedMScore = {}
 			window_opt = None #var for the optimal window
-			for window in ["8", "10", "12"]:
+			window_size_list = ["8", "10", "12"]
+			for window in window_size_list:
 			#for window in ["8"]:
 				Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
 				self.postgres_recorder.truncateSummaryTable()
 				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-				if 	window=="8":  
+				if 	window==window_size_list[0]:  
 					paraBaseline.prepareData(pd)
 				paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-				paraBaseline.generateSummary(gs)		
 				paraBaseline.runEvaluationTask()
 				paraBaseline.doHouseKeeping()	
 				adjustedMScore[window] = self.__getAdjustedMutulScore(paraBaseline.latReprName)
@@ -358,37 +291,18 @@ class DocumentReader:
 			paraBaseline.generateSummary(gs)
 			paraBaseline.doHouseKeeping()
 
-			adjustedMScore = {}
-			beta_opt = None #var for the optimal beta
-			for beta in ["0.3", "0.6", "0.9","1.0"]:
-			#for beta in ["0.3"]:
-				Logger.logr.info("Starting Running Node2vec Baseline for Beta = %s" %beta)
-				n2vBaseline = Node2VecRunner(self.dbstring)
-				n2vBaseline.mybeta = beta #reinitializing mybeta
-				generate_walk = False
-				if beta=="0.3":
-				   n2vBaseline.prepareData(pd)
-				   generate_walk = True 
-				n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
-				n2vBaseline.runEvaluationTask()
-				n2vBaseline.doHouseKeeping()
-				adjustedMScore[beta] = self.__getAdjustedMutulScore("%s_retrofit"%n2vBaseline.latReprName)
-				Logger.logr.info("Adjusted MScore for %s = %s" %(beta, adjustedMScore[beta]))
-			beta_opt = max(adjustedMScore, key=adjustedMScore.get)  
-			f.write("Optimal Beta is %s%s"%(beta_opt, os.linesep))
-			f.write("N2V Beta adjusted mutual score: %s%s" %(adjustedMScore, os.linesep))
-			f.flush()
-			optPDict["beta"] = beta_opt
+			
 			
 			adjustedMScore = {}
 			joint_beta_opt = None #var for the optimal beta
-			for joint_beta in [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]:
+			jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			for joint_beta in jointbeta_list:
 				Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
 				jointL = JointLearningSen2VecRunner(self.dbstring)
 				jointL.jointbeta = joint_beta #reinitializing myalpha
-				if 	joint_beta==0.5:
+				if 	joint_beta== jointbeta_list[0]:
 					jointL.prepareData(pd)
-				jointL.runTheBaseline(rbase, 300)	
+				jointL.runTheBaseline(rbase, latent_space_size)	
 				jointL.runEvaluationTask()
 				jointL.doHouseKeeping()
 				adjustedMScore[joint_beta] = self.__getAdjustedMutulScore("%s"%jointL.latReprName)	
@@ -399,20 +313,24 @@ class DocumentReader:
 			f.write("JTL Joint-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
 			optPDict["joint_beta"] = joint_beta_opt
+
 			
 			adjustedMScore = {}
 			fs_beta_opt = None #var for the optimal joint_beta
-			for fs_beta in [0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7]:
+			fs_beta_list = [0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7]
+			for fs_beta in fs_beta_list:
 				Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
 				frunner = FastSentVariantRunner(self.dbstring)
 				frunner.fastsentbeta = fs_beta
-				if fs_beta==0.3:
+				if fs_beta==fs_beta_list[0]:
 					frunner.prepareData(pd)
-				frunner.runTheBaseline(rbase, 300)
+				frunner.runTheBaseline(rbase, latent_space_size)
 				frunner.runEvaluationTask()
 				frunner.doHouseKeeping()
 				adjustedMScore[fs_beta] = self.__getAdjustedMutulScore("%s"%frunner.latReprName)	
 				Logger.logr.info("Adjusted Mutual Score for %s = %s" %(fs_beta, adjustedMScore[fs_beta]))
+
+
 			fs_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
 			Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
 			f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
@@ -420,89 +338,34 @@ class DocumentReader:
 			f.flush()
 			optPDict["fs_beta"] = fs_beta_opt
 			
-#			adjustedMScore = {}
-#			alpha_opt = None #var for the optimal beta
-#			for alpha in [0.3, 0.6, 0.8, 1.0]:
-#			#for alpha in [0.3]:
-#				Logger.logr.info("Starting Running Iterative Baseline for Alpha = %s" %alpha)
-#				iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-#				iterrunner.myalpha = alpha #reinitializing myalpha
-#				if 	alpha==0.3:
-#					iterrunner.prepareData(pd)
-#				iterrunner.runTheBaseline(rbase)	
-#				iterrunner.runEvaluationTask()
-#				iterrunner.doHouseKeeping()
-#				adjustedMScore[alpha] = self.__getAdjustedMutulScore("%s_weighted"%iterrunner.latReprName)	
-#				Logger.logr.info("Adjusted Mutual Score for %s = %s" %(alpha, adjustedMScore[alpha]))
-#			alpha_opt = max(adjustedMScore, key=adjustedMScore.get) 
-#			Logger.logr.info("Optimal Alpha=%s" %alpha_opt)
-#			f.write("Optimal alpha is %.2f%s"%(alpha_opt, os.linesep))
-#			f.write("ITR Alpha adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
-#			f.flush()
-#			optPDict["alpha"] = alpha_opt
 
-#			w_adjusted = {}
-#			unw_adjusted = {}
-#			w_opt = None
-#			unw_opt = None
-#			for beta in [0.3, 0.6, 0.8, 1.0]:
-#			#for beta in [0.3]:
-#				Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
-#				regs2v = RegularizedSen2VecRunner(self.dbstring)
-#				regs2v.regBetaW = beta
-#				regs2v.regBetaUNW = beta
-#				if beta==0.3:
-#					regs2v.prepareData(pd)
-#				regs2v.runTheBaseline(rbase, latent_space_size)
-#				regs2v.runEvaluationTask()
-#				regs2v.doHouseKeeping()
-#				w_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_w"%regs2v.latReprName)	
-#				unw_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_unw"%regs2v.latReprName)	
-#				Logger.logr.info("W_adjusted for %s = %s" %(beta, w_adjusted[beta]))
-#				Logger.logr.info("UNW_adjusted for %s = %s" %(beta, unw_adjusted[beta]))
-#			w_opt_reg = max(w_adjusted, key=w_adjusted.get)
-#			unw_opt_reg = max(unw_adjusted, key=unw_adjusted.get)
-#			Logger.logr.info("Optimal regBetaW=%s and regBetaUNW=%s" %(w_opt_reg, unw_opt_reg))
-#			optPDict["w_opt_reg"] = w_opt_reg
-#			optPDict["unw_opt_reg"] = unw_opt_reg
+			adjustedMScore = {}
+			js_beta_opt = None 
+			js_beta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			js_label_beta_list = [0.3, 0.2, 0.1, 0.1, 0.5, 0.05, 0.03]
 
-#			f.write("Optimal REG BetaW : %.2f%s" %(w_opt_reg, os.linesep))
-#			f.write("Optimal REG BetaUNW : %.2f%s" %(unw_opt_reg, os.linesep))
-#			f.write("REG BetaW adjusted mutual score: %s%s" %(w_adjusted, os.linesep))
-#			f.write("REG BetaUNW adjusted mutual score: %s%s" %(unw_adjusted, os.linesep))
-#			f.flush()
+			for beta in js_beta_list:
+				for beta_lab in  js_label_beta_list:
+					jsrunner = JointSupervisedRunner(self.dbstring)
+					jsrunner.window = optPDict["window"]
+					if  beta == js_beta_list[0] and beta_lab == js_label_beta_list[0]:
+						jsrunner.prepareData(pd)
+					jsrunner.jointbeta =  beta
+					jsrunner.jointbetaLab = beta_lab
+					jsrunner.runTheBaseline(rbase, latent_space_size)
+					jsrunner.runEvaluationTask()
 
-#			w_adjusted = {}
-#			unw_adjusted = {}
-#			w_opt = None
-#			unw_opt = None
-#			for beta in [0.3, 0.6, 0.8, 1.0]:
-#			#for beta in [0.3]:
-#				Logger.logr.info("Starting Running Dict Regularized Baseline for Beta = %s" %beta)
-#				dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
-#				dictregs2v.dictregBetaW = beta
-#				dictregs2v.dictregBetaUNW = beta
-#				if beta==0.3:
-#					dictregs2v.prepareData(pd)
-#				dictregs2v.runTheBaseline(rbase, latent_space_size)
-#				dictregs2v.runEvaluationTask()
-#				dictregs2v.doHouseKeeping()
-#				w_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_w"%dictregs2v.latReprName)	
-#				unw_adjusted[beta] = self.__getAdjustedMutulScore("%s_neighbor_unw"%dictregs2v.latReprName)	
-#				Logger.logr.info("W_adjusted for %s = %s" %(beta, w_adjusted[beta]))
-#				Logger.logr.info("UNW_adjusted for %s = %s" %(beta, unw_adjusted[beta]))
-#			w_opt_dict_reg = max(w_adjusted, key=w_adjusted.get)
-#			unw_opt_dict_reg = max(unw_adjusted, key=unw_adjusted.get)
-#			Logger.logr.info("Optimal dictregBetaW=%s and dictregBetaUNW=%s" %(w_opt_dict_reg, unw_opt_dict_reg))
-
-#			optPDict["w_opt_dict_reg"] = w_opt_dict_reg 
-#			optPDict["unw_opt_dict_reg"] = unw_opt_dict_reg
-
-#			f.write("DCT BetaW: %.2f%s" %(w_opt_dict_reg, os.linesep))
-#			f.write("DCT BetaUNW: %.2f%s" %(unw_opt_dict_reg, os.linesep))
-#			f.write("DCT BetaW adjusted mutual score: %s%s" %(w_adjusted, os.linesep))
-#			f.write("DCT BetaUNW adjusted mutual score: %s%s" %(unw_adjusted, os.linesep))
-#			f.flush()
+					adjustedMScore[(beta, beta_lab)] = self.__getAdjustedMutulScore("%s" %jsrunner.latReprName)
+					Logger.logr.info("Adjusted Mutual Score for %s,%s = %s" %(beta, beta_lab, adjustedMScore[(beta, beta_lab)]))
+			
+			
+			js_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
+			Logger.logr.info("Optimal JS-Beta=%s" %js_beta_opt)
+			f.write("Optimal JS-Beta is: (Beta) %.2f, (Beta label) %.2f %s"%(js_beta_opt[0], js_beta_opt[1], os.linesep))
+			f.write("adjustedMScores: %s%s" %(adjustedMScore, os.linesep))
+			f.flush()
+			optPDict['js-beta'] = js_beta_opt[0]
+			optPDict['js-beta-lab'] = js_beta_opt[1]
 
 		return optPDict
 
@@ -522,33 +385,20 @@ class DocumentReader:
 		for i in range(0,niter):
 			f.write("###### Iteration: %s ######%s" %(i, os.linesep))
 			f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))				
-			self.postgres_recorder.truncateSummaryTable()
+			#self.postgres_recorder.truncateSummaryTable()
+
 			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
 			paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"]) 
-			paraBaseline.generateSummary(gs)
 			paraBaseline.runEvaluationTask()
 			self.__writeResult(paraBaseline.latReprName, f)
 			paraBaseline.doHouseKeeping()
 			f.flush()
 
 
-			f.write("Optimal Beta: %s%s" %(optPDict["beta"], os.linesep))	
-			n2vBaseline = Node2VecRunner(self.dbstring)
-			n2vBaseline.mybeta = optPDict["beta"]
-			generate_walk = False
-			n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
-			n2vBaseline.runEvaluationTask()
-			self.__writeResult("%s"%n2vBaseline.latReprName, f)
-			self.__writeResult("%s_init"%n2vBaseline.latReprName, f)
-			self.__writeResult("%s_retrofit"%n2vBaseline.latReprName, f)
-			n2vBaseline.doHouseKeeping()
-			f.flush()
-
-
 			f.write("Optimal Joint-Beta: %.2f%s" %(optPDict["joint_beta"], os.linesep))	
 			jointL = JointLearningSen2VecRunner(self.dbstring)
 			jointL.jointbeta = optPDict["joint_beta"]
-			jointL.runTheBaseline(rbase, 300)
+			jointL.runTheBaseline(rbase, latent_space_size)
 			jointL.runEvaluationTask()
 			self.__writeResult("%s"%jointL.latReprName, f)
 			jointL.doHouseKeeping()
@@ -557,33 +407,18 @@ class DocumentReader:
 			f.write("Optimal FS-Beta: %.2f%s" %(optPDict["fs_beta"], os.linesep))	
 			frunner = FastSentVariantRunner(self.dbstring)
 			frunner.fastsentbeta = optPDict["fs_beta"]
-			frunner.runTheBaseline(rbase, 300)
+			frunner.runTheBaseline(rbase, latent_space_size)
 			frunner.runEvaluationTask()
 			self.__writeResult("%s"%frunner.latReprName, f)
 			frunner.doHouseKeeping()
 
-
-#			f.write("Optimal regBetaW: %.2f%s" %(optPDict['w_opt_reg'], os.linesep))	
-#			f.write("Optimal regBetaUNW: %.2f%s" %(optPDict['unw_opt_reg'], os.linesep))	
-#			regs2v = RegularizedSen2VecRunner(self.dbstring)
-#			regs2v.regBetaW = optPDict['w_opt_reg']
-#			regs2v.regBetaUNW = optPDict['unw_opt_reg']
-#			regs2v.runTheBaseline(rbase, latent_space_size)
-#			regs2v.runEvaluationTask()
-#			self.__writeResult("%s_neighbor_w"%regs2v.latReprName, f)
-#			self.__writeResult("%s_neighbor_unw"%regs2v.latReprName, f)
-#			regs2v.doHouseKeeping()
-#			f.flush()
+			f.write("Optimal JS-Beta: %.2f, %.2f %s" %(optPDict["js-beta"], optPDict["js-beta-lab"],os.linesep))	
+			jsrunner = FastSentVariantRunner(self.dbstring)
+			jsrunner.jointbeta =  optPDict["js-beta"]
+			jsrunner.jointbetaLab = optPDict["js-beta-lab"]
+			jrunner.runTheBaseline(rbase, latent_space_size)
+			jrunner.runEvaluationTask()
+			self.__writeResult("%s"%jrunner.latReprName, f)
+			jrunner.doHouseKeeping()
 
 
-#			f.write("Optimal dictregBetaW: %.2f%s" %(optPDict["w_opt_dict_reg"], os.linesep))	
-#			f.write("Optimal dictregBetaUNW: %.2f%s" %(optPDict["unw_opt_dict_reg"], os.linesep))	
-#			dictregs2v = DictRegularizedSen2VecRunner(self.dbstring)
-#			dictregs2v.dictregBetaW = optPDict["w_opt_dict_reg"]
-#			dictregs2v.dictregBetaUNW = optPDict["unw_opt_dict_reg"]
-#			dictregs2v.runTheBaseline(rbase, latent_space_size)
-#			dictregs2v.runEvaluationTask()
-#			self.__writeResult("%s_neighbor_w"%dictregs2v.latReprName, f)
-#			self.__writeResult("%s_neighbor_unw"%dictregs2v.latReprName, f)
-#			dictregs2v.doHouseKeeping()
-#			f.flush()

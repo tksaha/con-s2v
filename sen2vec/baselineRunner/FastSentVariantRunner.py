@@ -30,6 +30,8 @@ class FastSentVariantRunner(BaselineRunner):
 		self.fastsentbeta= float(os.environ['FSENT_BETA'])
 		self.cores = multiprocessing.cpu_count()
 		self.latReprName = "fsent_s2v"
+		self.window = 10
+		self.jointbeta_label = 0.0
 		self.cores = multiprocessing.cpu_count()
 		self.postgresConnection.connectDatabase()
 		self.sentenceList = []
@@ -98,6 +100,7 @@ class FastSentVariantRunner(BaselineRunner):
 		wPDict["output"] = os.path.join(self.dataDir , "%s_raw_DBOW"%self.latReprName)
 		wPDict["sentence-vectors"] = str(1)
 		wPDict["min-count"] = str(0)
+		wPDict["window"] = str(window)
 		wPDict["train"] = "%s.txt"%self.sentsFile
 		wPDict["beta"] = str(self.fastsentbeta)
 		

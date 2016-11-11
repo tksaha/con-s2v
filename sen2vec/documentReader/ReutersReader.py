@@ -183,13 +183,13 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		# optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
-		# self.doTesting(optDict, "reuter", rbase, pd, gs, True)
-		# optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
-		# self.doTesting(optDict, "reuter", rbase, pd, gs, False)
+		optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
+		self.doTesting(optDict, "reuter", rbase, pd, gs, True)
+		optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
+		self.doTesting(optDict, "reuter", rbase, pd, gs, False)
 
-		os.environ['EVAL'] = 'TEST'
-		os.environ['TEST_FOR'] = 'CLASS'
+		# os.environ['EVAL'] = 'TEST'
+		# os.environ['TEST_FOR'] = 'CLASS'
 		# jointL = JointLearningSen2VecRunner(self.dbstring)
 		# jointL.jointbeta = 0.91
 		# #jointL.prepareData(pd)
@@ -202,9 +202,9 @@ class ReutersReader(DocumentReader):
 		# frunner.runTheBaseline(rbase, 300)
 		# frunner.runEvaluationTask()
 
-		jsrunner = JointSupervisedRunner(self.dbstring)
-		jsrunner.prepareData(pd)
-		jsrunner.jointbeta =  0.90
-		jsrunner.jointbetaLab = 0.0
-		jsrunner.runTheBaseline(rbase, 300)
-		jsrunner.runEvaluationTask()
+		# jsrunner = JointSupervisedRunner(self.dbstring)
+		# jsrunner.prepareData(pd)
+		# jsrunner.jointbeta =  0.90
+		# jsrunner.jointbetaLab = 0.0
+		# jsrunner.runTheBaseline(rbase, 300)
+		# jsrunner.runEvaluationTask()

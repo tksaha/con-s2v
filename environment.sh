@@ -81,7 +81,7 @@ export DICTREGDICT=wordnet-synonyms.txt
 export JOINTS2VRPRFILE=~/Documents/sen2vec/Data/joint_sent
 export JOINT_BETA=1.0
 export NUM_WALKS=10
-export WALK_LENGTH=9
+export WALK_LENGTH=5
 export JOINTLEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_word_node2vec
 
 export FASTS2VRPRFILE=~/Documents/sen2vec/Data/fast_sent

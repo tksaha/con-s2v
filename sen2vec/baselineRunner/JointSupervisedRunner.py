@@ -31,6 +31,7 @@ class JointSupervisedRunner(BaselineRunner):
 		self.walk_length = int(os.environ["WALK_LENGTH"])
 		self.jointbeta= float(os.environ['JOINT_SENT_BETA'])
 		self.jointbetaLab = float(os.environ['JOINT_SENT_LBETA'])
+		self.window = 10
 		self.cores = multiprocessing.cpu_count()
 		self.latReprName = "joint_lab_s2v"
 
@@ -134,14 +135,14 @@ class JointSupervisedRunner(BaselineRunner):
 		wPDict["label"] = labelFile 
 
 
-		args = wordDoc2Vec.buildArgListforW2VWith_LAB_Neighbors(wPDict, 4)
+		args = wordDoc2Vec.buildArgListforW2VWith_LAB_Neighbors(wPDict, 3)
 		self._runProcess(args)
 		jointvecModel = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)
 
 
 		wPDict["cbow"] = str(1) 
 		wPDict["output"] = os.path.join(self.dataDir,"%s_raw_DM"%self.latReprName)
-		args = wordDoc2Vec.buildArgListforW2VWith_LAB_Neighbors(wPDict, 4)
+		args = wordDoc2Vec.buildArgListforW2VWith_LAB_Neighbors(wPDict, 3)
 		self._runProcess(args)
 		jointvecModelDM = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)	
 
