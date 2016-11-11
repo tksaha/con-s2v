@@ -1137,7 +1137,7 @@ int main(int argc, char **argv) {
 
   if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-beta", argc, argv)) > 0) beta = atof(argv[i + 1]);
-  if ((i = ArgPos((char *)"-beta-label", argc, argv)) > 0) beta_label = atof(argv[i + 1]);
+  if ((i = ArgPos((char *)"-label-beta", argc, argv)) > 0) beta_label = atof(argv[i + 1]);
 
 
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);

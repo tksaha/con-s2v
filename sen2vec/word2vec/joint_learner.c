@@ -381,7 +381,7 @@ void loadNeighbors()
       n2vvocab[index1].cn++; 
       if (debug_mode > 3) printf("word = %s, index=%lld \n",word, index1);
       if (index1 < 0) printf("[nbr] Vocabulary does not exist \n");        
-      for (xb = 0;; xb<max_neighbors; xb++) if (nbrs[xb + index1*max_neighbors]==-1) break ;
+      for (xb = 0;xb<max_neighbors; xb++){if (nbrs[xb + index1*max_neighbors]==-1) break ;}
 
       for (b=0; b<walk_length; b++){
         fscanf(finit,"%s",word);
@@ -422,7 +422,7 @@ void loadLabelFile()
     fscanf(finit,"%s",word);
     index = SearchVocab(word);
     fscanf(finit,"%lld",&labelval);
-    if (index <= 0) if (debug_mode > 3) printf("sentence not on the list");
+    if (index <= 0) {if (debug_mode > 3) printf("sentence not on the list");}
     else{
       if (debug_mode > 3) printf("index=%lld label=%lld\n",index, labelval);
       label_sent[index] = labelval; 
@@ -495,7 +495,7 @@ void *TrainModelThread(void *id) {
   unsigned long long next_random = (long long)id;
   int xb, nlab; 
   long long sentence_label;
-  real f, g, class_w;
+  real f, g, class_w, beta_temp, beta_label_temp, beta_node_temp;
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
   real *neu1e = (real *)calloc(layer1_size, sizeof(real));
@@ -653,15 +653,14 @@ void *TrainModelThread(void *id) {
       // Skip objective for node2vec 
       // init 
       l1n = sen[0] * max_neighbors;
-      l1  = sen[0] * layer1_size; //src
-
-      beta_node = 1.0 - beta_label - beta ; 
+    
       for (c=0 ; c<layer1_size; c++){
           temp[c] = syn0temp[c];
           templabel[c] = syn0temp[c];
       }
-      for (xb = 0; xb<max_neighbors; xb++) if (nbrs[xb+l1n]<0) break;
 
+      if(neighborFile[0]!=0){
+      for (xb = 0; xb<max_neighbors; xb++) if (nbrs[xb+l1n]<0) break;
       if (beta_node > 0) {  
         for (nbr =  0; nbr< max_neighbors; nbr++){
           //target
@@ -688,12 +687,13 @@ void *TrainModelThread(void *id) {
              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * temp[c];
           }
           if  (debug_mode>3) printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
-          for (c = 0; c < layer1_size; c++) temp[c] += neu1e[c];
+          for (c = 0; c < layer1_size; c++) temp[c] +=  (1.0/xb) * neu1e[c];
         }
-      }
+      }}else{xb =0;}
 
-      if (beta_label > 0)
-      {
+      if (labelFile[0]!=0){
+      sentence_label = label_sent[sen[0]];
+      if (beta_label > 0 && sentence_label >=0){
         f = 0.0; 
         for (nlab =  0; nlab < nlabels; nlab++){
           class_w = 0.0 ; 
@@ -706,29 +706,34 @@ void *TrainModelThread(void *id) {
           if (nlab == sentence_label) label = 1.0; 
           else label = 0.0; 
           class_w = 0.0;
-          for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);
 
           l2 = nlab * layer1_size; 
+          for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);      
           g = (label - (class_w / f)) * alpha; 
           for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
           for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * templabel[c];
         }
-        for (c = 0; c < layer1_size; c++) templabel[c] += neu1e[c];
-      }
+        for (c = 0; c < layer1_size; c++) templabel[c] +=   (1.0/nlabels) * neu1e[c];
+      }} else {sentence_label = -1; }
 
-      if (xb >0) {
-        for (c=0; c<layer1_size; c++){
-          syn0[c+l1] += (beta * (syn0[c+l1]-syn1temp[0]));
-          syn0[c+l1] += (beta_node *  (temp[c]-syn1temp[0]));
-          syn0[c+l1] += (beta_label * (templabel[c]-syn1temp[0]));
-        } 
-      }else{
-        for (c=0; c<layer1_size; c++){
-          syn0[c+l1] += ((beta + beta_node) * (syn0[c+l1]-syn1temp[0]));
-          syn0[c+l1] += (beta_label * (templabel[c]-syn1temp[0]));
-        }
-      }
+      l1 = sen[0]* layer1_size ; 
 
+      beta_temp = beta;
+      beta_node_temp = beta_node; 
+      beta_label_temp = beta_label; 
+
+      if (xb == 0) { beta_temp  = beta_temp + beta_node; beta_node_temp = 0.0; }
+      if (sentence_label < 0 ) {beta_temp = beta_temp + beta_label; beta_label_temp = 0.0; }
+
+
+      if (debug_mode >3) printf("beta=%lf, beta_node=%lf, beta_label=%lf\n",beta_temp,beta_node_temp,beta_label_temp);
+      if (beta_label_temp + beta_node_temp + beta_temp !=1.0) { printf("The summation is not zero"); exit(1);}
+
+      for (c=0; c<layer1_size; c++){
+          syn0[c+l1] = syn0temp[c] +  (beta_temp * (syn0[c+l1] - syn0temp[c]));
+          syn0[c+l1] += (beta_node_temp  * (temp[c]-syn0temp[c]));
+          syn0[c+l1] += (beta_label_temp * (templabel[c]-syn0temp[c]));
+      } 
       sentence_length = 0;
       continue;
     }
@@ -743,7 +748,7 @@ void *TrainModelThread(void *id) {
 
 
 void TrainModel() {
-  long a, b, c, d;
+  long a, b;
   FILE *fo;
   pthread_t *pt = (pthread_t *)malloc(num_threads * sizeof(pthread_t));
   printf("Starting training using file %s\n", train_file);
@@ -753,7 +758,6 @@ void TrainModel() {
 
   if (output_file[0] == 0) {printf("Please provide an output file"); return;}
   if (neighborFile[0]!= 0) {
-     printf("Loading neighbors\n");
      loadNeighbors();
      qsort(&n2vvocab[0], vocab_size, sizeof(struct n2vword), VocabCompareN2V);
      InitUnigramTableN2V();
@@ -774,7 +778,7 @@ void TrainModel() {
     if (binary) for (b = 0; b < layer1_size; b++) fwrite(&syn0[a * layer1_size + b], sizeof(real), 1, fo);
     else for (b = 0; b < layer1_size; b++) fprintf(fo, "%lf ", syn0[a * layer1_size + b]);
     fprintf(fo, "\n");
-
+  }
   fclose(fo);
   free(table);
   free(table_n2v);
@@ -875,7 +879,7 @@ int main(int argc, char **argv) {
 
   if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-beta", argc, argv)) > 0) beta = atof(argv[i + 1]);
-  if ((i = ArgPos((char *)"-beta-label", argc, argv)) > 0) beta_label = atof(argv[i + 1]);
+  if ((i = ArgPos((char *)"-label-beta", argc, argv)) > 0) beta_label = atof(argv[i + 1]);
 
 
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
@@ -894,6 +898,7 @@ int main(int argc, char **argv) {
   if ((i = ArgPos((char *)"-classes", argc, argv)) > 0) classes = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-sentence-vectors", argc, argv)) > 0) sentence_vectors = atoi(argv[i + 1]);
   
+  beta_node = 1.0 - beta_label - beta ; 
 
   vocab = (struct vocab_word *)calloc(vocab_max_size, sizeof(struct vocab_word));
   vocab_hash = (int *)calloc(vocab_hash_size, sizeof(int));

@@ -36,14 +36,14 @@ class FastSentVariantRunner(BaselineRunner):
 
 	def insertNeighbors(self, sentenceList, nbr_file):
 		for pos in range(0, len(sentenceList)):
-			nbr_file.write("%s "%str(sentenceList[pos]))
+			nbr_file.write("%s "%label_sent(sentenceList[pos]))
 			if pos -1 >= 0:
-				nbr_file.write("%s "%str(sentenceList[pos-1]))
+				nbr_file.write("%s "%label_sent(sentenceList[pos-1]))
 			else:
 				nbr_file.write("%s "%("-1"))
 
 			if pos+1 < len(sentenceList):
-				nbr_file.write("%s "%str(sentenceList[pos+1]))
+				nbr_file.write("%s "%label_sent(sentenceList[pos+1]))
 			else:
 				nbr_file.write("%s "%("-1"))
 			nbr_file.write(os.linesep)

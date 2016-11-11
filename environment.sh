@@ -90,4 +90,4 @@ export FSENT_BETA=0.9
 export SJOINTS2VRPRFILE=~/Documents/sen2vec/Data/joint_sup_sent
 export JOINT_SENT_BETA=0.90
 export JOINT_SENT_LBETA=0.07
-export JOINTSUPEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_supervised 
+export JOINTSUPEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_learner

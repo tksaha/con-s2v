@@ -204,5 +204,7 @@ class ReutersReader(DocumentReader):
 
 		jsrunner = JointSupervisedRunner(self.dbstring)
 		jsrunner.prepareData(pd)
+		jsrunner.jointbeta =  0.90
+		jsrunner.jointbetaLab = 0.0
 		jsrunner.runTheBaseline(rbase, 300)
 		jsrunner.runEvaluationTask()
