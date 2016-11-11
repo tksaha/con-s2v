@@ -229,34 +229,34 @@ class DocumentReader:
 			f.flush()
 			optPDict['fs-beta'] = fs_beta_opt
 
-			f1 = {}
-			js_beta_opt = None 
-			js_beta_list = [0.5, 0.6, 0.7, 0.80, 0.90]
-			js_label_beta_list = [0.4, 0.3, 0.2, 0.1]
+			# f1 = {}
+			# js_beta_opt = None 
+			# js_beta_list = [0.5, 0.6, 0.7, 0.80, 0.90]
+			# js_label_beta_list = [0.4, 0.3, 0.2, 0.1]
 
-			for beta in js_beta_list:
-				for beta_lab in  js_label_beta_list:
-					if beta + beta_lab > 1.00:
-						continue
-					jsrunner = JointSupervisedRunner(self.dbstring)
-					jsrunner.window = optPDict["window"]
-					if  beta == js_beta_list[0] and beta_lab == js_label_beta_list[0]:
-						jsrunner.prepareData(pd)
-					jsrunner.jointbeta =  beta
-					jsrunner.jointbetaLab = beta_lab
-					jsrunner.runTheBaseline(rbase, latent_space_size)
-					jsrunner.runEvaluationTask()
+			# for beta in js_beta_list:
+			# 	for beta_lab in  js_label_beta_list:
+			# 		if beta + beta_lab > 1.00:
+			# 			continue
+			# 		jsrunner = JointSupervisedRunner(self.dbstring)
+			# 		jsrunner.window = optPDict["window"]
+			# 		if  beta == js_beta_list[0] and beta_lab == js_label_beta_list[0]:
+			# 			jsrunner.prepareData(pd)
+			# 		jsrunner.jointbeta =  beta
+			# 		jsrunner.jointbetaLab = beta_lab
+			# 		jsrunner.runTheBaseline(rbase, latent_space_size)
+			# 		jsrunner.runEvaluationTask()
 
-					f1[(beta, beta_lab)] = self.__getF1("%s" %jsrunner.latReprName)
-					Logger.logr.info("F1 for %s,%s = %s" %(beta, beta_lab, f1[(beta, beta_lab)]))
+			# 		f1[(beta, beta_lab)] = self.__getF1("%s" %jsrunner.latReprName)
+			# 		Logger.logr.info("F1 for %s,%s = %s" %(beta, beta_lab, f1[(beta, beta_lab)]))
 			
-			js_beta_opt = max(f1, key=f1.get) 
-			Logger.logr.info("Optimal JS-Beta=%.2f %.2f" %(js_beta_opt[0], js_beta_opt[1]))
-			f.write("Optimal JS-Beta is: (Beta) %.2f, (Beta label) %.2f %s"%(js_beta_opt[0], js_beta_opt[1], os.linesep))
-			f.write("f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['js-beta'] = js_beta_opt[0]
-			optPDict['js-beta-lab'] = js_beta_opt[1]
+			# js_beta_opt = max(f1, key=f1.get) 
+			# Logger.logr.info("Optimal JS-Beta=%.2f %.2f" %(js_beta_opt[0], js_beta_opt[1]))
+			# f.write("Optimal JS-Beta is: (Beta) %.2f, (Beta label) %.2f %s"%(js_beta_opt[0], js_beta_opt[1], os.linesep))
+			# f.write("f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict['js-beta'] = js_beta_opt[0]
+			# optPDict['js-beta-lab'] = js_beta_opt[1]
 
 		return optPDict
 
