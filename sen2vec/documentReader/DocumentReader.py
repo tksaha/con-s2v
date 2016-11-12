@@ -177,14 +177,13 @@ class DocumentReader:
 			#we need the p2v vectors created with optimal window
 			paraBaseline.doHouseKeeping()
 
-			#if generate_walk == True:
-			   #n2vBaseline = Node2VecRunner(self.dbstring)
-			   #n2vBaseline.prepareData(pd)
-			   #n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
-			   #generate_walk = False 
+			if generate_walk == True:
+			   n2vBaseline = Node2VecRunner(self.dbstring)
+			   n2vBaseline.prepareData(pd)
+			   n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
+			   generate_walk = False 
 			
-			
-			
+					
 			f1 = {}
 			joint_beta_opt = None #var for the optimal joint_beta
 			jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
@@ -310,6 +309,7 @@ class DocumentReader:
 				Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
 				jointL = JointLearningSen2VecRunner(self.dbstring)
 				jointL.jointbeta = joint_beta #reinitializing myalpha
+				jointL.window = optPDict["window"]
 				if 	joint_beta== jointbeta_list[0]:
 					jointL.prepareData(pd)
 				jointL.runTheBaseline(rbase, latent_space_size)	
@@ -322,7 +322,7 @@ class DocumentReader:
 			f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
 			f.write("JTL Joint-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
-			optPDict["joint_beta"] = joint_beta_opt
+			optPDict["joint-beta"] = joint_beta_opt
 
 			
 			adjustedMScore = {}
@@ -331,6 +331,7 @@ class DocumentReader:
 			for fs_beta in fs_beta_list:
 				Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
 				frunner = FastSentVariantRunner(self.dbstring)
+				jointL.window = optPDict["window"]
 				frunner.fastsentbeta = fs_beta
 				if fs_beta==fs_beta_list[0]:
 					frunner.prepareData(pd)
@@ -346,7 +347,7 @@ class DocumentReader:
 			f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
 			f.write("FST FS-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
-			optPDict["fs_beta"] = fs_beta_opt
+			optPDict["fs-beta"] = fs_beta_opt
 			
 
 			# adjustedMScore = {}

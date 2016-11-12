@@ -39,17 +39,20 @@ export TRTESTFOLDER=~/Documents/sen2vec/Data
 
 export N2VOUTFILE=~/Documents/sen2vec/Data/node_repr
 export GINTERTHR=0.8
-export GINTRATHR=0.5
+export GINTRATHR=0.6
 
 export GTHRSUMTFIDF=0.1
 export GTHRSUMLAT=0.1
 export DUMPFACTOR=0.85
+
+
 # TOPNSUMMARY should be set to 0.2 for classification tasks (20%) and to 1.0 for ranking tasks
 export TOPNSUMMARY=0.2
 export KNEIGHBOR=20
 
+
 export ITERUPDATESEN2VECFILE=~/Documents/sen2vec/Data/retrofitted_repr
-export GRAPHFILE=~/Documents/sen2vec/Data/graph_0.8_0.5
+export GRAPHFILE=~/Documents/sen2vec/Data/graph_0.8_0.6
 
 export ROUGE=~/Documents/sen2vec/sen2vec/rouge/ROUGE-1.5.5.pl
 export ROUGE_EVAL_HOME=~/Documents/sen2vec/sen2vec/rouge/data
