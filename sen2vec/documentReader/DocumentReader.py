@@ -405,18 +405,18 @@ class DocumentReader:
 			f.flush()
 
 
-			f.write("Optimal Joint-Beta: %.2f%s" %(optPDict["joint_beta"], os.linesep))	
+			f.write("Optimal Joint-Beta: %.2f%s" %(optPDict["joint-beta"], os.linesep))	
 			jointL = JointLearningSen2VecRunner(self.dbstring)
-			jointL.jointbeta = optPDict["joint_beta"]
+			jointL.jointbeta = optPDict["joint-beta"]
 			jointL.runTheBaseline(rbase, latent_space_size)
 			jointL.runEvaluationTask()
 			self.__writeResult("%s"%jointL.latReprName, f)
 			jointL.doHouseKeeping()
 
 
-			f.write("Optimal FS-Beta: %.2f%s" %(optPDict["fs_beta"], os.linesep))	
+			f.write("Optimal FS-Beta: %.2f%s" %(optPDict["fs-beta"], os.linesep))	
 			frunner = FastSentVariantRunner(self.dbstring)
-			frunner.fastsentbeta = optPDict["fs_beta"]
+			frunner.fastsentbeta = optPDict["fs-beta"]
 			frunner.runTheBaseline(rbase, latent_space_size)
 			frunner.runEvaluationTask()
 			self.__writeResult("%s"%frunner.latReprName, f)
