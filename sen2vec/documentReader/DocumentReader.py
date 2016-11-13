@@ -350,37 +350,7 @@ class DocumentReader:
 			# optPDict["fs-beta"] = fs_beta_opt
 			
 
-			optPDict["window"] = 10; 
-
-			adjustedMScore = {}
-			js_beta_opt = None 
-			js_beta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
-			js_label_beta_list = [0.3, 0.2, 0.1, 0.1, 0.5, 0.05, 0.03]
-
-			for beta in js_beta_list:
-				for beta_lab in  js_label_beta_list:
-					if beta + beta_lab >= 1.00:
-						continue
-					jsrunner = JointSupervisedRunner(self.dbstring)
-					jsrunner.window = optPDict["window"]
-					if  beta == js_beta_list[0] and beta_lab == js_label_beta_list[0]:
-						jsrunner.prepareData(pd)
-					jsrunner.jointbeta =  beta
-					jsrunner.jointbetaLab = beta_lab
-					jsrunner.runTheBaseline(rbase, latent_space_size)
-					jsrunner.runEvaluationTask()
-
-					adjustedMScore[(beta, beta_lab)] = self.__getAdjustedMutulScore("%s" %jsrunner.latReprName)
-					Logger.logr.info("Adjusted Mutual Score for %s,%s = %s" %(beta, beta_lab, adjustedMScore[(beta, beta_lab)]))
 			
-			
-			js_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
-			Logger.logr.info("Optimal JS-Beta=%s, %s" %(js_beta_opt[0], js_beta_opt[1]))
-			f.write("Optimal JS-Beta is: (Beta) %.2f, (Beta label) %.2f %s"%(js_beta_opt[0], js_beta_opt[1], os.linesep))
-			f.write("adjustedMScores: %s%s" %(adjustedMScore, os.linesep))
-			f.flush()
-			optPDict['js-beta'] = js_beta_opt[0]
-			optPDict['js-beta-lab'] = js_beta_opt[1]
 
 		return optPDict
 
@@ -426,17 +396,17 @@ class DocumentReader:
 			# frunner.runEvaluationTask()
 			# self.__writeResult("%s"%frunner.latReprName, f)
 			# frunner.doHouseKeeping()
-			optPDict["window"] = 10
+			# optPDict["window"] = 10
 
-			f.write("Optimal JS-Beta: %.2f, %.2f %s" %(optPDict["js-beta"], optPDict["js-beta-lab"],os.linesep))	
-			jsrunner = JointSupervisedRunner(self.dbstring)
-			jsrunner.window = optPDict["window"]
-			jsrunner.jointbeta =  optPDict["js-beta"]
-			jsrunner.jointbetaLab = optPDict["js-beta-lab"]
-			jsrunner.runTheBaseline(rbase, latent_space_size)
-			jsrunner.runEvaluationTask()
-			self.__writeResult("%s"%jsrunner.latReprName, f)
-			jsrunner.doHouseKeeping()
-			f.flush()
+			# f.write("Optimal JS-Beta: %.2f, %.2f %s" %(optPDict["js-beta"], optPDict["js-beta-lab"],os.linesep))	
+			# jsrunner = JointSupervisedRunner(self.dbstring)
+			# jsrunner.window = optPDict["window"]
+			# jsrunner.jointbeta =  optPDict["js-beta"]
+			# jsrunner.jointbetaLab = optPDict["js-beta-lab"]
+			# jsrunner.runTheBaseline(rbase, latent_space_size)
+			# jsrunner.runEvaluationTask()
+			# self.__writeResult("%s"%jsrunner.latReprName, f)
+			# jsrunner.doHouseKeeping()
+			# f.flush()
 
 
