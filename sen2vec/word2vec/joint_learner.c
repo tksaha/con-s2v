@@ -60,7 +60,7 @@ real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0, beta_label = 0.0,
 real *syn0, *syn0temp, *temp,  *syn1, *syn1neg, *initembed, *expTable, *templabel, *syn1label; 
 long long  *nbrs;
 long long  *label_sent; 
-int nlabels; 
+int nlabels = 1; 
 
 
 clock_t start;
@@ -69,6 +69,7 @@ int hs = 0, negative = 5;
 const int table_size = 1e8;
 int *table;
 int *table_n2v; 
+real *tempclassw; 
 
 
 /* 
@@ -464,11 +465,13 @@ void InitNet() {
   }
 
   // for labels
-  printf("nlabels =%d\n",nlabels);
-  a = posix_memalign((void **)&syn1label, 128, (long long)nlabels * layer1_size * sizeof(real));
-  if (syn1label == NULL) {printf("Memory allocation failed\n"); exit(1);}
-  for (a = 0; a < nlabels; a++) for (b = 0; b < layer1_size; b++)
-     syn1label[a * layer1_size + b] = 0;
+  if (labelFile[0]!=0){
+    printf("nlabels =%d\n",nlabels);
+    a = posix_memalign((void **)&syn1label, 128, (long long)nlabels * layer1_size * sizeof(real));
+    if (syn1label == NULL) {printf("Memory allocation failed\n"); exit(1);}
+    for (a = 0; a < nlabels; a++) for (b = 0; b < layer1_size; b++)
+       syn1label[a * layer1_size + b] = 0;
+  }
   
   for (a = 0; a < vocab_size; a++) for (b = 0; b < layer1_size; b++) {
       next_random = next_random * (unsigned long long)25214903917 + 11;
@@ -491,7 +494,7 @@ void DestroyNet() {
 void *TrainModelThread(void *id) {
   long long a, b, d, nbr, cw, word, last_word, sentence_length = 0, sentence_position = 0;
   long long word_count = 0, last_word_count = 0, sen[MAX_SENTENCE_LENGTH + 1];
-  long long l1, l2,l1n, nbrindex, c, target, label, local_iter = iter;
+  long long l1, l2,l1n, nbrindex, c, target, label, local_iter = iter; 
   unsigned long long next_random = (long long)id;
   int xb, nlab; 
   long long sentence_label;
@@ -499,6 +502,11 @@ void *TrainModelThread(void *id) {
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
   real *neu1e = (real *)calloc(layer1_size, sizeof(real));
+  real *tempclassw;
+  tempclassw = (real *)calloc(nlabels, sizeof(real));
+  
+
+  real max_weight; 
   FILE *fi = fopen(train_file, "rb");
 
   printf("Num threads =%d\n", num_threads);
@@ -651,15 +659,14 @@ void *TrainModelThread(void *id) {
     sentence_position++;
     if (sentence_position >= sentence_length) {
       // Skip objective for node2vec 
-      // init 
-      l1n = sen[0] * max_neighbors;
-    
+      // init     
       for (c=0 ; c<layer1_size; c++){
           temp[c] = syn0temp[c];
           templabel[c] = syn0temp[c];
       }
 
       if(neighborFile[0]!=0){
+      l1n = sen[0] * max_neighbors;
       for (xb = 0; xb<max_neighbors; xb++) if (nbrs[xb+l1n]<0) break;
       if (beta_node > 0) {  
         for (nbr =  0; nbr< max_neighbors; nbr++){
@@ -692,28 +699,39 @@ void *TrainModelThread(void *id) {
       }}else{xb =0;}
 
       if (labelFile[0]!=0){
+      // https://hips.seas.harvard.edu/blog/2013/01/09/computing-log-sum-exp/
       sentence_label = label_sent[sen[0]];
       if (beta_label > 0 && sentence_label >=0){
-        f = 0.0; 
+        max_weight = 0; 
         for (nlab =  0; nlab < nlabels; nlab++){
           class_w = 0.0 ; 
           for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);
-          f = f + exp(class_w);
+
+          if (nlab == 0) max_weight = class_w;
+          else{
+            if (class_w > max_weight) max_weight = class_w;
+          }
+          tempclassw[nlab] = class_w;
         }
+
+        f= 0.0;
+        for (nlab =  0; nlab < nlabels; nlab++){
+          f = f + exp(tempclassw[nlab] - max_weight);
+        }
+
+        f = max_weight + log (f); 
 
         for (c = 0; c < layer1_size; c++) neu1e[c] = 0.0;
         for (nlab = 0; nlab <nlabels; nlab++){
           if (nlab == sentence_label) label = 1.0; 
           else label = 0.0; 
-          class_w = 0.0;
 
           l2 = nlab * layer1_size; 
-          for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);      
-          g = (label - (exp(class_w) / f)) * alpha; 
+          g = (label - (tempclassw[nlab] / f)) * alpha; 
           for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
           for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * templabel[c];
         }
-        for (c = 0; c < layer1_size; c++) templabel[c] +=   (1.0/nlabels) * neu1e[c];
+        for (c = 0; c < layer1_size; c++) templabel[c] +=   (1.0) * neu1e[c];
       }} else {sentence_label = -1; }
 
       l1 = sen[0]* layer1_size ; 
@@ -742,6 +760,7 @@ void *TrainModelThread(void *id) {
   fclose(fi);
   free(neu1);
   free(neu1e);
+  free(tempclassw);
   pthread_exit(NULL);
 
 }

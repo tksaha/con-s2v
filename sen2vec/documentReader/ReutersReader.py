@@ -183,8 +183,9 @@ class ReutersReader(DocumentReader):
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
-		self.doTesting(optDict, "reuter", rbase, pd, gs, True)
+		#optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
+		#optDict = {}
+		#self.doTesting(optDict, "reuter", rbase, pd, gs, True)
 		optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
 		self.doTesting(optDict, "reuter", rbase, pd, gs, False)
 
