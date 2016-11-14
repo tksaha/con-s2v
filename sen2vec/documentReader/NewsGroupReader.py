@@ -13,6 +13,8 @@ from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
 from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
+from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
+from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
 
 class NewsGroupReader(DocumentReader):
@@ -167,13 +169,13 @@ class NewsGroupReader(DocumentReader):
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		#optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
-		#self.doTesting(optDict, "news", rbase, pd, gs, True)
+		optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
+		self.doTesting(optDict, "news", rbase, pd, gs, True)
 		#optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
 		#self.doTesting(optDict, "news", rbase, pd, gs, False)
 
-		os.environ['EVAL'] = 'TEST'
-		os.environ['TEST_FOR'] = 'CLASS'
+		# os.environ['EVAL'] = 'TEST'
+		# os.environ['TEST_FOR'] = 'CLASS'
 		# jointL = JointLearningSen2VecRunner(self.dbstring)
 		# jointL.jointbeta = 0.91
 		# #jointL.prepareData(pd)
@@ -186,7 +188,7 @@ class NewsGroupReader(DocumentReader):
 		# frunner.runTheBaseline(rbase, 300)
 		# frunner.runEvaluationTask()
 
-		jsrunner = JointSupervisedRunner(self.dbstring)
-		jsrunner.prepareData(pd)
-		jsrunner.runTheBaseline(rbase, 300)
-		jsrunner.runEvaluationTask()
+		# jsrunner = JointSupervisedRunner(self.dbstring)
+		# jsrunner.prepareData(pd)
+		# jsrunner.runTheBaseline(rbase, 300)
+		# jsrunner.runEvaluationTask()
