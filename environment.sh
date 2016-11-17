@@ -46,6 +46,7 @@ export GTHRSUMLAT=0.1
 export DUMPFACTOR=0.85
 
 
+
 # TOPNSUMMARY should be set to 0.2 for classification tasks (20%) and to 1.0 for ranking tasks
 export TOPNSUMMARY=0.2
 export KNEIGHBOR=20
@@ -94,3 +95,6 @@ export SJOINTS2VRPRFILE=~/Documents/sen2vec/Data/joint_sup_sent
 export JOINT_SENT_BETA=0.90
 export JOINT_SENT_LBETA=0.07
 export JOINTSUPEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_learner
+
+export DBOW_ONLY=1
+export NBR_TYPE=0

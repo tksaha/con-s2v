@@ -147,35 +147,35 @@ class DocumentReader:
 
 			generate_walk = True 
 	
-			f1 = {}
-			window_opt = None #var for the optimal window
-			window_size_list = ["8", "10", "12"]
-			for window in window_size_list:
-				Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)				
-				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-				if 	window == window_size_list[0]:  
-					self.postgres_recorder.truncateSummaryTable()
-					paraBaseline.prepareData(pd)		
-				paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-				if window == window_size_list[0]:
-					paraBaseline.generateSummary(gs)
-				paraBaseline.runEvaluationTask()
-				paraBaseline.doHouseKeeping()	
-				f1[window] = self.__getF1(paraBaseline.latReprName)
-				Logger.logr.info("F1 for %s = %s" %(window, f1[window]))
-			window_opt = max(f1, key=f1.get) 
-			f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
-			f.write("P2V Window F1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict["window"] = window_opt
+			# f1 = {}
+			# window_opt = None #var for the optimal window
+			# window_size_list = ["8", "10", "12"]
+			# for window in window_size_list:
+			# 	Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)				
+			# 	paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			# 	if 	window == window_size_list[0]:  
+			# 		self.postgres_recorder.truncateSummaryTable()
+			# 		paraBaseline.prepareData(pd)		
+			# 	paraBaseline.runTheBaseline(rbase,latent_space_size, window)
+			# 	if window == window_size_list[0]:
+			# 		paraBaseline.generateSummary(gs)
+			# 	paraBaseline.runEvaluationTask()
+			# 	paraBaseline.doHouseKeeping()	
+			# 	f1[window] = self.__getF1(paraBaseline.latReprName)
+			# 	Logger.logr.info("F1 for %s = %s" %(window, f1[window]))
+			# window_opt = max(f1, key=f1.get) 
+			# f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
+			# f.write("P2V Window F1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict["window"] = window_opt
 
-			Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
-			self.postgres_recorder.truncateSummaryTable()
-			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
-			paraBaseline.generateSummary(gs)
-			#we need the p2v vectors created with optimal window
-			paraBaseline.doHouseKeeping()
+			# Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
+			# self.postgres_recorder.truncateSummaryTable()
+			# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			# paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
+			# paraBaseline.generateSummary(gs)
+			# #we need the p2v vectors created with optimal window
+			# paraBaseline.doHouseKeeping()
 
 			# if generate_walk == True:
 			#    n2vBaseline = Node2VecRunner(self.dbstring)
@@ -183,7 +183,7 @@ class DocumentReader:
 			#    n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
 			#    generate_walk = False 
 			
-					
+			optPDict["window"] ="10"	
 			f1 = {}
 			joint_beta_opt = None #var for the optimal joint_beta
 			jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
@@ -206,27 +206,27 @@ class DocumentReader:
 			f.flush()
 			optPDict['joint-beta'] = joint_beta_opt
 			
-			f1 = {}
-			fs_beta_opt = None #var for the optimal joint_beta
-			fs_beta_list = [0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
-			for fs_beta in fs_beta_list:
-				Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
-				frunner = FastSentVariantRunner(self.dbstring)
-				frunner.window = optPDict["window"]
-				frunner.fastsentbeta = fs_beta
-				if fs_beta==fs_beta_list[0]:
-					frunner.prepareData(pd)
-				frunner.runTheBaseline(rbase, latent_space_size)
-				frunner.runEvaluationTask()
-				frunner.doHouseKeeping()
-				f1[fs_beta] = self.__getF1("%s" %frunner.latReprName)
-				Logger.logr.info("F1 for %s = %s" %(fs_beta, f1[fs_beta]))
-			fs_beta_opt = max(f1, key=f1.get) 
-			Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
-			f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
-			f.write("FST FS-Beta f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['fs-beta'] = fs_beta_opt
+			# f1 = {}
+			# fs_beta_opt = None #var for the optimal joint_beta
+			# fs_beta_list = [0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			# for fs_beta in fs_beta_list:
+			# 	Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
+			# 	frunner = FastSentVariantRunner(self.dbstring)
+			# 	frunner.window = optPDict["window"]
+			# 	frunner.fastsentbeta = fs_beta
+			# 	if fs_beta==fs_beta_list[0]:
+			# 		frunner.prepareData(pd)
+			# 	frunner.runTheBaseline(rbase, latent_space_size)
+			# 	frunner.runEvaluationTask()
+			# 	frunner.doHouseKeeping()
+			# 	f1[fs_beta] = self.__getF1("%s" %frunner.latReprName)
+			# 	Logger.logr.info("F1 for %s = %s" %(fs_beta, f1[fs_beta]))
+			# fs_beta_opt = max(f1, key=f1.get) 
+			# Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
+			# f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
+			# f.write("FST FS-Beta f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict['fs-beta'] = fs_beta_opt
 
 			f1 = {}
 			js_beta_opt = None 
@@ -324,29 +324,29 @@ class DocumentReader:
 			optPDict["joint-beta"] = joint_beta_opt
 
 			
-			adjustedMScore = {}
-			fs_beta_opt = None #var for the optimal joint_beta
-			fs_beta_list = [0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7]
-			for fs_beta in fs_beta_list:
-				Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
-				frunner = FastSentVariantRunner(self.dbstring)
-				jointL.window = optPDict["window"]
-				frunner.fastsentbeta = fs_beta
-				if fs_beta==fs_beta_list[0]:
-					frunner.prepareData(pd)
-				frunner.runTheBaseline(rbase, latent_space_size)
-				frunner.runEvaluationTask()
-				frunner.doHouseKeeping()
-				adjustedMScore[fs_beta] = self.__getAdjustedMutulScore("%s"%frunner.latReprName)	
-				Logger.logr.info("Adjusted Mutual Score for %s = %s" %(fs_beta, adjustedMScore[fs_beta]))
+			# adjustedMScore = {}
+			# fs_beta_opt = None #var for the optimal joint_beta
+			# fs_beta_list = [0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7]
+			# for fs_beta in fs_beta_list:
+			# 	Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
+			# 	frunner = FastSentVariantRunner(self.dbstring)
+			# 	jointL.window = optPDict["window"]
+			# 	frunner.fastsentbeta = fs_beta
+			# 	if fs_beta==fs_beta_list[0]:
+			# 		frunner.prepareData(pd)
+			# 	frunner.runTheBaseline(rbase, latent_space_size)
+			# 	frunner.runEvaluationTask()
+			# 	frunner.doHouseKeeping()
+			# 	adjustedMScore[fs_beta] = self.__getAdjustedMutulScore("%s"%frunner.latReprName)	
+			# 	Logger.logr.info("Adjusted Mutual Score for %s = %s" %(fs_beta, adjustedMScore[fs_beta]))
 
 
-			fs_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
-			Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
-			f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
-			f.write("FST FS-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
-			f.flush()
-			optPDict["fs-beta"] = fs_beta_opt
+			# fs_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
+			# Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
+			# f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
+			# f.write("FST FS-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
+			# f.flush()
+			# optPDict["fs-beta"] = fs_beta_opt
 			
 
 			
@@ -388,14 +388,14 @@ class DocumentReader:
 			jointL.doHouseKeeping()
 
 
-			f.write("Optimal FS-Beta: %.2f%s" %(optPDict["fs-beta"], os.linesep))	
-			frunner = FastSentVariantRunner(self.dbstring)
-			frunner.window = optPDict["window"]
-			frunner.fastsentbeta = optPDict["fs-beta"]
-			frunner.runTheBaseline(rbase, latent_space_size)
-			frunner.runEvaluationTask()
-			self.__writeResult("%s"%frunner.latReprName, f)
-			frunner.doHouseKeeping()
+			# f.write("Optimal FS-Beta: %.2f%s" %(optPDict["fs-beta"], os.linesep))	
+			# frunner = FastSentVariantRunner(self.dbstring)
+			# frunner.window = optPDict["window"]
+			# frunner.fastsentbeta = optPDict["fs-beta"]
+			# frunner.runTheBaseline(rbase, latent_space_size)
+			# frunner.runEvaluationTask()
+			# self.__writeResult("%s"%frunner.latReprName, f)
+			# frunner.doHouseKeeping()
 
 			if os.environ['TEST_FOR'] == 'CLASS':
 				f.write("Optimal JS-Beta: %.2f, %.2f %s" %(optPDict["js-beta"], optPDict["js-beta-lab"],os.linesep))	

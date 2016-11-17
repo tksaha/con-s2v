@@ -29,40 +29,84 @@ class JointSupervisedRunner(BaselineRunner):
 		self.sentsFile = os.environ['P2VCEXECSENTFILE']
 		self.num_walks = int(os.environ["NUM_WALKS"])
 		self.walk_length = int(os.environ["WALK_LENGTH"])
+		self.dbow_only = int(os.environ["DBOW_ONLY"])
+		self.graphFile = os.environ["GRAPHFILE"]
+		self.nbrtype = int (os.environ["NBR_TYPE"]) # 1 variable, 0 fixed 
 		self.jointbeta= float(os.environ['JOINT_SENT_BETA'])
 		self.jointbetaLab = float(os.environ['JOINT_SENT_LBETA'])
 		self.window = 10
 		self.cores = multiprocessing.cpu_count()
-		self.latReprName = "joint_lab_s2v"
+		if self.dbow_only == 0:
+			self.latReprName = "joint_lab_s2v"
+		else:
+			self.latReprName = "joint_lab_s2v_dbow_only"
 
 		self.postgresConnection.connectDatabase()
 	
 
+	def __getMaxNeighbors(self):
+		"""
+		Calculates the maximum number of neighbors.
+		"""
+		max_neighbor = 0 
+		for nodes in self.Graph.nodes():
+			nbrs = self.Graph.neighbors(nodes)
+			if len(nbrs) > max_neighbor:
+				max_neighbor = len(nbrs)
+
+		return max_neighbor
+
+	def __write_neighbors (self, max_neighbor, file_to_write, weighted):
+		file_to_write.write("%s 1 %s%s"%(self.Graph.number_of_nodes(),max_neighbor, os.linesep))
+
+		for nodes in self.Graph.nodes():
+			file_to_write.write("%s "%label_sent(str(nodes)))
+			nbrs = self.Graph.neighbors(nodes)
+			nbr_count = 0
+			for nbr in nbrs:
+				file_to_write.write("%s "%(label_sent(str(nbr))))
+				nbr_count = nbr_count +1 
+
+			if nbr_count < max_neighbor:
+				for  x in range(nbr_count, max_neighbor):
+					file_to_write.write("%s " %("-1"))
+
+			file_to_write.write("%s"%os.linesep)
+
+		file_to_write.flush()
+		file_to_write.close()
+
 	def prepareNeighborData(self):
 
-		walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt"))
+		
 		joint_nbr_file  = open(os.path.join(self.dataDir,"%s_nbr"%(self.latReprName)), "w")
 
-		line_count = 0 
-		for line in walkinputFile: 
-			line_count = line_count + 1 
+		if self.nbrtype == 1:
+			walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt"))
+			line_count = 0 
+			for line in walkinputFile: 
+				line_count = line_count + 1 
 
-		joint_nbr_file.write("%s %s %s"%(str(line_count),str(self.num_walks),str(self.walk_length)))
-		joint_nbr_file.write(os.linesep)
-
-		walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt")) # reset position 
-		for line in walkinputFile:
-			line_elems = line.strip().split(" ")
-
-			for pos in range(0, self.walk_length+1):
-				if pos >= len(line_elems):
-					joint_nbr_file.write("-1 ")
-				else:
-					joint_nbr_file.write("%s "%label_sent(line_elems[pos]))
-
+			joint_nbr_file.write("%s %s %s"%(str(line_count),str(self.num_walks),str(self.walk_length)))
 			joint_nbr_file.write(os.linesep)
-			joint_nbr_file.flush()
-		joint_nbr_file.close()
+
+			walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt")) # reset position 
+			for line in walkinputFile:
+				line_elems = line.strip().split(" ")
+
+				for pos in range(0, self.walk_length+1):
+					if pos >= len(line_elems):
+						joint_nbr_file.write("-1 ")
+					else:
+						joint_nbr_file.write("%s "%label_sent(line_elems[pos]))
+
+				joint_nbr_file.write(os.linesep)
+				joint_nbr_file.flush()
+			joint_nbr_file.close()
+		else:
+			self.Graph = nx.read_gpickle(self.graphFile)
+			max_neighbor = self.__getMaxNeighbors()
+			self.__write_neighbors (max_neighbor, joint_nbr_file, weighted=False)
 
 	def prepareData(self, pd):
 		if pd <= 0: return 0 
@@ -127,7 +171,11 @@ class JointSupervisedRunner(BaselineRunner):
 		wPDict["beta"] = str(self.jointbeta)
 		wPDict["label-beta"] = str(self.jointbetaLab) 
 		
-		wPDict["size"]= str(latent_space_size)
+		if self.dbow_only ==1:
+			wPDict["size"]= str(latent_space_size*2)
+		else:
+			wPDict["size"]= str(latent_space_size)
+
 		args = []
 		neighborFile = os.path.join(self.dataDir,"%s_nbr"%(self.latReprName))
 		wPDict["neighborFile"] = neighborFile
@@ -139,12 +187,12 @@ class JointSupervisedRunner(BaselineRunner):
 		self._runProcess(args)
 		jointvecModel = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)
 
-
-		wPDict["cbow"] = str(1) 
-		wPDict["output"] = os.path.join(self.dataDir,"%s_raw_DM"%self.latReprName)
-		args = wordDoc2Vec.buildArgListforW2VWith_LAB_Neighbors(wPDict, 3)
-		self._runProcess(args)
-		jointvecModelDM = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)	
+		if self.dbow_only == 0:
+			wPDict["cbow"] = str(1) 
+			wPDict["output"] = os.path.join(self.dataDir,"%s_raw_DM"%self.latReprName)
+			args = wordDoc2Vec.buildArgListforW2VWith_LAB_Neighbors(wPDict, 3)
+			self._runProcess(args)
+			jointvecModelDM = Doc2Vec.load_word2vec_format(wPDict["output"], binary=False)	
 
 		jointvecFile = open("%s.p"%(self.jointSupReprFile),"wb")
 		jointvec_dict = {}
@@ -157,9 +205,14 @@ class JointSupervisedRunner(BaselineRunner):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]	
 				vec1 = jointvecModel[label_sent(id_)]
-				vec2 = jointvecModelDM[label_sent(id_)]
-				vec = np.hstack((vec1,vec2))
-				jointvec_raw_dict[id_] = vec 		
+
+				if self.dbow_only ==0:
+					vec2 = jointvecModelDM[label_sent(id_)]
+					vec = np.hstack((vec1,vec2))	
+				else:
+					vec = vec1 
+				
+				jointvec_raw_dict[id_] = vec 
 				jointvec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
 				
 		Logger.logr.info("Total Number of Sentences written=%i", len(jointvec_raw_dict))			
