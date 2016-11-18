@@ -41,6 +41,9 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		else:
 			self.latReprName = "joint_s2v_dbow_only"
 
+		if self.nbrtype == 0:
+			self.latReprName = "%s_%s"%(self.latReprName,"fixed_nbr")
+
 		self.postgresConnection.connectDatabase()
 	
 	def __getMaxNeighbors(self):
