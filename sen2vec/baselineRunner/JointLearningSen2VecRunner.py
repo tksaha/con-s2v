@@ -33,16 +33,24 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		self.dbow_only = int(os.environ["DBOW_ONLY"])
 		self.nbrtype = int (os.environ["NBR_TYPE"]) # 1 variable, 0 fixed 
 		self.jointbeta= float(os.environ['JOINT_BETA'])
-		self.window = 10
+		self.window = str(10)
+		self.lambda_val = float(os.environ['LAMBDA'])
 		self.jointbeta_label = 0.0; 
 		self.cores = multiprocessing.cpu_count()
-		if self.dbow_only ==0:
+		if self.dbow_only == 0:
 			self.latReprName = "joint_s2v"
 		else:
 			self.latReprName = "joint_s2v_dbow_only"
 
 		if self.nbrtype == 0:
 			self.latReprName = "%s_%s"%(self.latReprName,"fixed_nbr")
+		else:
+
+
+		if self.lambda_val > 0.0:
+			self.latReprName = "%s_%s"%(self.latReprName,"_regularized")
+		else:
+			
 
 		self.postgresConnection.connectDatabase()
 	
@@ -148,6 +156,7 @@ class JointLearningSen2VecRunner(BaselineRunner):
 		wPDict["window"] = str(self.window)
 		wPDict["train"] = "%s.txt"%self.sentsFile
 		wPDict["beta"] = str(self.jointbeta)
+		wPDict["lambda"] = str(self.lambda_val)
 		
 		if self.dbow_only ==1:
 			wPDict["size"]= str(latent_space_size *2 )

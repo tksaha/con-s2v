@@ -41,7 +41,8 @@ class ClassificationEvaluation:
 		return mt.cohen_kappa_score(self.true_values, self.predicted_values, labels = self.class_keys)
 		
 	def _getClassificationReport(self):
-		return mt.classification_report(self.true_values, self.predicted_values, labels = self.class_keys, target_names = self.class_names)
+		return mt.classification_report(self.true_values, self.predicted_values,\
+			 labels = self.class_keys, target_names = self.class_names, digits=4)
 	
 	def _getAccuracyScore(self):
 		return mt.accuracy_score(self.true_values, self.predicted_values)

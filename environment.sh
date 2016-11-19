@@ -98,3 +98,4 @@ export JOINTSUPEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_learner
 
 export DBOW_ONLY=1
 export NBR_TYPE=0
+export LAMBDA=0.8

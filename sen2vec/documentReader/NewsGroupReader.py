@@ -169,7 +169,8 @@ class NewsGroupReader(DocumentReader):
 	def runBaselines(self, pd, rbase, gs):
 		"""
 		"""
-		optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
+		#optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
+		optDict ={}
 		self.doTesting(optDict, "news", rbase, pd, gs, True)
 		#optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
 		#self.doTesting(optDict, "news", rbase, pd, gs, False)

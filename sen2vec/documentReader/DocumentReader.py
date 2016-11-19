@@ -184,27 +184,58 @@ class DocumentReader:
 			#    generate_walk = False 
 			
 			optPDict["window"] ="10"	
+			# f1 = {}
+			# joint_beta_opt = None #var for the optimal joint_beta
+			# jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			# for joint_beta in jointbeta_list:
+			# 	Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
+			# 	jointL = JointLearningSen2VecRunner(self.dbstring)
+			# 	jointL.window = optPDict["window"]
+			# 	jointL.jointbeta = joint_beta
+			# 	if joint_beta==jointbeta_list[0]:
+			# 	   jointL.prepareData(pd)
+			# 	jointL.runTheBaseline(rbase, latent_space_size)
+			# 	jointL.runEvaluationTask()
+			# 	jointL.doHouseKeeping()
+			# 	f1[joint_beta] = self.__getF1("%s" %jointL.latReprName)
+			# 	Logger.logr.info("F1 for %s = %s" %(joint_beta, f1[joint_beta]))
+			# joint_beta_opt = max(f1, key=f1.get) 
+			# Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
+			# f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
+			# f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict['joint-beta'] = joint_beta_opt
+
+
 			f1 = {}
 			joint_beta_opt = None #var for the optimal joint_beta
 			jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			lambda_list = [0.3, 0.6, 0.8, 1.0]
 			for joint_beta in jointbeta_list:
-				Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
-				jointL = JointLearningSen2VecRunner(self.dbstring)
-				jointL.window = optPDict["window"]
-				jointL.jointbeta = joint_beta
-				if joint_beta==jointbeta_list[0]:
-				   jointL.prepareData(pd)
-				jointL.runTheBaseline(rbase, latent_space_size)
-				jointL.runEvaluationTask()
-				jointL.doHouseKeeping()
-				f1[joint_beta] = self.__getF1("%s" %jointL.latReprName)
-				Logger.logr.info("F1 for %s = %s" %(joint_beta, f1[joint_beta]))
+				for lambda_ in lambda_list:
+					Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
+					jointL = JointLearningSen2VecRunner(self.dbstring)
+					jointL.window = optPDict["window"]
+					jointL.jointbeta = joint_beta
+					jointL.lambda_val = lambda_
+					if joint_beta==jointbeta_list[0] and lambda_ == lambda_list[0]:
+				   	   jointL.prepareData(pd)
+					jointL.runTheBaseline(rbase, latent_space_size)
+					jointL.runEvaluationTask()
+					jointL.doHouseKeeping()
+					f1[(joint_beta, lambda_)] = self.__getF1("%s" %jointL.latReprName)
+					Logger.logr.info("F1 for %s = %s" %(joint_beta, f1[(joint_beta, lambda_)]))
+
+
 			joint_beta_opt = max(f1, key=f1.get) 
-			Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
-			f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
-			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['joint-beta'] = joint_beta_opt
+			# Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
+			# f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
+			# f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			optPDict['joint-beta'] = joint_beta_opt[0]
+			optPDict['lambda-val'] = joint_beta_opt[1]
+
+
 			
 			# f1 = {}
 			# fs_beta_opt = None #var for the optimal joint_beta
@@ -228,33 +259,33 @@ class DocumentReader:
 			# f.flush()
 			# optPDict['fs-beta'] = fs_beta_opt
 
-			f1 = {}
-			js_beta_opt = None 
-			js_beta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
-			js_label_beta_list = [0.3, 0.2, 0.1, 0.1, 0.5, 0.05, 0.03]
-			for beta in js_beta_list:
-				for beta_lab in  js_label_beta_list:
-					if beta + beta_lab >= 1.00:
-						continue
-					jsrunner = JointSupervisedRunner(self.dbstring)
-					jsrunner.window = optPDict["window"]
-					if  beta == js_beta_list[0] and beta_lab == js_label_beta_list[0]:
-						jsrunner.prepareData(pd)
-					jsrunner.jointbeta =  beta
-					jsrunner.jointbetaLab = beta_lab
-					jsrunner.runTheBaseline(rbase, latent_space_size)
-					jsrunner.runEvaluationTask()
+			# f1 = {}
+			# js_beta_opt = None 
+			# js_beta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+			# js_label_beta_list = [0.3, 0.2, 0.1, 0.1, 0.5, 0.05, 0.03]
+			# for beta in js_beta_list:
+			# 	for beta_lab in  js_label_beta_list:
+			# 		if beta + beta_lab >= 1.00:
+			# 			continue
+			# 		jsrunner = JointSupervisedRunner(self.dbstring)
+			# 		jsrunner.window = optPDict["window"]
+			# 		if  beta == js_beta_list[0] and beta_lab == js_label_beta_list[0]:
+			# 			jsrunner.prepareData(pd)
+			# 		jsrunner.jointbeta =  beta
+			# 		jsrunner.jointbetaLab = beta_lab
+			# 		jsrunner.runTheBaseline(rbase, latent_space_size)
+			# 		jsrunner.runEvaluationTask()
 
-					f1[(beta, beta_lab)] = self.__getF1("%s" %jsrunner.latReprName)
-					Logger.logr.info("F1 for %s,%s = %s" %(beta, beta_lab, f1[(beta, beta_lab)]))
+			# 		f1[(beta, beta_lab)] = self.__getF1("%s" %jsrunner.latReprName)
+			# 		Logger.logr.info("F1 for %s,%s = %s" %(beta, beta_lab, f1[(beta, beta_lab)]))
 			
-			js_beta_opt = max(f1, key=f1.get) 
-			Logger.logr.info("Optimal JS-Beta=%.2f %.2f" %(js_beta_opt[0], js_beta_opt[1]))
-			f.write("Optimal JS-Beta is: (Beta) %.2f, (Beta label) %.2f %s"%(js_beta_opt[0], js_beta_opt[1], os.linesep))
-			f.write("f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['js-beta'] = js_beta_opt[0]
-			optPDict['js-beta-lab'] = js_beta_opt[1]
+			# js_beta_opt = max(f1, key=f1.get) 
+			# Logger.logr.info("Optimal JS-Beta=%.2f %.2f" %(js_beta_opt[0], js_beta_opt[1]))
+			# f.write("Optimal JS-Beta is: (Beta) %.2f, (Beta label) %.2f %s"%(js_beta_opt[0], js_beta_opt[1], os.linesep))
+			# f.write("f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict['js-beta'] = js_beta_opt[0]
+			# optPDict['js-beta-lab'] = js_beta_opt[1]
 
 		return optPDict
 
@@ -365,23 +396,38 @@ class DocumentReader:
 			os.environ['TEST_FOR'] = 'CLUST'
 
 		f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
-		niter = 5
+		niter = 1
 		for i in range(0,niter):
-			f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-			f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))				
+			#f.write("###### Iteration: %s ######%s" %(i, os.linesep))
+			#f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))				
 
-			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"]) 
-			paraBaseline.runEvaluationTask()
-			self.__writeResult(paraBaseline.latReprName, f)
-			paraBaseline.doHouseKeeping()
-			f.flush()
+			# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			# paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"]) 
+			# paraBaseline.runEvaluationTask()
+			# self.__writeResult(paraBaseline.latReprName, f)
+			# paraBaseline.doHouseKeeping()
+			# f.flush()
 
+
+			# f.write("Optimal Joint-Beta: %.2f%s" %(optPDict["joint-beta"], os.linesep))	
+			# jointL = JointLearningSen2VecRunner(self.dbstring)
+			# jointL.window = optPDict["window"]
+			# jointL.jointbeta = optPDict["joint-beta"]
+			# jointL.runTheBaseline(rbase, latent_space_size)
+			# jointL.runEvaluationTask()
+			# self.__writeResult("%s"%jointL.latReprName, f)
+			# jointL.doHouseKeeping()
+
+			optPDict["joint-beta"] = 0.91
+			optPDict["lambda-val"] = 0.80
+			optPDict["window"] = "10"
 
 			f.write("Optimal Joint-Beta: %.2f%s" %(optPDict["joint-beta"], os.linesep))	
 			jointL = JointLearningSen2VecRunner(self.dbstring)
 			jointL.window = optPDict["window"]
 			jointL.jointbeta = optPDict["joint-beta"]
+			jointL.lambda_val = optPDict["lambda-val"]
+			jointL.prepareData(pd)
 			jointL.runTheBaseline(rbase, latent_space_size)
 			jointL.runEvaluationTask()
 			self.__writeResult("%s"%jointL.latReprName, f)
@@ -397,16 +443,16 @@ class DocumentReader:
 			# self.__writeResult("%s"%frunner.latReprName, f)
 			# frunner.doHouseKeeping()
 
-			if os.environ['TEST_FOR'] == 'CLASS':
-				f.write("Optimal JS-Beta: %.2f, %.2f %s" %(optPDict["js-beta"], optPDict["js-beta-lab"],os.linesep))	
-				jsrunner = JointSupervisedRunner(self.dbstring)
-				jsrunner.window = optPDict["window"]
-				jsrunner.jointbeta =  optPDict["js-beta"]
-				jsrunner.jointbetaLab = optPDict["js-beta-lab"]
-				jsrunner.runTheBaseline(rbase, latent_space_size)
-				jsrunner.runEvaluationTask()
-				self.__writeResult("%s"%jsrunner.latReprName, f)
-				jsrunner.doHouseKeeping()
-				f.flush()
+			# if os.environ['TEST_FOR'] == 'CLASS':
+			# 	f.write("Optimal JS-Beta: %.2f, %.2f %s" %(optPDict["js-beta"], optPDict["js-beta-lab"],os.linesep))	
+			# 	jsrunner = JointSupervisedRunner(self.dbstring)
+			# 	jsrunner.window = optPDict["window"]
+			# 	jsrunner.jointbeta =  optPDict["js-beta"]
+			# 	jsrunner.jointbetaLab = optPDict["js-beta-lab"]
+			# 	jsrunner.runTheBaseline(rbase, latent_space_size)
+			# 	jsrunner.runEvaluationTask()
+			# 	self.__writeResult("%s"%jsrunner.latReprName, f)
+			# 	jsrunner.doHouseKeeping()
+			# 	f.flush()
 
 

@@ -74,6 +74,8 @@ class WordDoc2Vec:
 		args.append(wPDict["neighborFile"])
 		args.append("-beta")
 		args.append(wPDict["beta"])
+		args.append("-lambda")
+		args.append(wPDict['lambda'])
 		return args 
 
 	def buildArgListforW2VWith_LAB_Neighbors(self, wPDict, retrofit):

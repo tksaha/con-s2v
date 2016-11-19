@@ -55,6 +55,7 @@ int *vocab_hash;
 long long vocab_max_size = 1000, vocab_size = 0, layer1_size = 100, sentence_vectors = 0;
 long long train_words = 0, word_count_actual = 0, iter = 5, file_size = 0, classes = 0;
 real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0, beta_label = 0.0, beta_node=0.0;
+real lambda = 0.0; 
 
 
 real *syn0, *syn0temp, *temp,  *syn1, *syn1neg, *initembed, *expTable, *templabel, *syn1label; 
@@ -494,11 +495,11 @@ void DestroyNet() {
 void *TrainModelThread(void *id) {
   long long a, b, d, nbr, cw, word, last_word, sentence_length = 0, sentence_position = 0;
   long long word_count = 0, last_word_count = 0, sen[MAX_SENTENCE_LENGTH + 1];
-  long long l1, l2,l1n, nbrindex, c, target, label, local_iter = iter; 
+  long long l1, l2,l1n,lnbr, nbrindex, c, target, label, local_iter = iter; 
   unsigned long long next_random = (long long)id;
   int xb, nlab; 
   long long sentence_label;
-  real f, g, class_w, beta_temp, beta_label_temp, beta_node_temp;
+  real f, g, class_w, beta_temp, beta_label_temp, beta_node_temp, diff;
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
   real *neu1e = (real *)calloc(layer1_size, sizeof(real));
@@ -654,6 +655,19 @@ void *TrainModelThread(void *id) {
         }
         // Learn embedding
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
+        if (lambda > 0.0){
+        for (c = 0; c < layer1_size; c++){
+        l1n = last_word * max_neighbors;
+        diff = 0.0 ;
+        for (nbr=0; nbr < max_neighbors; nbr++){
+          nbrindex = nbrs[l1n + nbr];
+            //nbrwgt = nbr_weights[l1n + nbr]; 
+          if (nbrindex < 0) break; 
+          lnbr = nbrindex * layer1_size;
+          diff += (syn0[c + lnbr] - syn0[c+l1]);
+        }
+        if (nbr > 0) syn0[c+l1] += alpha * (lambda/nbr) * diff ;    
+        }}
       }
     }
     sentence_position++;
@@ -665,7 +679,7 @@ void *TrainModelThread(void *id) {
           templabel[c] = syn0temp[c];
       }
 
-      if(neighborFile[0]!=0){
+      if(neighborFile[0]!=0 && beta_node > 0){
       l1n = sen[0] * max_neighbors;
       for (xb = 0; xb<max_neighbors; xb++) if (nbrs[xb+l1n]<0) break;
       if (beta_node > 0) {  
@@ -698,7 +712,7 @@ void *TrainModelThread(void *id) {
         }
       }}else{xb =0;}
 
-      if (labelFile[0]!=0){
+      if (labelFile[0]!=0 && beta_label > 0){
       // https://hips.seas.harvard.edu/blog/2013/01/09/computing-log-sum-exp/
       sentence_label = label_sent[sen[0]];
       if (beta_label > 0 && sentence_label >=0){
@@ -736,6 +750,7 @@ void *TrainModelThread(void *id) {
 
       l1 = sen[0]* layer1_size ; 
 
+      if (beta_node >0 || beta_label >0){
       beta_temp = beta;
       beta_node_temp = beta_node; 
       beta_label_temp = beta_label; 
@@ -751,7 +766,9 @@ void *TrainModelThread(void *id) {
           syn0[c+l1] = syn0temp[c] +  (beta_temp * (syn0[c+l1] - syn0temp[c]));
           syn0[c+l1] += (beta_node_temp  * (temp[c]-syn0temp[c]));
           syn0[c+l1] += (beta_label_temp * (templabel[c]-syn0temp[c]));
-      } 
+      } }
+
+      
       sentence_length = 0;
       continue;
     }
@@ -899,6 +916,7 @@ int main(int argc, char **argv) {
   if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-beta", argc, argv)) > 0) beta = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-label-beta", argc, argv)) > 0) beta_label = atof(argv[i + 1]);
+  if ((i = ArgPos((char *)"-lambda", argc, argv))>0) lambda = atof(argv[i + 1]);
 
 
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
@@ -906,6 +924,7 @@ int main(int argc, char **argv) {
   if ((i = ArgPos((char *)"-init", argc, argv)) > 0) strcpy(initfromFile, argv[i + 1]);
   if ((i = ArgPos((char *)"-neighbor", argc, argv))>0) strcpy(neighborFile, argv[i+1]);
   if ((i = ArgPos((char *)"-label", argc, argv))>0) strcpy(labelFile, argv[i+1]);
+
 
 
   if ((i = ArgPos((char *)"-sample", argc, argv)) > 0) sample = atof(argv[i + 1]);
