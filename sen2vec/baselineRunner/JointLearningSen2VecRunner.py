@@ -44,13 +44,11 @@ class JointLearningSen2VecRunner(BaselineRunner):
 
 		if self.nbrtype == 0:
 			self.latReprName = "%s_%s"%(self.latReprName,"fixed_nbr")
-		else:
-
 
 		if self.lambda_val > 0.0:
 			self.latReprName = "%s_%s"%(self.latReprName,"_regularized")
-		else:
-			
+	
+
 
 		self.postgresConnection.connectDatabase()
 	
