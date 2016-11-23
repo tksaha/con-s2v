@@ -170,11 +170,11 @@ class DocumentReader:
 			# optPDict["window"] = window_opt
 
 			# Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
-			# self.postgres_recorder.truncateSummaryTable()
+			
 			# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
 			# paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
+			# self.postgres_recorder.truncateSummaryTable()
 			# paraBaseline.generateSummary(gs)
-			# #we need the p2v vectors created with optimal window
 			# paraBaseline.doHouseKeeping()
 
 			# if generate_walk == True:
@@ -183,202 +183,181 @@ class DocumentReader:
 			#    n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
 			#    generate_walk = False 
 			
-			optPDict["window"] ="10"	
-			# f1 = {}
-			# joint_beta_opt = None #var for the optimal joint_beta
-			# jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
-			# for joint_beta in jointbeta_list:
-			# 	Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
-			# 	jointL = JointLearningSen2VecRunner(self.dbstring)
-			# 	jointL.window = optPDict["window"]
-			# 	jointL.jointbeta = joint_beta
-			# 	if joint_beta==jointbeta_list[0]:
-			# 	   jointL.prepareData(pd)
-			# 	jointL.runTheBaseline(rbase, latent_space_size)
-			# 	jointL.runEvaluationTask()
-			# 	jointL.doHouseKeeping()
-			# 	f1[joint_beta] = self.__getF1("%s" %jointL.latReprName)
-			# 	Logger.logr.info("F1 for %s = %s" %(joint_beta, f1[joint_beta]))
-			# joint_beta_opt = max(f1, key=f1.get) 
-			# Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
-			# f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
-			# f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
-			# f.flush()
-			# optPDict['joint-beta'] = joint_beta_opt
+			# for full fixed nbr
+			f1 = {}
+			optPDict["window"] = "10"
+			joint_beta_opt = None #var for the optimal joint_beta
+	
+			lambda_list = [0.3, 0.5, 0.8, 1.0]
+			#lambda_list = [0.3]		
+			for lambda_ in  lambda_list:
+				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+				os.environ["NBR_TYPE"]=str(0)
+				os.environ["FULL_DATA"]=str(1)
+				os.environ["LAMBDA"]=str(lambda_)
+				jointL = JointLearningSen2VecRunner(self.dbstring)
+				jointL.window = optPDict["window"]
+				if lambda_==lambda_list[0]:
+			   		jointL.prepareData(pd)
+				jointL.runTheBaseline(rbase, latent_space_size)
+				jointL.runEvaluationTask()
+				jointL.doHouseKeeping()
+				f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
+				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+			joint_beta_opt = max(f1, key=f1.get) 
+	
+			Logger.logr.info("Optimal lambda for full fixed = %s" %joint_beta_opt)		
+			f.write("Optimal lambda for full fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			f.flush()
+			optPDict['lambda-full-fixed'] = joint_beta_opt
+
+			f1 = {}
+			joint_beta_opt = None
+			lambda_list = [0.3, 0.5, 0.8, 1.0]
+			#lambda_list = [0.3]		
+			for lambda_ in  lambda_list:
+				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+				os.environ["NBR_TYPE"]=str(1)
+				os.environ["FULL_DATA"]=str(1)
+				os.environ["LAMBDA"]=str(lambda_)
+				jointL = JointLearningSen2VecRunner(self.dbstring)
+				jointL.window = optPDict["window"]
+				if lambda_==lambda_list[0]:
+			   		jointL.prepareData(pd)
+				jointL.runTheBaseline(rbase, latent_space_size)
+				jointL.runEvaluationTask()
+				jointL.doHouseKeeping()
+				f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
+				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+			joint_beta_opt = max(f1, key=f1.get) 
+	
+			Logger.logr.info("Optimal lambda for full n2v = %s" %joint_beta_opt)		
+			f.write("Optimal lambda for full n2v nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			f.flush()
+			optPDict['lambda-full-n2v'] = joint_beta_opt
 
 
 			f1 = {}
-			joint_beta_opt = None #var for the optimal joint_beta
-			jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
-			lambda_list = [0.3, 0.6, 0.8, 1.0]
-			for joint_beta in jointbeta_list:
-				for lambda_ in lambda_list:
-					Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
-					jointL = JointLearningSen2VecRunner(self.dbstring)
-					jointL.window = optPDict["window"]
-					jointL.jointbeta = joint_beta
-					jointL.lambda_val = lambda_
-					if joint_beta==jointbeta_list[0] and lambda_ == lambda_list[0]:
-				   	   jointL.prepareData(pd)
-					jointL.runTheBaseline(rbase, latent_space_size)
-					jointL.runEvaluationTask()
-					jointL.doHouseKeeping()
-					f1[(joint_beta, lambda_)] = self.__getF1("%s" %jointL.latReprName)
-					Logger.logr.info("F1 for %s = %s" %(joint_beta, f1[(joint_beta, lambda_)]))
-
-
+			joint_beta_opt = None
+			lambda_list = [0.3, 0.5, 0.8, 1.0]
+			#lambda_list = [0.3]		
+			for lambda_ in  lambda_list:
+				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+				os.environ["NBR_TYPE"]=str(0)
+				os.environ["FULL_DATA"]=str(0)
+				os.environ["LAMBDA"]=str(lambda_)
+				jointL = JointLearningSen2VecRunner(self.dbstring)
+				jointL.window = optPDict["window"]
+				if lambda_==lambda_list[0]:
+			   		jointL.prepareData(pd)
+				jointL.runTheBaseline(rbase, latent_space_size)
+				jointL.runEvaluationTask()
+				jointL.doHouseKeeping()
+				f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
+				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
 			joint_beta_opt = max(f1, key=f1.get) 
-			# Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
-			# f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
-			# f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
-			# f.flush()
-			optPDict['joint-beta'] = joint_beta_opt[0]
-			optPDict['lambda-val'] = joint_beta_opt[1]
+	
+			Logger.logr.info("Optimal lambda for random fixed = %s" %joint_beta_opt)		
+			f.write("Optimal lambda for random fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			f.flush()
+			optPDict['lambda-random-fixed'] = joint_beta_opt
 
+			f1 = {}
+			joint_beta_opt = None
+			#lambda_list = [0.3, 0.5, 0.8, 1.0]
+				
+			for lambda_ in  lambda_list:
+				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+				os.environ["NBR_TYPE"]=str(1)
+				os.environ["FULL_DATA"]=str(0)
+				os.environ["LAMBDA"]=str(lambda_)
+				jointL = JointLearningSen2VecRunner(self.dbstring)
+				jointL.window = optPDict["window"]
+				if lambda_==lambda_list[0]:
+			   		jointL.prepareData(pd)
+				jointL.runTheBaseline(rbase, latent_space_size)
+				jointL.runEvaluationTask()
+				jointL.doHouseKeeping()
+				f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
+				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+			joint_beta_opt = max(f1, key=f1.get) 
+	
+			Logger.logr.info("Optimal lambda for random n2v = %s" %joint_beta_opt)		
+			f.write("Optimal lambda for random n2v nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			f.flush()
+			optPDict['lambda-random-n2v'] = joint_beta_opt
 
-			
-			# f1 = {}
-			# fs_beta_opt = None #var for the optimal joint_beta
-			# fs_beta_list = [0.4, 0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
-			# for fs_beta in fs_beta_list:
-			# 	Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
-			# 	frunner = FastSentVariantRunner(self.dbstring)
-			# 	frunner.window = optPDict["window"]
-			# 	frunner.fastsentbeta = fs_beta
-			# 	if fs_beta==fs_beta_list[0]:
-			# 		frunner.prepareData(pd)
-			# 	frunner.runTheBaseline(rbase, latent_space_size)
-			# 	frunner.runEvaluationTask()
-			# 	frunner.doHouseKeeping()
-			# 	f1[fs_beta] = self.__getF1("%s" %frunner.latReprName)
-			# 	Logger.logr.info("F1 for %s = %s" %(fs_beta, f1[fs_beta]))
-			# fs_beta_opt = max(f1, key=f1.get) 
-			# Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
-			# f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
-			# f.write("FST FS-Beta f1s: %s%s" %(f1, os.linesep))
-			# f.flush()
-			# optPDict['fs-beta'] = fs_beta_opt
-
-			# f1 = {}
-			# js_beta_opt = None 
-			# js_beta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
-			# js_label_beta_list = [0.3, 0.2, 0.1, 0.1, 0.5, 0.05, 0.03]
-			# for beta in js_beta_list:
-			# 	for beta_lab in  js_label_beta_list:
-			# 		if beta + beta_lab >= 1.00:
-			# 			continue
-			# 		jsrunner = JointSupervisedRunner(self.dbstring)
-			# 		jsrunner.window = optPDict["window"]
-			# 		if  beta == js_beta_list[0] and beta_lab == js_label_beta_list[0]:
-			# 			jsrunner.prepareData(pd)
-			# 		jsrunner.jointbeta =  beta
-			# 		jsrunner.jointbetaLab = beta_lab
-			# 		jsrunner.runTheBaseline(rbase, latent_space_size)
-			# 		jsrunner.runEvaluationTask()
-
-			# 		f1[(beta, beta_lab)] = self.__getF1("%s" %jsrunner.latReprName)
-			# 		Logger.logr.info("F1 for %s,%s = %s" %(beta, beta_lab, f1[(beta, beta_lab)]))
-			
-			# js_beta_opt = max(f1, key=f1.get) 
-			# Logger.logr.info("Optimal JS-Beta=%.2f %.2f" %(js_beta_opt[0], js_beta_opt[1]))
-			# f.write("Optimal JS-Beta is: (Beta) %.2f, (Beta label) %.2f %s"%(js_beta_opt[0], js_beta_opt[1], os.linesep))
-			# f.write("f1s: %s%s" %(f1, os.linesep))
-			# f.flush()
-			# optPDict['js-beta'] = js_beta_opt[0]
-			# optPDict['js-beta-lab'] = js_beta_opt[1]
-
+		
 		return optPDict
 
 
 	def _runClusteringOnValidation(self, pd, rbase, gs, dataset_name):
 		############# Validation ############################		
 		optPDict = {}
-		with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_hyperparameters_clust.txt"), 'w') as f:
+		# with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_hyperparameters_clust.txt"), 'w') as f:
 			
-			latent_space_size = 300
-			os.environ['EVAL'] = 'VALID'
-			os.environ['VALID_FOR'] = 'CLUST'	
+		# 	latent_space_size = 300
+		# 	os.environ['EVAL'] = 'VALID'
+		# 	os.environ['VALID_FOR'] = 'CLUST'	
 
-			adjustedMScore = {}
-			window_opt = None #var for the optimal window
-			window_size_list = ["8", "10", "12"]
-			for window in window_size_list:
-			#for window in ["8"]:
-				Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)			
-				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-				if 	window == window_size_list[0]: 
-					self.postgres_recorder.truncateSummaryTable()
-					paraBaseline.prepareData(pd)
+		# 	adjustedMScore = {}
+		# 	window_opt = None #var for the optimal window
+		# 	window_size_list = ["8", "10", "12"]
+		# 	for window in window_size_list:
+		# 	#for window in ["8"]:
+		# 		Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)			
+		# 		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		# 		if 	window == window_size_list[0]: 
+		# 			self.postgres_recorder.truncateSummaryTable()
+		# 			paraBaseline.prepareData(pd)
 					
-				paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-				if window == window_size_list[0]:
-					paraBaseline.generateSummary(gs)
-				paraBaseline.runEvaluationTask()
-				paraBaseline.doHouseKeeping()	
-				adjustedMScore[window] = self.__getAdjustedMutulScore(paraBaseline.latReprName)
-				Logger.logr.info("adjustedMScore for %s = %s" %(window, adjustedMScore[window]))
-			window_opt = max(adjustedMScore, key=adjustedMScore.get) 
-			f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
-			f.write("P2V Window adjustedMScores: %s%s" %(adjustedMScore, os.linesep))
-			f.flush()
-			optPDict["window"] = window_opt
+		# 		paraBaseline.runTheBaseline(rbase,latent_space_size, window)
+		# 		if window == window_size_list[0]:
+		# 			paraBaseline.generateSummary(gs)
+		# 		paraBaseline.runEvaluationTask()
+		# 		paraBaseline.doHouseKeeping()	
+		# 		adjustedMScore[window] = self.__getAdjustedMutulScore(paraBaseline.latReprName)
+		# 		Logger.logr.info("adjustedMScore for %s = %s" %(window, adjustedMScore[window]))
+		# 	window_opt = max(adjustedMScore, key=adjustedMScore.get) 
+		# 	f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
+		# 	f.write("P2V Window adjustedMScores: %s%s" %(adjustedMScore, os.linesep))
+		# 	f.flush()
+		# 	optPDict["window"] = window_opt
 
-			Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
-			self.postgres_recorder.truncateSummaryTable()
-			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
-			paraBaseline.generateSummary(gs)
-			paraBaseline.doHouseKeeping()
-
-			
-			
-			adjustedMScore = {}
-			joint_beta_opt = None #var for the optimal beta
-			jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
-			for joint_beta in jointbeta_list:
-				Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
-				jointL = JointLearningSen2VecRunner(self.dbstring)
-				jointL.jointbeta = joint_beta #reinitializing myalpha
-				jointL.window = optPDict["window"]
-				if 	joint_beta== jointbeta_list[0]:
-					jointL.prepareData(pd)
-				jointL.runTheBaseline(rbase, latent_space_size)	
-				jointL.runEvaluationTask()
-				jointL.doHouseKeeping()
-				adjustedMScore[joint_beta] = self.__getAdjustedMutulScore("%s"%jointL.latReprName)	
-				Logger.logr.info("Adjusted Mutual Score for %s = %s" %(joint_beta, adjustedMScore[joint_beta]))
-			joint_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
-			Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
-			f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
-			f.write("JTL Joint-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
-			f.flush()
-			optPDict["joint-beta"] = joint_beta_opt
+		# 	Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
+		# 	self.postgres_recorder.truncateSummaryTable()
+		# 	paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		# 	paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
+		# 	paraBaseline.generateSummary(gs)
+		# 	paraBaseline.doHouseKeeping()
 
 			
-			# adjustedMScore = {}
-			# fs_beta_opt = None #var for the optimal joint_beta
-			# fs_beta_list = [0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7]
-			# for fs_beta in fs_beta_list:
-			# 	Logger.logr.info("Starting Running FastSent Baseline for FS-Beta = %s" %fs_beta)
-			# 	frunner = FastSentVariantRunner(self.dbstring)
-			# 	jointL.window = optPDict["window"]
-			# 	frunner.fastsentbeta = fs_beta
-			# 	if fs_beta==fs_beta_list[0]:
-			# 		frunner.prepareData(pd)
-			# 	frunner.runTheBaseline(rbase, latent_space_size)
-			# 	frunner.runEvaluationTask()
-			# 	frunner.doHouseKeeping()
-			# 	adjustedMScore[fs_beta] = self.__getAdjustedMutulScore("%s"%frunner.latReprName)	
-			# 	Logger.logr.info("Adjusted Mutual Score for %s = %s" %(fs_beta, adjustedMScore[fs_beta]))
-
-
-			# fs_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
-			# Logger.logr.info("Optimal FS-Beta=%s" %fs_beta_opt)
-			# f.write("Optimal FS-Beta is %.2f%s"%(fs_beta_opt, os.linesep))
-			# f.write("FST FS-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
-			# f.flush()
-			# optPDict["fs-beta"] = fs_beta_opt
 			
+		# 	adjustedMScore = {}
+		# 	joint_beta_opt = None #var for the optimal beta
+		# 	jointbeta_list = [0.5, 0.6, 0.7, 0.8, 0.85, 0.90, 0.95]
+		# 	for joint_beta in jointbeta_list:
+		# 		Logger.logr.info("Starting Running JointLearning Baseline for Joint-Beta = %s" %joint_beta)
+		# 		jointL = JointLearningSen2VecRunner(self.dbstring)
+		# 		jointL.jointbeta = joint_beta #reinitializing myalpha
+		# 		jointL.window = optPDict["window"]
+		# 		if 	joint_beta== jointbeta_list[0]:
+		# 			jointL.prepareData(pd)
+		# 		jointL.runTheBaseline(rbase, latent_space_size)	
+		# 		jointL.runEvaluationTask()
+		# 		jointL.doHouseKeeping()
+		# 		adjustedMScore[joint_beta] = self.__getAdjustedMutulScore("%s"%jointL.latReprName)	
+		# 		Logger.logr.info("Adjusted Mutual Score for %s = %s" %(joint_beta, adjustedMScore[joint_beta]))
+		# 	joint_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
+		# 	Logger.logr.info("Optimal Joint-Beta=%s" %joint_beta_opt)
+		# 	f.write("Optimal Joint-Beta is %.2f%s"%(joint_beta_opt, os.linesep))
+		# 	f.write("JTL Joint-Beta adjusted mutual scores: %s%s" %(adjustedMScore, os.linesep))
+		# 	f.flush()
+		# 	optPDict["joint-beta"] = joint_beta_opt
 
 			
 
@@ -396,63 +375,67 @@ class DocumentReader:
 			os.environ['TEST_FOR'] = 'CLUST'
 
 		f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
-		niter = 1
+		niter = 5
 		for i in range(0,niter):
 			#f.write("###### Iteration: %s ######%s" %(i, os.linesep))
 			#f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))				
 
-			# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			# paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"]) 
-			# paraBaseline.runEvaluationTask()
-			# self.__writeResult(paraBaseline.latReprName, f)
-			# paraBaseline.doHouseKeeping()
-			# f.flush()
+			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			paraBaseline.prepareData(pd)
+			paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"])
+			paraBaseline.runEvaluationTask()
+			self.__writeResult(paraBaseline.latReprName, f)
+			paraBaseline.doHouseKeeping()
+			f.flush()
+			
 
-
-			# f.write("Optimal Joint-Beta: %.2f%s" %(optPDict["joint-beta"], os.linesep))	
-			# jointL = JointLearningSen2VecRunner(self.dbstring)
-			# jointL.window = optPDict["window"]
-			# jointL.jointbeta = optPDict["joint-beta"]
-			# jointL.runTheBaseline(rbase, latent_space_size)
-			# jointL.runEvaluationTask()
-			# self.__writeResult("%s"%jointL.latReprName, f)
-			# jointL.doHouseKeeping()
-
-			optPDict["joint-beta"] = 0.91
-			optPDict["lambda-val"] = 0.80
-			optPDict["window"] = "10"
-
-			f.write("Optimal Joint-Beta: %.2f%s" %(optPDict["joint-beta"], os.linesep))	
+			# fixed full 
+			os.environ["NBR_TYPE"]=str(0)
+			os.environ["FULL_DATA"]=str(1)
+			f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda_full_fixed"], os.linesep))	
 			jointL = JointLearningSen2VecRunner(self.dbstring)
 			jointL.window = optPDict["window"]
-			jointL.jointbeta = optPDict["joint-beta"]
-			jointL.lambda_val = optPDict["lambda-val"]
+			jointL.lambda_val = optPDict["lambda-full-fixed"]
 			jointL.prepareData(pd)
 			jointL.runTheBaseline(rbase, latent_space_size)
 			jointL.runEvaluationTask()
 			self.__writeResult("%s"%jointL.latReprName, f)
 			jointL.doHouseKeeping()
 
+			
+			os.environ["NBR_TYPE"]=str(1)
+			os.environ["FULL_DATA"]=str(1)
+			f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda_full_n2v"], os.linesep))	
+			jointL = JointLearningSen2VecRunner(self.dbstring)
+			jointL.window = optPDict["window"]
+			jointL.lambda_val = optPDict["lambda-full-n2v"]
+			jointL.prepareData(pd)
+			jointL.runTheBaseline(rbase, latent_space_size)
+			jointL.runEvaluationTask()
+			self.__writeResult("%s"%jointL.latReprName, f)
+			jointL.doHouseKeeping()
 
-			# f.write("Optimal FS-Beta: %.2f%s" %(optPDict["fs-beta"], os.linesep))	
-			# frunner = FastSentVariantRunner(self.dbstring)
-			# frunner.window = optPDict["window"]
-			# frunner.fastsentbeta = optPDict["fs-beta"]
-			# frunner.runTheBaseline(rbase, latent_space_size)
-			# frunner.runEvaluationTask()
-			# self.__writeResult("%s"%frunner.latReprName, f)
-			# frunner.doHouseKeeping()
+			os.environ["NBR_TYPE"]=str(0)
+			os.environ["FULL_DATA"]=str(0)
+			f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda_random_fixed"], os.linesep))	
+			jointL = JointLearningSen2VecRunner(self.dbstring)
+			jointL.window = optPDict["window"]
+			jointL.lambda_val = optPDict["lambda-random-fixed"]
+			jointL.prepareData(pd)
+			jointL.runTheBaseline(rbase, latent_space_size)
+			jointL.runEvaluationTask()
+			self.__writeResult("%s"%jointL.latReprName, f)
+			jointL.doHouseKeeping()
 
-			# if os.environ['TEST_FOR'] == 'CLASS':
-			# 	f.write("Optimal JS-Beta: %.2f, %.2f %s" %(optPDict["js-beta"], optPDict["js-beta-lab"],os.linesep))	
-			# 	jsrunner = JointSupervisedRunner(self.dbstring)
-			# 	jsrunner.window = optPDict["window"]
-			# 	jsrunner.jointbeta =  optPDict["js-beta"]
-			# 	jsrunner.jointbetaLab = optPDict["js-beta-lab"]
-			# 	jsrunner.runTheBaseline(rbase, latent_space_size)
-			# 	jsrunner.runEvaluationTask()
-			# 	self.__writeResult("%s"%jsrunner.latReprName, f)
-			# 	jsrunner.doHouseKeeping()
-			# 	f.flush()
-
-
+			
+			os.environ["NBR_TYPE"]=str(1)
+			os.environ["FULL_DATA"]=str(0)
+			f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda_random_n2v"], os.linesep))	
+			jointL = JointLearningSen2VecRunner(self.dbstring)
+			jointL.window = optPDict["window"]
+			jointL.lambda_val = optPDict["lambda-random-n2v"]
+			jointL.prepareData(pd)
+			jointL.runTheBaseline(rbase, latent_space_size)
+			jointL.runEvaluationTask()
+			self.__writeResult("%s"%jointL.latReprName, f)
+			jointL.doHouseKeeping()

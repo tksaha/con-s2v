@@ -54,7 +54,8 @@ int binary = 0, cbow = 1, debug_mode = 2, window = 5, min_count = 5, num_threads
 int *vocab_hash;
 long long vocab_max_size = 1000, vocab_size = 0, layer1_size = 100, sentence_vectors = 0;
 long long train_words = 0, word_count_actual = 0, iter = 5, file_size = 0, classes = 0;
-real alpha = 0.025, starting_alpha, sample = 1e-3, beta = 1.0, beta_label = 0.0, beta_node=0.0;
+real alpha = 0.025, starting_alpha, sample = 1e-3; 
+int full_nbr = 1;
 real lambda = 0.0; 
 
 
@@ -496,10 +497,11 @@ void *TrainModelThread(void *id) {
   long long a, b, d, nbr, cw, word, last_word, sentence_length = 0, sentence_position = 0;
   long long word_count = 0, last_word_count = 0, sen[MAX_SENTENCE_LENGTH + 1];
   long long l1, l2,l1n,lnbr, nbrindex, c, target, label, local_iter = iter; 
+
   unsigned long long next_random = (long long)id;
-  int xb, nlab; 
+  int start_xb, end_xb, nlab; 
   long long sentence_label;
-  real f, g, class_w, beta_temp, beta_label_temp, beta_node_temp, diff;
+  real f, g, class_w, diff;
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
   real *neu1e = (real *)calloc(layer1_size, sizeof(real));
@@ -656,17 +658,26 @@ void *TrainModelThread(void *id) {
         // Learn embedding
         for (c = 0; c < layer1_size; c++) syn0[c + l1] += neu1e[c];
 
-        if(beta_node >0){
+        if(neighborFile[0]!=0){
           l1n = last_word * max_neighbors;
           for (nbr=0; nbr < max_neighbors; nbr++){
             nbrindex = nbrs[l1n + nbr];
             if (nbrindex < 0) break; 
           }
           if (nbr >0){
-          xb = rand() % nbr; 
+          if (full_nbr == 0){
+            start_xb = rand() % nbr; 
+            end_xb = start_xb + 1; 
+          } 
+          else{
+            start_xb = 0;
+            end_xb = nbr; 
+          }
+
           for (nbr =  0; nbr< max_neighbors; nbr++){
-            if (nbr==xb) {
+            if (nbr>=start_xb && nbr<end_xb) {
               nbrindex = nbrs[l1n+nbr]; 
+              if (nbrindex <0) break; 
               for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
               if (negative > 0) for (d = 0; d < negative + 1; d++) {
                 if (d == 0) {
@@ -693,6 +704,43 @@ void *TrainModelThread(void *id) {
           }}
         }
 
+
+        if (labelFile[0]!=0){
+        // https://hips.seas.harvard.edu/blog/2013/01/09/computing-log-sum-exp/
+        sentence_label = label_sent[sen[0]];
+        if (sentence_label >=0){
+          max_weight = 0; 
+          for (nlab =  0; nlab < nlabels; nlab++){
+            class_w = 0.0 ; 
+            for(c=0 ; c<layer1_size; c++) class_w = class_w + (syn0[c+l1] * syn1label[c + nlab*layer1_size]);
+
+            if (nlab == 0) max_weight = class_w;
+            else{
+              if (class_w > max_weight) max_weight = class_w;
+            }
+            tempclassw[nlab] = class_w;
+          }
+
+          f = 0.0;
+          for (nlab =  0; nlab < nlabels; nlab++){
+            f = f + exp(tempclassw[nlab] - max_weight);
+          }
+
+          f = max_weight + log (f); 
+
+          for (c = 0; c < layer1_size; c++) neu1e[c] = 0.0;
+          for (nlab = 0; nlab <nlabels; nlab++){
+            if (nlab == sentence_label) label = 1.0; 
+            else label = 0.0; 
+
+            l2 = nlab * layer1_size; 
+            g = (label - (tempclassw[nlab] / f)) * alpha; 
+            for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
+            for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * syn0[c+l1];
+          }
+          for (c = 0; c < layer1_size; c++) syn0[c+l1] += neu1e[c];
+        }} 
+
         if (lambda > 0.0){
         for (c = 0; c < layer1_size; c++){
         l1n = last_word * max_neighbors;
@@ -706,107 +754,11 @@ void *TrainModelThread(void *id) {
         }
         if (nbr > 0) syn0[c+l1] += alpha * (lambda/nbr) * diff ;    
         }}
+
       }
     }
     sentence_position++;
     if (sentence_position >= sentence_length) {
-      // Skip objective for node2vec 
-      // init     
-      // for (c=0 ; c<layer1_size; c++){
-      //     temp[c] = syn0temp[c];
-      //     templabel[c] = syn0temp[c];
-      // }
-
-      // if(neighborFile[0]!=0 && beta_node > 0){
-      // l1n = sen[0] * max_neighbors;
-      // for (xb = 0; xb<max_neighbors; xb++) if (nbrs[xb+l1n]<0) break;
-      // if (beta_node > 0) {  
-      //   for (nbr =  0; nbr< max_neighbors; nbr++){
-      //     //target
-      //     nbrindex = nbrs[l1n+nbr]; 
-      //     if (nbrindex < 0) break; 
-      //     for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
-      //     if (negative > 0) for (d = 0; d < negative + 1; d++) {
-      //       if (d == 0) {
-      //         target = nbrindex;
-      //         label = 1;
-      //        } else {
-      //           next_random = next_random * (unsigned long long)25214903917 + 11;
-      //           target = table_n2v[(next_random >> 16) % table_size];
-      //           if (target == nbrindex) continue;
-      //           label = 0;
-      //        }
-      //        l2 = target * layer1_size;
-      //        f = 0;
-      //        for (c = 0; c < layer1_size; c++) f += temp[c] * syn1neg[c + l2];
-      //        if (f > MAX_EXP) g = (label - 1) * alpha;
-      //        else if (f < -MAX_EXP) g = (label - 0) * alpha;
-      //        else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
-      //        for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
-      //        for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * temp[c];
-      //     }
-      //     if  (debug_mode>3) printf("Working for source=%lld and nbr=%lld\n",sen[0], nbrindex);
-      //     for (c = 0; c < layer1_size; c++) temp[c] +=  (1.0) * neu1e[c];
-      //   }
-      // }}else{xb =0;}
-
-      // if (labelFile[0]!=0 && beta_label > 0){
-      // // https://hips.seas.harvard.edu/blog/2013/01/09/computing-log-sum-exp/
-      // sentence_label = label_sent[sen[0]];
-      // if (beta_label > 0 && sentence_label >=0){
-      //   max_weight = 0; 
-      //   for (nlab =  0; nlab < nlabels; nlab++){
-      //     class_w = 0.0 ; 
-      //     for(c=0 ; c<layer1_size; c++) class_w = class_w + (templabel[c] * syn1label[c + nlab*layer1_size]);
-
-      //     if (nlab == 0) max_weight = class_w;
-      //     else{
-      //       if (class_w > max_weight) max_weight = class_w;
-      //     }
-      //     tempclassw[nlab] = class_w;
-      //   }
-
-      //   f= 0.0;
-      //   for (nlab =  0; nlab < nlabels; nlab++){
-      //     f = f + exp(tempclassw[nlab] - max_weight);
-      //   }
-
-      //   f = max_weight + log (f); 
-
-      //   for (c = 0; c < layer1_size; c++) neu1e[c] = 0.0;
-      //   for (nlab = 0; nlab <nlabels; nlab++){
-      //     if (nlab == sentence_label) label = 1.0; 
-      //     else label = 0.0; 
-
-      //     l2 = nlab * layer1_size; 
-      //     g = (label - (tempclassw[nlab] / f)) * alpha; 
-      //     for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
-      //     for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * templabel[c];
-      //   }
-      //   for (c = 0; c < layer1_size; c++) templabel[c] +=   (1.0) * neu1e[c];
-      // }} else {sentence_label = -1; }
-
-      // l1 = sen[0]* layer1_size ; 
-
-      // if (beta_node >0 || beta_label >0){
-      // beta_temp = beta;
-      // beta_node_temp = beta_node; 
-      // beta_label_temp = beta_label; 
-
-      // if (xb == 0) { beta_temp  = beta_temp + beta_node; beta_node_temp = 0.0; }
-      // if (sentence_label < 0 ) {beta_temp = beta_temp + beta_label; beta_label_temp = 0.0; }
-
-
-      // if (debug_mode >3) printf("beta=%lf, beta_node=%lf, beta_label=%lf\n",beta_temp,beta_node_temp,beta_label_temp);
-      // if (beta_label_temp + beta_node_temp + beta_temp !=1.0) { printf("The summation is not zero"); exit(1);}
-
-      // for (c=0; c<layer1_size; c++){
-      //     syn0[c+l1] = syn0temp[c] +  (beta_temp * (syn0[c+l1] - syn0temp[c]));
-      //     syn0[c+l1] += (beta_node_temp  * (temp[c]-syn0temp[c]));
-      //     syn0[c+l1] += (beta_label_temp * (templabel[c]-syn0temp[c]));
-      // } }
-
-      
       sentence_length = 0;
       continue;
     }
@@ -911,9 +863,6 @@ int main(int argc, char **argv) {
     printf("\t-alpha <float>\n");
     printf("\t\tSet the starting learning rate; default is 0.025 for skip-gram and 0.05 for CBOW\n");
 
-    printf("\t-beta <float>\n");
-    printf("\t\tSet relative importance\n");
-
 
     printf("\t-classes <int>\n");
     printf("\t\tOutput word classes rather than word vectors; default number of classes is 0 (vectors are written)\n");
@@ -952,10 +901,10 @@ int main(int argc, char **argv) {
   if (cbow) alpha = 0.05;
 
   if ((i = ArgPos((char *)"-alpha", argc, argv)) > 0) alpha = atof(argv[i + 1]);
-  if ((i = ArgPos((char *)"-beta", argc, argv)) > 0) beta = atof(argv[i + 1]);
-  if ((i = ArgPos((char *)"-label-beta", argc, argv)) > 0) beta_label = atof(argv[i + 1]);
   if ((i = ArgPos((char *)"-lambda", argc, argv))>0) lambda = atof(argv[i + 1]);
+  if ((i = ArgPos((char *)"-full-nbr", argc, argv))>0) full_nbr = atoi(argv[i + 1]);
 
+  //printf("full nbr = %d, lambda = %lf\n",full_nbr,lambda);
 
   if ((i = ArgPos((char *)"-output", argc, argv)) > 0) strcpy(output_file, argv[i + 1]);
   if ((i = ArgPos((char *)"-window", argc, argv)) > 0) window = atoi(argv[i + 1]);
@@ -974,7 +923,7 @@ int main(int argc, char **argv) {
   if ((i = ArgPos((char *)"-classes", argc, argv)) > 0) classes = atoi(argv[i + 1]);
   if ((i = ArgPos((char *)"-sentence-vectors", argc, argv)) > 0) sentence_vectors = atoi(argv[i + 1]);
   
-  beta_node = 1.0 - beta_label - beta ; 
+
 
   vocab = (struct vocab_word *)calloc(vocab_max_size, sizeof(struct vocab_word));
   vocab_hash = (int *)calloc(vocab_hash_size, sizeof(int));

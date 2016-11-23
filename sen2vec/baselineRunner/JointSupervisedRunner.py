@@ -32,8 +32,8 @@ class JointSupervisedRunner(BaselineRunner):
 		self.dbow_only = int(os.environ["DBOW_ONLY"])
 		self.graphFile = os.environ["GRAPHFILE"]
 		self.nbrtype = int (os.environ["NBR_TYPE"]) # 1 variable, 0 fixed 
-		self.jointbeta= float(os.environ['JOINT_SENT_BETA'])
-		self.jointbetaLab = float(os.environ['JOINT_SENT_LBETA'])
+		self.full_data = int (os.environ["FULL_DATA"]) # FULL DATA 1 full nbr, 0 random nbr
+		self.lambda_val = float(os.environ['LAMBDA'])
 		self.window = 10
 		self.cores = multiprocessing.cpu_count()
 		if self.dbow_only == 0:
@@ -43,7 +43,18 @@ class JointSupervisedRunner(BaselineRunner):
 
 		if self.nbrtype == 0:
 			self.latReprName = "%s_%s"%(self.latReprName,"fixed_nbr")
-			
+		else:
+			self.latReprName = "%s_%s"%(self.latReprName,"n2v_nbr")
+
+		if self.lambda_val > 0.0:
+			self.latReprName = "%s_%s"%(self.latReprName,"regularized")
+		else:
+			self.latReprName = "%s_%s"%(self.latReprName,"general")
+
+		if self.full_data == 0:
+			self.latReprName = "%s_%s"%(self.latReprName,"full")
+		else:
+			self.latReprName = "%s_%s"%(self.latReprName,"rnd")
 		self.postgresConnection.connectDatabase()
 	
 
@@ -171,8 +182,9 @@ class JointSupervisedRunner(BaselineRunner):
 		wPDict["sentence-vectors"] = str(1)
 		wPDict["min-count"] = str(0)
 		wPDict["train"] = "%s.txt"%self.sentsFile
-		wPDict["beta"] = str(self.jointbeta)
-		wPDict["label-beta"] = str(self.jointbetaLab) 
+		
+		wPDict["lambda"] = str(self.lambda_val)
+		wPDict["full_data"] = str(self.full_data)
 		
 		if self.dbow_only ==1:
 			wPDict["size"]= str(latent_space_size*2)
