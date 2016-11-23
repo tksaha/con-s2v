@@ -1,19 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+import sys 
 import pandas as pd
 import re
 
 d = {}
 
-method_names = ['p2v', 'n2v', 'n2v_int', 'n2v_retrofit', 'Iter_unw', 'Iter_w', 'regsen2vec_w', 'regsen2vec_unw', 'dictreg_w_wordnet', 'dictreg_unw_wordnet']
+method_names = []
 metric_names = ['HomoGeneity', 'Completeness', 'v_measure', 'Adjusted Mutual Info Score']
+
+
+
+# read method names
+for line in open(sys.argv[1]):
+	if "####" in line and "Iteration" not in line:
+		pre, _, post = line.strip().partition("#######")
+		method_name, _, post = post.partition("#############")
+		if method_name not in method_names:
+			method_names.append(method_name)
 
 for method in method_names:
 	for metric in metric_names:
 		d[(method, metric)] = []
 
-with open('../Data/news_testresults_CLUST.txt', 'r') as f:
+with open(sys.argv[1]) as f:
 	f = f.read()
 	f = f.replace("Completeness", "Completeness:")
 	runs = re.compile("###### Iteration.*######").split(f)
@@ -38,4 +48,4 @@ df['method_ordered'] = pd.Categorical(
 
 df = df.sort_values(by=['metric', 'method_ordered'])
 
-df[df.columns[0:7]].to_csv("temp.csv", index=False)
+df[df.columns[0:7]].to_csv("temp_clust.csv", index=False)

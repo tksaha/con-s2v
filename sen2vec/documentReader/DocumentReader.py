@@ -457,8 +457,8 @@ class DocumentReader:
 		f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
 		niter = 5
 		for i in range(0,niter):
-			#f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-			#f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))				
+			f.write("###### Iteration: %s ######%s" %(i, os.linesep))
+			f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))				
 
 			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
 			paraBaseline.prepareData(pd)

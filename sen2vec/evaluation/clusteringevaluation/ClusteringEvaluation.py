@@ -83,7 +83,7 @@ class ClusteringEvaluation:
 		evaluationResultFile = open("%s/%sclustereval_%i.txt"%(self.dataFolder,\
 				latReprName, summaryMethodID), "w")
 		evaluationResultFile.write("#######%s#############%s"%(latReprName,os.linesep))
-		evaluationResultFile.write("HomoGeneity:%0.3f   Completeness%.3f "\
+		evaluationResultFile.write("HomoGeneity:%0.3f   Completeness:%.3f "\
 			"  v_measure:%.3f   Adjusted Mutual Info Score:%.3f %s"\
     		% (mt.homogeneity_score(Y, estimator.labels_),\
     			mt.completeness_score(Y, estimator.labels_),\
