@@ -670,8 +670,17 @@ void *TrainModelThread(void *id) {
             end_xb = start_xb + 1; 
           } 
           else{
-            start_xb = 0;
-            end_xb = nbr; 
+            if (nbr < sentence_length){
+              start_xb = sentence_position;
+              end_xb = start_xb + 1; 
+            }else{
+              start_xb = ((int) (nbr/sentence_length)) * sentence_position; 
+              end_xb = ((int) (nbr/sentence_length)) * (sentence_position+1); 
+              if (sentence_position == sentence_length - 1)
+              {
+                end_xb = nbr; 
+              }
+            }
           }
 
           for (nbr =  0; nbr< max_neighbors; nbr++){
