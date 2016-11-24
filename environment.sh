@@ -1,7 +1,8 @@
 #!/bin/bash
 # Path to Reuters data
 #export REUTERS_PATH=~/Documents/sen2vec/Data/reuter21578_temp
-export REUTERS_PATH=~/Documents/sen2vec/Data/reuters21578
+export SEN2VEC_DIR=/home/tanay/Documents/DUC2001/sen2vec
+export REUTERS_PATH=$SEN2VEC_DIR/reuters21578
 
 
 
@@ -13,31 +14,31 @@ export NEWSGROUP_DBSTRING=news,postgres,postgres,localhost,5432
 export IMDB_DBSTRING=imdb,postgres,postgres,localhost,5432
 export SENTTREE_DBSTRING=senttree,postgres,postgres,localhost,5432
 
-export NEWSGROUP_PATH=~/Documents/sen2vec/Data/newsgroup/
-export IMDB_PATH=~/Documents/sen2vec/Data/aclImdb
-export SENTTREE_PATH=~/Documents/sen2vec/Data/stanfordSentimentTreebank
+export NEWSGROUP_PATH=$SEN2VEC_DIR/Data/newsgroup/
+export IMDB_PATH=$SEN2VEC_DIR/Data/aclImdb
+export SENTTREE_PATH=$SEN2VEC_DIR/Data/stanfordSentimentTreebank
 
 
-export P2VECSENTRUNNERINFILE=~/Documents/sen2vec/Data/sents
-export P2VECSENTRUNNEROUTFILE=~/Documents/sen2vec/Data/sents_repr
+export P2VECSENTRUNNERINFILE=$SEN2VEC_DIR/Data/sents
+export P2VECSENTRUNNEROUTFILE=$SEN2VEC_DIR/Data/sents_repr
 
-export P2VECRUNNERINFILE=~/Documents/sen2vec/Data/docs
-export P2VECRUNNEROUTFILE=~/Documents/sen2vec/Data/docs_repr
+export P2VECRUNNERINFILE=$SEN2VEC_DIR/Data/docs
+export P2VECRUNNEROUTFILE=$SEN2VEC_DIR/Data/docs_repr
 
-export P2VDOCOUT=~/Documents/sen2vec/Data/docs_repr_CEXE
-export P2VECRUNNERCEXEOUTFILE=~/Documents/sen2vec/Data/docs_repr_CEXE
-export DOC2VECEXECDIR=~/Documents/sen2vec/sen2vec/word2vec/word2vec
-export RETROFITONEEXE=~/Documents/sen2vec/sen2vec/word2vec/retrofit_word2vec_one
+export P2VDOCOUT=$SEN2VEC_DIR/Data/docs_repr_CEXE
+export P2VECRUNNERCEXEOUTFILE=$SEN2VEC_DIR/Data/docs_repr_CEXE
+export DOC2VECEXECDIR=$SEN2VEC_DIR/sen2vec/word2vec/word2vec
+export RETROFITONEEXE=$SEN2VEC_DIR/sen2vec/word2vec/retrofit_word2vec_one
 
-export P2VCEXECSENTFILE=~/Documents/sen2vec/Data/sentsCEXE
-export P2VCEXECOUTFILE=~/Documents/sen2vec/Data/sentsCEXE_repr
-export P2VECSENTDOC2VECOUT=~/Documents/sen2vec/Data/sentCEXE_repr
+export P2VCEXECSENTFILE=$SEN2VEC_DIR/Data/sentsCEXE
+export P2VCEXECOUTFILE=$SEN2VEC_DIR/Data/sentsCEXE_repr
+export P2VECSENTDOC2VECOUT=$SEN2VEC_DIR/Data/sentCEXE_repr
 
 
 
-export TRTESTFOLDER=~/Documents/sen2vec/Data
+export TRTESTFOLDER=$SEN2VEC_DIR/Data
 
-export N2VOUTFILE=~/Documents/sen2vec/Data/node_repr
+export N2VOUTFILE=$SEN2VEC_DIR/Data/node_repr
 export GINTERTHR=0.8
 export GINTRATHR=0.6
 
@@ -48,33 +49,33 @@ export DUMPFACTOR=0.85
 
 
 # TOPNSUMMARY should be set to 0.2 for classification tasks (20%) and to 1.0 for ranking tasks
-export TOPNSUMMARY=0.2
+export TOPNSUMMARY=1.0
 export KNEIGHBOR=20
 
 
-export ITERUPDATESEN2VECFILE=~/Documents/sen2vec/Data/retrofitted_repr
-export GRAPHFILE=~/Documents/sen2vec/Data/graph_0.8_0.6
+export ITERUPDATESEN2VECFILE=$SEN2VEC_DIR/Data/retrofitted_repr
+export GRAPHFILE=$SEN2VEC_DIR/Data/graph_0.8_0.6
 
-export ROUGE=~/Documents/sen2vec/sen2vec/rouge/ROUGE-1.5.5.pl
-export ROUGE_EVAL_HOME=~/Documents/sen2vec/sen2vec/rouge/data
-export SUMMARYFOLDER=~/Documents/sen2vec/Data/Summary/
-export MODELSUMMARYFOLDER=~/Documents/sen2vec/Data/Summary/model
-export SYSTEMSUMMARYFOLDER=~/Documents/sen2vec/Data/Summary/system
+export ROUGE=$SEN2VEC_DIR/sen2vec/rouge/ROUGE-1.5.5.pl
+export ROUGE_EVAL_HOME=$SEN2VEC_DIR/sen2vec/rouge/data
+export SUMMARYFOLDER=$SEN2VEC_DIR/Data/Summary/
+export MODELSUMMARYFOLDER=$SEN2VEC_DIR/Data/Summary/model
+export SYSTEMSUMMARYFOLDER=$SEN2VEC_DIR/Data/Summary/system
 
 export DUC_DBSTRING=duc,postgres,postgres,localhost,5432
-export DUC_PATH=~/Documents/sen2vec/Data/DUC_merged
+export DUC_PATH=$SEN2VEC_DIR/Data/DUC_merged
 
 
 export DUC_LAMBDA=1.0
 export DUC_DIVERSITY=0
-export DUC_TOPIC=2002
+export DUC_TOPIC=2001
 export DUC_EVAL='TEST'
 
-export REGSEN2VECREPRFILE=~/Documents/sen2vec/Data/reg_sent
-export REGSEN2VECEXE=~/Documents/sen2vec/sen2vec/word2vec/reg_sen2vec_net
+export REGSEN2VECREPRFILE=$SEN2VEC_DIR/Data/reg_sent
+export REGSEN2VECEXE=$SEN2VEC_DIR/sen2vec/word2vec/reg_sen2vec_net
 
-export DICTREGSEN2VECREPRFILE=~/Documents/sen2vec/Data/dictreg_sent
-export DICTDIR=~/Documents/sen2vec/Data/lexicons
+export DICTREGSEN2VECREPRFILE=$SEN2VEC_DIR/Data/dictreg_sent
+export DICTDIR=$SEN2VEC_DIR/Data/lexicons
 
 export REG_BETA_UNW=1.0
 export REG_BETA_W=1.0
@@ -82,19 +83,19 @@ export ITERUPDATE_ALPHA=1.0
 export N2VBETA=1.0
 export DICTREGDICT=wordnet-synonyms.txt
 
-export JOINTS2VRPRFILE=~/Documents/sen2vec/Data/joint_sent
+export JOINTS2VRPRFILE=$SEN2VEC_DIR/Data/joint_sent
 export JOINT_BETA=1.0
 export NUM_WALKS=10
 export WALK_LENGTH=5
-export JOINTLEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_word_node2vec
+export JOINTLEXE=$SEN2VEC_DIR/sen2vec/word2vec/joint_word_node2vec
 
-export FASTS2VRPRFILE=~/Documents/sen2vec/Data/fast_sent
+export FASTS2VRPRFILE=$SEN2VEC_DIR/Data/fast_sent
 export FSENT_BETA=0.9
 
-export SJOINTS2VRPRFILE=~/Documents/sen2vec/Data/joint_sup_sent
+export SJOINTS2VRPRFILE=$SEN2VEC_DIR/Data/joint_sup_sent
 export JOINT_SENT_BETA=0.90
 export JOINT_SENT_LBETA=0.07
-export JOINTSUPEXE=~/Documents/sen2vec/sen2vec/word2vec/joint_learner
+export JOINTSUPEXE=$SEN2VEC_DIR/sen2vec/word2vec/joint_learner
 
 export DBOW_ONLY=1
 export NBR_TYPE=0
