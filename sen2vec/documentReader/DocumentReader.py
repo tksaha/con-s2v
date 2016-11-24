@@ -361,7 +361,7 @@ class DocumentReader:
 			f.flush()
 			optPDict['lambda-full-fixed'] = joint_beta_opt
 
-			f1 = {}
+			adjustedMScore = {}
 			joint_beta_opt = None
 			lambda_list = [0.3, 0.5, 0.8, 1.0]
 			#lambda_list = [0.3]		
@@ -382,7 +382,7 @@ class DocumentReader:
 			joint_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
 	
 			Logger.logr.info("Optimal lambda for full fixed = %s" %joint_beta_opt)		
-			f.write("Optimal lambda for full fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			f.write("Optimal lambda for full n2v nbr  nbr is %.2f%s"%(joint_beta_opt, os.linesep))
 			f.write("JTL Joint-Beta adjustedMScores: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
 			optPDict['lambda-full-n2v'] = joint_beta_opt
@@ -408,7 +408,7 @@ class DocumentReader:
 			joint_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
 	
 			Logger.logr.info("Optimal lambda for full fixed = %s" %joint_beta_opt)		
-			f.write("Optimal lambda for full fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			f.write("Optimal lambda for random fixed nbr nbr is %.2f%s"%(joint_beta_opt, os.linesep))
 			f.write("JTL Joint-Beta adjustedMScores: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
 				
@@ -435,7 +435,7 @@ class DocumentReader:
 			joint_beta_opt = max(adjustedMScore, key=adjustedMScore.get) 
 	
 			Logger.logr.info("Optimal lambda for full fixed = %s" %joint_beta_opt)		
-			f.write("Optimal lambda for full fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			f.write("Optimal lambda for random n2v nbr is %.2f%s"%(joint_beta_opt, os.linesep))
 			f.write("JTL Joint-Beta adjustedMScores: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
 			optPDict['lambda-random-n2v'] = joint_beta_opt

@@ -222,6 +222,8 @@ class JointLearningSen2VecRunner(BaselineRunner):
 			 postgres_connection = self.postgresConnection,\
 			 lambda_val = lambda_val)
 
+		summGen.populateSummary(methodId, j2vDict)
+
 		# Need a method id for the joint 
 	
 	def runEvaluationTask(self):
