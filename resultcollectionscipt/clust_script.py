@@ -25,7 +25,7 @@ for method in method_names:
 
 with open(sys.argv[1]) as f:
 	f = f.read()
-	f = f.replace("Completeness", "Completeness:")
+	#f = f.replace("Completeness", "Completeness:")
 	runs = re.compile("###### Iteration.*######").split(f)
 	
 	for r, run in enumerate(runs):

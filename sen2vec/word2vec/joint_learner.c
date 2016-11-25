@@ -734,9 +734,7 @@ void *TrainModelThread(void *id) {
           for (nlab =  0; nlab < nlabels; nlab++){
             f = f + exp(tempclassw[nlab] - max_weight);
           }
-
-          //f = max_weight + log (f); 
-
+          //f = max_weight + log (f);
           for (c = 0; c < layer1_size; c++) neu1e[c] = 0.0;
           for (nlab = 0; nlab <nlabels; nlab++){
             if (nlab == sentence_label) label = 1.0; 
