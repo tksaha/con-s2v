@@ -143,7 +143,7 @@ class JointSupervisedRunner(BaselineRunner):
 			for nrows in range(0,len(result)):
 				topics.append(result[nrows][0])
 		ntopics = len(topics)
-		print(topics)
+		#print(topics)
 
 		labelFile.write("%i %i%s"%(nSent, ntopics, os.linesep))
 

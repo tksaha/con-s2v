@@ -735,7 +735,7 @@ void *TrainModelThread(void *id) {
             f = f + exp(tempclassw[nlab] - max_weight);
           }
 
-          f = max_weight + log (f); 
+          //f = max_weight + log (f); 
 
           for (c = 0; c < layer1_size; c++) neu1e[c] = 0.0;
           for (nlab = 0; nlab <nlabels; nlab++){
@@ -743,7 +743,7 @@ void *TrainModelThread(void *id) {
             else label = 0.0; 
 
             l2 = nlab * layer1_size; 
-            g = (label - (tempclassw[nlab] / f)) * alpha; 
+            g = (label - (exp(tempclassw[nlab] - max_weight) / f)) * alpha; 
             for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
             for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * syn0[c+l1];
           }
