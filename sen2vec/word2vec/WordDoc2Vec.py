@@ -75,6 +75,7 @@ class WordDoc2Vec:
 		
 		args.append("-lambda")
 		args.append(wPDict['lambda'])
+		
 		args.append("-full-nbr")
 		args.append(wPDict["full_data"])
 		return args 
@@ -86,6 +87,9 @@ class WordDoc2Vec:
 		
 		args.append("-label")
 		args.append(wPDict["label"])
+
+		args.append("-lambda")
+		args.append(wPDict['lambda'])
 		
 		args.append("-full-nbr")
 		args.append(wPDict["full_data"])

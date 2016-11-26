@@ -52,9 +52,9 @@ class JointSupervisedRunner(BaselineRunner):
 			self.latReprName = "%s_%s"%(self.latReprName,"general")
 
 		if self.full_data == 0:
-			self.latReprName = "%s_%s"%(self.latReprName,"full")
-		else:
 			self.latReprName = "%s_%s"%(self.latReprName,"rnd")
+		else:
+			self.latReprName = "%s_%s"%(self.latReprName,"full")
 		self.postgresConnection.connectDatabase()
 	
 
@@ -129,6 +129,7 @@ class JointSupervisedRunner(BaselineRunner):
 		topics = []
 		nSent = 0 
 		labelFile = open(os.path.join(self.dataDir, "%s_label"%self.latReprName), "w")
+		#print (labelFile)
 
 		# Number of sentences 
 		for result in self.postgresConnection.memoryEfficientSelect(["count(*)"],\
@@ -147,17 +148,17 @@ class JointSupervisedRunner(BaselineRunner):
 		# max in one of the particular topic 
 		# self, fields = [], tables = [], where = [], 
 		# groupby = [], orderby = []
-		max_occupant = 0
-		for result in self.postgresConnection.memoryEfficientSelect(["sentence.topic","count(*)"],\
-			["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
-			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"]\
-			 	 ], ['sentence.topic'], []):
-				for nrows in range(0,len(result)):
-					occupant = int(result[nrows][1])
-					if occupant > max_occupant:
-						max_occupant = occupant
+		# max_occupant = 0
+		# for result in self.postgresConnection.memoryEfficientSelect(["sentence.topic","count(*)"],\
+		# 	["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+		# 	 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"]\
+		# 	 	 ], ['sentence.topic'], []):
+		# 		for nrows in range(0,len(result)):
+		# 			occupant = int(result[nrows][1])
+		# 			if occupant > max_occupant:
+		# 				max_occupant = occupant
 
-		labelFile.write("%i %i %i%s"%(nSent, ntopics, max_occupant, os.linesep))
+		labelFile.write("%i %i%s"%(nSent, ntopics, os.linesep))
 		# Prepare Label Data 
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
@@ -168,6 +169,7 @@ class JointSupervisedRunner(BaselineRunner):
 					topic_id = topics.index(result[nrows][1])
 					labelFile.write("%s %i%s"%(label_sent(id_), topic_id, os.linesep))
 					labelFile.flush()
+
 
 		labelFile.close()
 

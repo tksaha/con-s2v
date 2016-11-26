@@ -60,9 +60,11 @@ real lambda = 0.0;
 
 
 real *syn0, *syn0temp, *temp,  *syn1, *syn1neg, *initembed, *expTable, *templabel, *syn1label; 
+//long long label_occupant;
 long long  *nbrs;
 long long  *label_sent; 
 int nlabels = 1; 
+//long long max_occupant; 
 
 
 clock_t start;
@@ -410,16 +412,25 @@ void loadLabelFile()
 {
 
   char *word;
-  long long a, labelval,index, it, nnodes; 
+  long long a, labelval,index, it, nnodes;
   word = (char*)malloc(MAX_STRING* sizeof(char));
 
   a = posix_memalign((void **)&label_sent, 128, (long long)vocab_size * 1 *sizeof(long long));
   if (label_sent == NULL){printf("Memory allocation failed\n"); exit(1);}
   for (a = 0; a < vocab_size; a++) label_sent[a] = -1;
 
+
+
   FILE *finit = fopen(labelFile, "rb");
   fscanf(finit, "%lld %d", &nnodes, &nlabels);
   if (debug_mode > 3) printf("nnodes=%lld, nlabels=%d\n", nnodes, nlabels);
+
+  // a = posix_memalign((void **)&label_occupant, 128, (long long)nlabels * max_occupant *sizeof(long long));
+  // if (label_occupant==NUL) {printf("Memory allocation failed\n");}
+
+  // for (a=0; a <nlabels; a++){
+  //   for (nbr =0; nbr<max_occupant; nbr++){label_occupant[a*max_neighbors+nbr] = -1; }
+  // }
 
   for (it=0; it<nnodes; it++) {
     fscanf(finit,"%s",word);
@@ -429,6 +440,13 @@ void loadLabelFile()
     else{
       if (debug_mode > 3) printf("index=%lld label=%lld\n",index, labelval);
       label_sent[index] = labelval; 
+      // for (nbr=0; nbr<max_occupant; nbr++)
+      // {
+      //   if (label_occupant[labelval*max_occupant+nbr] <0)
+      //   {
+      //     label_occupant[labelval*max_occupant+nbr] = index;
+      //   }
+      // }
     }  
   }
   free(word); 
@@ -713,23 +731,21 @@ void *TrainModelThread(void *id) {
           }}
         }
 
-
+        // Teach supervised discrimination
         if (labelFile[0]!=0){
         // https://hips.seas.harvard.edu/blog/2013/01/09/computing-log-sum-exp/
-        sentence_label = label_sent[sen[0]];
+        sentence_label = label_sent[last_word];
         if (sentence_label >=0){
           max_weight = 0; 
           for (nlab =  0; nlab < nlabels; nlab++){
             class_w = 0.0 ; 
             for(c=0 ; c<layer1_size; c++) class_w = class_w + (syn0[c+l1] * syn1label[c + nlab*layer1_size]);
-
             if (nlab == 0) max_weight = class_w;
             else{
               if (class_w > max_weight) max_weight = class_w;
             }
             tempclassw[nlab] = class_w;
           }
-
           f = 0.0;
           for (nlab =  0; nlab < nlabels; nlab++){
             f = f + exp(tempclassw[nlab] - max_weight);
@@ -739,7 +755,6 @@ void *TrainModelThread(void *id) {
           for (nlab = 0; nlab <nlabels; nlab++){
             if (nlab == sentence_label) label = 1.0; 
             else label = 0.0; 
-
             l2 = nlab * layer1_size; 
             g = (label - (exp(tempclassw[nlab] - max_weight) / f)) * alpha; 
             for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
