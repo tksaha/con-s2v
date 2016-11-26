@@ -425,7 +425,7 @@ void loadLabelFile()
     fscanf(finit,"%s",word);
     index = SearchVocab(word);
     fscanf(finit,"%lld",&labelval);
-    if (index <= 0) {if (debug_mode > 3) printf("sentence not on the list");}
+    if (index <= 0) {if (debug_mode > 3) printf("sentence not on the list"); exit(1);}
     else{
       if (debug_mode > 3) printf("index=%lld label=%lld\n",index, labelval);
       label_sent[index] = labelval; 

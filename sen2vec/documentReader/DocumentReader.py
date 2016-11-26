@@ -305,34 +305,34 @@ class DocumentReader:
 			generate_walk = True 
 	
 			f1 = {}
-			window_opt = None #var for the optimal window
-			window_size_list = ["8", "10", "12"]
-			for window in window_size_list:
-				Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)				
-				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-				if 	window == window_size_list[0]:  
-					self.postgres_recorder.truncateSummaryTable()
-					paraBaseline.prepareData(pd)		
-				paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-				if window == window_size_list[0]:
-					paraBaseline.generateSummary(gs)
-				paraBaseline.runEvaluationTask()
-				paraBaseline.doHouseKeeping()	
-				f1[window] = self.__getF1(paraBaseline.latReprName)
-				Logger.logr.info("F1 for %s = %s" %(window, f1[window]))
-			window_opt = max(f1, key=f1.get) 
-			f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
-			f.write("P2V Window F1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict["window"] = window_opt
+			# window_opt = None #var for the optimal window
+			# window_size_list = ["8", "10", "12"]
+			# for window in window_size_list:
+			# 	Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)				
+			# 	paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			# 	if 	window == window_size_list[0]:  
+			# 		self.postgres_recorder.truncateSummaryTable()
+			# 		paraBaseline.prepareData(pd)		
+			# 	paraBaseline.runTheBaseline(rbase,latent_space_size, window)
+			# 	if window == window_size_list[0]:
+			# 		paraBaseline.generateSummary(gs)
+			# 	paraBaseline.runEvaluationTask()
+			# 	paraBaseline.doHouseKeeping()	
+			# 	f1[window] = self.__getF1(paraBaseline.latReprName)
+			# 	Logger.logr.info("F1 for %s = %s" %(window, f1[window]))
+			# window_opt = max(f1, key=f1.get) 
+			# f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
+			# f.write("P2V Window F1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict["window"] = window_opt
 
-			Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
+			# Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
 			
-			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
-			self.postgres_recorder.truncateSummaryTable()
-			paraBaseline.generateSummary(gs)
-			paraBaseline.doHouseKeeping()
+			# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			# paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
+			# self.postgres_recorder.truncateSummaryTable()
+			# paraBaseline.generateSummary(gs)
+			# paraBaseline.doHouseKeeping()
 
 			# if generate_walk == True:
 			#    n2vBaseline = Node2VecRunner(self.dbstring)
@@ -341,111 +341,112 @@ class DocumentReader:
 			#    generate_walk = False 
 			
 			# for full fixed nbr
-			f1 = {}
-			joint_beta_opt = None #var for the optimal joint_beta
+			# f1 = {}
+			# joint_beta_opt = None #var for the optimal joint_beta
 	
-			lambda_list = [0.3, 0.5, 0.8, 1.0]
-			#lambda_list = [0.3]		
-			for lambda_ in  lambda_list:
-				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-				os.environ["NBR_TYPE"]=str(0)
-				os.environ["FULL_DATA"]=str(1)
-				os.environ["LAMBDA"]=str(lambda_)
-				jointL = JointSupervisedRunner(self.dbstring)
-				jointL.window = optPDict["window"]
-				if lambda_==lambda_list[0]:
-			   		jointL.prepareData(pd)
-				jointL.runTheBaseline(rbase, latent_space_size)
-				jointL.runEvaluationTask()
-				jointL.doHouseKeeping()
-				f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
-				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
-			joint_beta_opt = max(f1, key=f1.get) 
+			# lambda_list = [0.3, 0.5, 0.8, 1.0]
+			# #lambda_list = [0.3]		
+			# for lambda_ in  lambda_list:
+			# 	Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+			# 	os.environ["NBR_TYPE"]=str(0)
+			# 	os.environ["FULL_DATA"]=str(1)
+			# 	os.environ["LAMBDA"]=str(lambda_)
+			# 	jointL = JointSupervisedRunner(self.dbstring)
+			# 	jointL.window = optPDict["window"]
+			# 	if lambda_==lambda_list[0]:
+			#    		jointL.prepareData(pd)
+			# 	jointL.runTheBaseline(rbase, latent_space_size)
+			# 	jointL.runEvaluationTask()
+			# 	jointL.doHouseKeeping()
+			# 	f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
+			# 	Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+			# joint_beta_opt = max(f1, key=f1.get) 
 	
-			Logger.logr.info("Optimal lambda for full fixed = %s" %joint_beta_opt)		
-			f.write("Optimal lambda for full fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
-			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['lambda-full-fixed'] = joint_beta_opt
+			# Logger.logr.info("Optimal lambda for full fixed = %s" %joint_beta_opt)		
+			# f.write("Optimal lambda for full fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			# f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict['lambda-full-fixed'] = joint_beta_opt
+
+			# f1 = {}
+			# joint_beta_opt = None
+			# lambda_list = [0.3, 0.5, 0.8, 1.0]
+			# #lambda_list = [0.3]		
+			# for lambda_ in  lambda_list:
+			# 	Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+			# 	os.environ["NBR_TYPE"]=str(1)
+			# 	os.environ["FULL_DATA"]=str(1)
+			# 	os.environ["LAMBDA"]=str(lambda_)
+			# 	jointL = JointSupervisedRunner(self.dbstring)
+			# 	jointL.window = optPDict["window"]
+			# 	if lambda_==lambda_list[0]:
+			#    		jointL.prepareData(pd)
+			# 	jointL.runTheBaseline(rbase, latent_space_size)
+			# 	jointL.runEvaluationTask()
+			# 	jointL.doHouseKeeping()
+			# 	f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
+			# 	Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+			# joint_beta_opt = max(f1, key=f1.get) 
+	
+			# Logger.logr.info("Optimal lambda for full n2v = %s" %joint_beta_opt)		
+			# f.write("Optimal lambda for full n2v nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			# f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict['lambda-full-n2v'] = joint_beta_opt
+
 
 			f1 = {}
 			joint_beta_opt = None
-			lambda_list = [0.3, 0.5, 0.8, 1.0]
-			#lambda_list = [0.3]		
-			for lambda_ in  lambda_list:
-				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-				os.environ["NBR_TYPE"]=str(1)
-				os.environ["FULL_DATA"]=str(1)
-				os.environ["LAMBDA"]=str(lambda_)
-				jointL = JointSupervisedRunner(self.dbstring)
-				jointL.window = optPDict["window"]
-				if lambda_==lambda_list[0]:
-			   		jointL.prepareData(pd)
-				jointL.runTheBaseline(rbase, latent_space_size)
-				jointL.runEvaluationTask()
-				jointL.doHouseKeeping()
-				f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
-				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
-			joint_beta_opt = max(f1, key=f1.get) 
-	
-			Logger.logr.info("Optimal lambda for full n2v = %s" %joint_beta_opt)		
-			f.write("Optimal lambda for full n2v nbr is %.2f%s"%(joint_beta_opt, os.linesep))
-			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['lambda-full-n2v'] = joint_beta_opt
-
-
-			f1 = {}
-			joint_beta_opt = None
-			lambda_list = [0.3, 0.5, 0.8, 1.0]
-			#lambda_list = [0.3]		
-			for lambda_ in  lambda_list:
-				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-				os.environ["NBR_TYPE"]=str(0)
-				os.environ["FULL_DATA"]=str(0)
-				os.environ["LAMBDA"]=str(lambda_)
-				jointL = JointSupervisedRunner(self.dbstring)
-				jointL.window = optPDict["window"]
-				if lambda_==lambda_list[0]:
-			   		jointL.prepareData(pd)
-				jointL.runTheBaseline(rbase, latent_space_size)
-				jointL.runEvaluationTask()
-				jointL.doHouseKeeping()
-				f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
-				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
-			joint_beta_opt = max(f1, key=f1.get) 
-	
-			Logger.logr.info("Optimal lambda for random fixed = %s" %joint_beta_opt)		
-			f.write("Optimal lambda for random fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
-			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['lambda-random-fixed'] = joint_beta_opt
-
-			f1 = {}
-			joint_beta_opt = None
+			optPDict["window"] = "10"
 			#lambda_list = [0.3, 0.5, 0.8, 1.0]
-				
+			lambda_list = [0.3]		
 			for lambda_ in  lambda_list:
 				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-				os.environ["NBR_TYPE"]=str(1)
+				os.environ["NBR_TYPE"]=str(0)
 				os.environ["FULL_DATA"]=str(0)
 				os.environ["LAMBDA"]=str(lambda_)
 				jointL = JointSupervisedRunner(self.dbstring)
 				jointL.window = optPDict["window"]
 				if lambda_==lambda_list[0]:
 			   		jointL.prepareData(pd)
-				jointL.runTheBaseline(rbase, latent_space_size)
-				jointL.runEvaluationTask()
-				jointL.doHouseKeeping()
-				f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
-				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
-			joint_beta_opt = max(f1, key=f1.get) 
+				#jointL.runTheBaseline(rbase, latent_space_size)
+			# 	jointL.runEvaluationTask()
+			# 	jointL.doHouseKeeping()
+			# 	f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
+			# 	Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+			# joint_beta_opt = max(f1, key=f1.get) 
 	
-			Logger.logr.info("Optimal lambda for random n2v = %s" %joint_beta_opt)		
-			f.write("Optimal lambda for random n2v nbr is %.2f%s"%(joint_beta_opt, os.linesep))
-			f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict['lambda-random-n2v'] = joint_beta_opt
+			# Logger.logr.info("Optimal lambda for random fixed = %s" %joint_beta_opt)		
+			# f.write("Optimal lambda for random fixed nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			# f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict['lambda-random-fixed'] = joint_beta_opt
+
+			# f1 = {}
+			# joint_beta_opt = None
+			# #lambda_list = [0.3, 0.5, 0.8, 1.0]
+				
+			# for lambda_ in  lambda_list:
+			# 	Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+			# 	os.environ["NBR_TYPE"]=str(1)
+			# 	os.environ["FULL_DATA"]=str(0)
+			# 	os.environ["LAMBDA"]=str(lambda_)
+			# 	jointL = JointSupervisedRunner(self.dbstring)
+			# 	jointL.window = optPDict["window"]
+			# 	if lambda_==lambda_list[0]:
+			#    		jointL.prepareData(pd)
+			# 	jointL.runTheBaseline(rbase, latent_space_size)
+			# 	jointL.runEvaluationTask()
+			# 	jointL.doHouseKeeping()
+			# 	f1[lambda_] = self.__getF1("%s" %jointL.latReprName)
+			# 	Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+			# joint_beta_opt = max(f1, key=f1.get) 
+	
+			# Logger.logr.info("Optimal lambda for random n2v = %s" %joint_beta_opt)		
+			# f.write("Optimal lambda for random n2v nbr is %.2f%s"%(joint_beta_opt, os.linesep))
+			# f.write("JTL Joint-Beta f1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict['lambda-random-n2v'] = joint_beta_opt
 
 		
 		return optPDict

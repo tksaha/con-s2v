@@ -175,7 +175,7 @@ class NewsGroupReader(DocumentReader):
 		#self.doTesting(optDict, "news", rbase, pd, gs, False)
 
 		optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"news")
-		self.doTesting_Sup(optDict, "news", rbase, pd, gs, True)
+		#self.doTesting_Sup(optDict, "news", rbase, pd, gs, True)
 
 		# os.environ['EVAL'] = 'TEST'
 		# os.environ['TEST_FOR'] = 'CLASS'
