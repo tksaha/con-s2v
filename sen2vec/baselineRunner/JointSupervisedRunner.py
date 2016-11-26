@@ -148,17 +148,17 @@ class JointSupervisedRunner(BaselineRunner):
 		# max in one of the particular topic 
 		# self, fields = [], tables = [], where = [], 
 		# groupby = [], orderby = []
-		# max_occupant = 0
-		# for result in self.postgresConnection.memoryEfficientSelect(["sentence.topic","count(*)"],\
-		# 	["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
-		# 	 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"]\
-		# 	 	 ], ['sentence.topic'], []):
-		# 		for nrows in range(0,len(result)):
-		# 			occupant = int(result[nrows][1])
-		# 			if occupant > max_occupant:
-		# 				max_occupant = occupant
+		max_occupant = 0
+		for result in self.postgresConnection.memoryEfficientSelect(["sentence.topic","count(*)"],\
+			["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"]\
+			 	 ], ['sentence.topic'], []):
+				for nrows in range(0,len(result)):
+					occupant = int(result[nrows][1])
+					if occupant > max_occupant:
+						max_occupant = occupant
 
-		labelFile.write("%i %i%s"%(nSent, ntopics, os.linesep))
+		labelFile.write("%i %i %i%s"%(nSent, ntopics, max_occupant, os.linesep))
 		# Prepare Label Data 
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\

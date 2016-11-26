@@ -734,7 +734,7 @@ class DocumentReader:
 
 			os.environ["NBR_TYPE"]=str(0)
 			os.environ["FULL_DATA"]=str(0)
-			optPDict["lambda-random-fixed"] =1 
+			optPDict["lambda-random-fixed"] = 0.3 
 			optPDict["window"] = "10"
 
 			f.write("Optimal lambda random fixed: %.2f%s" %(optPDict["lambda-random-fixed"], os.linesep))	
