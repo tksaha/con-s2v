@@ -14,6 +14,7 @@ from documentReader.NewsGroupReader import NewsGroupReader
 from documentReader.ReutersReader import ReutersReader
 from documentReader.IMDBReader import IMDBReader
 from documentReader.RTReader import RTReader
+from documentReader.SICKReader import SICKReader
 
 
 from six import text_type as unicode
@@ -28,9 +29,10 @@ from log_manager.log_config import Logger
 
 module_dict ={"reuter": "documentReader.ReutersReader", "news": "documentReader.NewsGroupReader",
 		"imdb": "documentReader.IMDBReader","rt": "documentReader.RTReader",
-		"stree2way":"documentReader.SentimentTreeBankReader", "duc": "documentReader.DUCReader" }
+		"stree2way":"documentReader.SentimentTreeBankReader", "duc": "documentReader.DUCReader",
+		"sick": "documentReader.SICKReader" }
 class_dict = {"reuter": "ReutersReader", "news": "NewsGroupReader","imdb": "IMDBReader",
-		"rt": "RTReader", "stree2way": "SentimentTreeBank2WayReader", "duc": "DUCReader"}
+		"rt": "RTReader", "stree2way": "SentimentTreeBank2WayReader", "duc": "DUCReader", "sick": "SICKReader"}
 
 def main():
 	"""

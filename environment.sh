@@ -1,8 +1,9 @@
 #!/bin/bash
 # Path to Reuters data
 #export REUTERS_PATH=~/Documents/sen2vec/Data/reuter21578_temp
-export SEN2VEC_DIR=/home/tanay/Documents/sen2vec
+export SEN2VEC_DIR=~/Documents/SICK/sen2vec
 export REUTERS_PATH=$SEN2VEC_DIR/reuters21578
+export SICK_PATH=$SEN2VEC_DIR/Data/sick_data
 
 
 
@@ -13,6 +14,7 @@ export REUTERS_DBSTRING=reuter,postgres,postgres,localhost,5432
 export NEWSGROUP_DBSTRING=news,postgres,postgres,localhost,5432
 export IMDB_DBSTRING=imdb,postgres,postgres,localhost,5432
 export SENTTREE_DBSTRING=senttree,postgres,postgres,localhost,5432
+export SICK_DBSTRING=sick,postgres,postgres,localhost,5432
 
 export NEWSGROUP_PATH=$SEN2VEC_DIR/Data/newsgroup/
 export IMDB_PATH=$SEN2VEC_DIR/Data/aclImdb

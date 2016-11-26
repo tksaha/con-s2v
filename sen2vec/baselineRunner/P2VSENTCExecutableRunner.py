@@ -15,6 +15,8 @@ from word2vec.WordDoc2Vec import WordDoc2Vec
 from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
 from summaryGenerator.SummaryGenerator import SummaryGenerator
 from baselineRunner.BaselineRunner import BaselineRunner
+import scipy.stats
+
 
 label_sent = lambda id_: 'SENT_%s' %(id_)
 
@@ -30,7 +32,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		self.postgresConnection.connectDatabase()
 		self.utFunction = Utility("Text Utility")
 		self.latReprName = "p2vsent"
-
+		self.rootdir = os.environ['SEN2VEC_DIR']
 	
 	def prepareData(self, pd):
 		"""
@@ -166,6 +168,43 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		else:
 			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
 		
+	def evaluateRankCorrelation(self, dataset):
+		vecFile = open("%s.p"%(self.sentReprFile),"rb")
+		vDict = pickle.load(vecFile)
+
+		if os.environ['EVAL']=='VALID':
+			validation_pair_file = open(os.path.join(self.rootdir,"Data/validation_pair_%s.p"%(dataset)), "rb")
+			val_dict = pickle.load(validation_pair_file)
+
+			original_val = []
+			computed_val = []
+			for k, val in val_dict.items():
+				original_val.append(val)
+				computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
+			return scipy.stats.pearsonr(original_val,computed_val)[0]
+		else:
+			test_pair_file = open(os.path.join(self.rootdir,"Data/test_pair_%s.p"%(dataset)), "rb")
+			test_dict = pickle.load(test_pair_file)
+
+			original_val = []
+			computed_val = []
+			for k, val in test_dict.items():
+				original_val.append(val)
+				computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
+
+			if os.environ['TEST_AND_TRAIN'] =="YES":
+				train_pair_file = open(os.path.join(self.rootdir,"Data/train_pair_%s.p"%(dataset)), "rb")
+				train_dict = pickle.load(train_pair_file)
+				for k, val in train_dict.items():
+					original_val.append(val)
+					computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
+
+			print (len(original_val))
+			print (len(computed_val))
+
+			sp = scipy.stats.spearmanr(original_val,computed_val)[0]
+			pearson = scipy.stats.pearsonr(original_val,computed_val)[0]
+			return sp, pearson
 
 	def doHouseKeeping(self):
 		"""
