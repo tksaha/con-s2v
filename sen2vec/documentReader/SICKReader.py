@@ -159,105 +159,105 @@ class SICKReader(DocumentReader):
             # n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
             # n2vBaseline.doHouseKeeping()
 
-            spearman ={}
-            joint_beta_opt = None 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # spearman ={}
+            # joint_beta_opt = None 
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
             
-            #lambda_list = [0.3]   
-            for lambda_ in  lambda_list:
-                Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-                self.postgres_recorder.truncateSummaryTable()
-                os.environ["NBR_TYPE"]=str(0)
-                os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(lambda_)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                if lambda_==lambda_list[0]:
-                    jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                val =jointL.evaluateRankCorrelation(dataset)
-                jointL.doHouseKeeping()           
-                spearman[lambda_] = val
-                Logger.logr.info("correlation for %s = %s" %(lambda_, spearman[lambda_]))
-            joint_beta_opt_full_fixed = max(spearman, key=spearman.get) #get the window for the max recall
-            f.write("Optimal joint_beta_opt_full_fixed is %s%s"%(joint_beta_opt_full_fixed, os.linesep))
-            f.write("spearman: %s%s" %(spearman, os.linesep))
-            f.flush()
+            # #lambda_list = [0.3]   
+            # for lambda_ in  lambda_list:
+            #     Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["NBR_TYPE"]=str(0)
+            #     os.environ["FULL_DATA"]=str(1)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     jointL = JointLearningSen2VecRunner(self.dbstring)
+            #     jointL.window = window_opt
+            #     if lambda_==lambda_list[0]:
+            #         jointL.prepareData(pd)
+            #     jointL.runTheBaseline(rbase, latent_space_size)
+            #     val =jointL.evaluateRankCorrelation(dataset)
+            #     jointL.doHouseKeeping()           
+            #     spearman[lambda_] = val
+            #     Logger.logr.info("correlation for %s = %s" %(lambda_, spearman[lambda_]))
+            # joint_beta_opt_full_fixed = max(spearman, key=spearman.get) #get the window for the max recall
+            # f.write("Optimal joint_beta_opt_full_fixed is %s%s"%(joint_beta_opt_full_fixed, os.linesep))
+            # f.write("spearman: %s%s" %(spearman, os.linesep))
+            # f.flush()
 
 
-            spearman = {}
-            joint_beta_opt = None 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
-            #lambda_list = [0.3]   
-            for lambda_ in  lambda_list:
-                Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-                self.postgres_recorder.truncateSummaryTable()
-                os.environ["NBR_TYPE"]=str(1)
-                os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(lambda_)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                if lambda_==lambda_list[0]:
-                    jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                val = jointL.evaluateRankCorrelation(dataset)
-                jointL.doHouseKeeping()           
-                spearman[lambda_] = val
-                Logger.logr.info("correlation for %s = %s" %(lambda_, spearman[lambda_]))
-            joint_beta_opt_full_n2v = max(spearman, key=spearman.get) #get the window for the max recall
-            f.write("Optimal joint_beta_opt_full_n2v is %s%s"%(joint_beta_opt_full_n2v, os.linesep))
-            f.write("spearman: %s%s" %(spearman, os.linesep))
-            f.flush()
+            # spearman = {}
+            # joint_beta_opt = None 
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # #lambda_list = [0.3]   
+            # for lambda_ in  lambda_list:
+            #     Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["NBR_TYPE"]=str(1)
+            #     os.environ["FULL_DATA"]=str(1)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     jointL = JointLearningSen2VecRunner(self.dbstring)
+            #     jointL.window = window_opt
+            #     if lambda_==lambda_list[0]:
+            #         jointL.prepareData(pd)
+            #     jointL.runTheBaseline(rbase, latent_space_size)
+            #     val = jointL.evaluateRankCorrelation(dataset)
+            #     jointL.doHouseKeeping()           
+            #     spearman[lambda_] = val
+            #     Logger.logr.info("correlation for %s = %s" %(lambda_, spearman[lambda_]))
+            # joint_beta_opt_full_n2v = max(spearman, key=spearman.get) #get the window for the max recall
+            # f.write("Optimal joint_beta_opt_full_n2v is %s%s"%(joint_beta_opt_full_n2v, os.linesep))
+            # f.write("spearman: %s%s" %(spearman, os.linesep))
+            # f.flush()
 
-            spearman = {}
-            joint_beta_opt = None 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # spearman = {}
+            # joint_beta_opt = None 
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
           
-            #lambda_list = [0.3]      
-            for lambda_ in  lambda_list:
-                Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-                self.postgres_recorder.truncateSummaryTable()
-                os.environ["NBR_TYPE"]=str(0)
-                os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(lambda_)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                if lambda_==lambda_list[0]:
-                    jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                val =jointL.evaluateRankCorrelation(dataset)
-                jointL.doHouseKeeping()           
-                spearman[lambda_] = val
-                Logger.logr.info("correlation for %s = %s" %(lambda_, spearman[lambda_]))
-            joint_beta_opt_random_fixed = max(spearman, key=spearman.get) #get the window for the max recall
-            f.write("Optimal joint_beta_opt_random_fixed is %s%s"%(joint_beta_opt_random_fixed, os.linesep))
-            f.write("spearman: %s%s" %(spearman, os.linesep))
-            f.flush()
+            # #lambda_list = [0.3]      
+            # for lambda_ in  lambda_list:
+            #     Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["NBR_TYPE"]=str(0)
+            #     os.environ["FULL_DATA"]=str(0)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     jointL = JointLearningSen2VecRunner(self.dbstring)
+            #     jointL.window = window_opt
+            #     if lambda_==lambda_list[0]:
+            #         jointL.prepareData(pd)
+            #     jointL.runTheBaseline(rbase, latent_space_size)
+            #     val =jointL.evaluateRankCorrelation(dataset)
+            #     jointL.doHouseKeeping()           
+            #     spearman[lambda_] = val
+            #     Logger.logr.info("correlation for %s = %s" %(lambda_, spearman[lambda_]))
+            # joint_beta_opt_random_fixed = max(spearman, key=spearman.get) #get the window for the max recall
+            # f.write("Optimal joint_beta_opt_random_fixed is %s%s"%(joint_beta_opt_random_fixed, os.linesep))
+            # f.write("spearman: %s%s" %(spearman, os.linesep))
+            # f.flush()
 
-            spearman = {}
-            joint_beta_opt = None 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # spearman = {}
+            # joint_beta_opt = None 
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
            
-            #lambda_list = [0.3]       
-            for lambda_ in  lambda_list:
-                Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-                self.postgres_recorder.truncateSummaryTable()
-                os.environ["NBR_TYPE"]=str(1)
-                os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(lambda_)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                if lambda_==lambda_list[0]:
-                    jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                val =jointL.evaluateRankCorrelation(dataset)
-                jointL.doHouseKeeping()           
-                spearman[lambda_] = val
-                Logger.logr.info("correlation for %s = %s" %(lambda_, spearman[lambda_]))
-            joint_beta_opt_random_n2v = max(spearman, key=spearman.get) #get the window for the max recall
-            f.write("Optimal joint_beta_opt_random_n2v is %s%s"%(joint_beta_opt_random_n2v, os.linesep))
-            f.write("spearman: %s%s" %(spearman, os.linesep))
-            f.flush()
+            # #lambda_list = [0.3]       
+            # for lambda_ in  lambda_list:
+            #     Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["NBR_TYPE"]=str(1)
+            #     os.environ["FULL_DATA"]=str(0)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     jointL = JointLearningSen2VecRunner(self.dbstring)
+            #     jointL.window = window_opt
+            #     if lambda_==lambda_list[0]:
+            #         jointL.prepareData(pd)
+            #     jointL.runTheBaseline(rbase, latent_space_size)
+            #     val =jointL.evaluateRankCorrelation(dataset)
+            #     jointL.doHouseKeeping()           
+            #     spearman[lambda_] = val
+            #     Logger.logr.info("correlation for %s = %s" %(lambda_, spearman[lambda_]))
+            # joint_beta_opt_random_n2v = max(spearman, key=spearman.get) #get the window for the max recall
+            # f.write("Optimal joint_beta_opt_random_n2v is %s%s"%(joint_beta_opt_random_n2v, os.linesep))
+            # f.write("spearman: %s%s" %(spearman, os.linesep))
+            # f.flush()
     
             
 # ######## Test ########################################
@@ -267,11 +267,7 @@ class SICKReader(DocumentReader):
             self.pearson_methods = {}
             niter = 5
 
-            window_opt = "10" 
-            joint_beta_opt_full_fixed = 0.3
-            joint_beta_opt_random_n2v = 0.3
-            joint_beta_opt_random_fixed = 0.3
-            joint_beta_opt_full_n2v = 0.3
+           
 
             for i in range(0,niter):
                 f.write("###### Iteration: %s ######%s" %(i, os.linesep))
@@ -286,55 +282,55 @@ class SICKReader(DocumentReader):
                 f.flush()
 
                
-                os.environ["NBR_TYPE"]=str(0)
-                os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(joint_beta_opt_full_fixed)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                sp,pearson = jointL.evaluateRankCorrelation(dataset)
-                jointL.doHouseKeeping()
-                self.insertevals(sp, pearson, jointL.latReprName)
+                # os.environ["NBR_TYPE"]=str(0)
+                # os.environ["FULL_DATA"]=str(1)
+                # os.environ["LAMBDA"]=str(joint_beta_opt_full_fixed)
+                # jointL = JointLearningSen2VecRunner(self.dbstring)
+                # jointL.window = window_opt
+                # jointL.prepareData(pd)
+                # jointL.runTheBaseline(rbase, latent_space_size)
+                # sp,pearson = jointL.evaluateRankCorrelation(dataset)
+                # jointL.doHouseKeeping()
+                # self.insertevals(sp, pearson, jointL.latReprName)
 
-                f.flush()
+                # f.flush()
 
-                os.environ["NBR_TYPE"]=str(1)
-                os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(joint_beta_opt_full_n2v)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                sp,pearson = jointL.evaluateRankCorrelation(dataset)
-                jointL.doHouseKeeping()
-                self.insertevals(sp, pearson, jointL.latReprName)
+                # os.environ["NBR_TYPE"]=str(1)
+                # os.environ["FULL_DATA"]=str(1)
+                # os.environ["LAMBDA"]=str(joint_beta_opt_full_n2v)
+                # jointL = JointLearningSen2VecRunner(self.dbstring)
+                # jointL.window = window_opt
+                # jointL.prepareData(pd)
+                # jointL.runTheBaseline(rbase, latent_space_size)
+                # sp,pearson = jointL.evaluateRankCorrelation(dataset)
+                # jointL.doHouseKeeping()
+                # self.insertevals(sp, pearson, jointL.latReprName)
 
-                f.flush()
+                # f.flush()
                
-                os.environ["NBR_TYPE"]=str(0)
-                os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(joint_beta_opt_random_fixed)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                sp,pearson = jointL.evaluateRankCorrelation(dataset)
-                jointL.doHouseKeeping()
-                self.insertevals(sp, pearson, jointL.latReprName)
-                f.flush()
+                # os.environ["NBR_TYPE"]=str(0)
+                # os.environ["FULL_DATA"]=str(0)
+                # os.environ["LAMBDA"]=str(joint_beta_opt_random_fixed)
+                # jointL = JointLearningSen2VecRunner(self.dbstring)
+                # jointL.window = window_opt
+                # jointL.prepareData(pd)
+                # jointL.runTheBaseline(rbase, latent_space_size)
+                # sp,pearson = jointL.evaluateRankCorrelation(dataset)
+                # jointL.doHouseKeeping()
+                # self.insertevals(sp, pearson, jointL.latReprName)
+                # f.flush()
                
-                os.environ["NBR_TYPE"]=str(1)
-                os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(joint_beta_opt_random_n2v)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                sp,pearson = jointL.evaluateRankCorrelation(dataset)
-                jointL.doHouseKeeping()
-                self.insertevals(sp, pearson, jointL.latReprName)
-                f.flush()
+                # os.environ["NBR_TYPE"]=str(1)
+                # os.environ["FULL_DATA"]=str(0)
+                # os.environ["LAMBDA"]=str(joint_beta_opt_random_n2v)
+                # jointL = JointLearningSen2VecRunner(self.dbstring)
+                # jointL.window = window_opt
+                # jointL.prepareData(pd)
+                # jointL.runTheBaseline(rbase, latent_space_size)
+                # sp,pearson = jointL.evaluateRankCorrelation(dataset)
+                # jointL.doHouseKeeping()
+                # self.insertevals(sp, pearson, jointL.latReprName)
+                # f.flush()
 
         for k,v in self.sp_methods.items():
             print (k, sum(v) / float(len(v)))
