@@ -136,6 +136,64 @@ class DocumentReader:
 				f.write(line)
 
 
+	def _runFastSentClassificationValidation(self, pd, rbase, gs, dataset_name):
+		optPDict = {}
+		with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fsent_hyperparameters_class.txt"), 'w') as f:
+			latent_space_size = 300
+			os.environ['EVAL'] = 'VALID'
+			os.environ['VALID_FOR'] = 'CLASS'
+
+			f1 = {}
+			
+			fsent_lambda = None
+			lambda_list = [0.3, 0.5, 0.8, 1.0]
+			optPDict["window"] = "10"
+			for lambda_ in lambda_list:
+				os.environ["FULL_DATA"]=str(1)
+				os.environ["LAMBDA"]=str(lambda_)
+				fsent =  FastSentVariantRunner(self.dbstring)	
+				fsent.window = optPDict["window"]
+				if  lambda_ == lambda_list[0]:
+					fsent.prepareData(pd)
+
+				fsent.runTheBaseline(rbase, latent_space_size)
+				fsent.runEvaluationTask()
+				fsent.doHouseKeeping()
+				f1[lambda_] = self.__getF1("%s" %fsent.latReprName)
+				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+				
+			fsent_lambda = max(f1, key=f1.get) 
+			Logger.logr.info("Optimal lambda for full  = %s" %fsent_lambda)		
+			f.write("Optimal lambda for full fixed nbr is %.2f%s"%(fsent_lambda, os.linesep))
+			f.write("fsent beta f1s full: %s%s" %(f1, os.linesep))
+			f.flush()
+			optPDict['fsent-full'] = fsent_lambda
+
+			f1 = {}
+			fsent_lambda = None
+			for lambda_ in lambda_list:
+				os.environ["FULL_DATA"]=str(0)
+				os.environ["LAMBDA"]=str(lambda_)
+				fsent =  FastSentVariantRunner(self.dbstring)	
+				fsent.window = optPDict["window"]
+				if  lambda_ == lambda_list[0]:
+					fsent.prepareData(pd)
+
+				fsent.runTheBaseline(rbase, latent_space_size)
+				fsent.runEvaluationTask()
+				fsent.doHouseKeeping()
+				f1[lambda_] = self.__getF1("%s" %fsent.latReprName)
+				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,f1[lambda_]))
+
+			fsent_lambda = max(f1, key=f1.get) 
+			Logger.logr.info("Optimal lambda for random  = %s" %fsent_lambda)		
+			f.write("Optimal lambda for random nbr is %.2f%s"%(fsent_lambda, os.linesep))
+			f.write("fsent-Beta f1s (random): %s%s" %(f1, os.linesep))
+			f.flush()
+			optPDict['fsent-random'] = fsent_lambda
+
+		return optPDict
+
 	def _runClassificationOnValidation(self, pd, rbase, gs, dataset_name):
 		############# Validation ############################	
 		optPDict = {}	
@@ -453,6 +511,65 @@ class DocumentReader:
 		return optPDict
 
 
+	def _runFastSentClusteringValidation(self, pd, rbase, gs, dataset_name):
+		optPDict = {}
+		with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fsent_hyperparameters_clust.txt"), 'w') as f:
+			latent_space_size = 300
+			os.environ['EVAL'] = 'VALID'
+			os.environ['VALID_FOR'] = 'CLUST'
+
+			adjustedMScore = {}
+			
+			fsent_lambda = None
+			lambda_list = [0.3, 0.5, 0.8, 1.0]
+			optPDict["window"] = "10"
+			for lambda_ in lambda_list:
+				os.environ["FULL_DATA"]=str(1)
+				os.environ["LAMBDA"]=str(lambda_)
+				fsent =  FastSentVariantRunner(self.dbstring)	
+				fsent.window = optPDict["window"]
+				if  lambda_ == lambda_list[0]:
+					fsent.prepareData(pd)
+
+				fsent.runTheBaseline(rbase, latent_space_size)
+				fsent.runEvaluationTask()
+				fsent.doHouseKeeping()
+				adjustedMScore[lambda_] = self.__getAdjustedMutulScore("%s" %fsent.latReprName)
+				Logger.logr.info("Adjusted Mutual Score for lambda,%s = %s" %(lambda_,adjustedMScore[lambda_]))
+				
+			fsent_lambda = max(adjustedMScore, key=adjustedMScore.get) 
+			Logger.logr.info("Optimal lambda for full  = %s" %adjustedMScore_lambda)		
+			f.write("Optimal lambda for full fixed nbr is %.2f%s"%(adjustedMScore, os.linesep))
+			f.write("fsent beta adjustedMScore full: %s%s" %(adjustedMScore, os.linesep))
+			f.flush()
+			optPDict['fsent-full'] = fsent_lambda
+
+			f1 = {}
+			fsent_lambda = None
+			for lambda_ in lambda_list:
+				os.environ["FULL_DATA"]=str(0)
+				os.environ["LAMBDA"]=str(lambda_)
+				fsent =  FastSentVariantRunner(self.dbstring)	
+				fsent.window = optPDict["window"]
+				if  lambda_ == lambda_list[0]:
+					fsent.prepareData(pd)
+
+				fsent.runTheBaseline(rbase, latent_space_size)
+				fsent.runEvaluationTask()
+				fsent.doHouseKeeping()
+				adjustedMScore[lambda_] = self.__getAdjustedMutulScore("%s" %fsent.latReprName)
+				Logger.logr.info("F1 for lambda,%s = %s" %(lambda_,adjustedMScore[lambda_]))
+
+			fsent_lambda = max(adjustedMScore, key=adjustedMScore.get) 
+			Logger.logr.info("Optimal lambda for random  = %s" %fsent_lambda)		
+			f.write("Optimal lambda for random nbr is %.2f%s"%(fsent_lambda, os.linesep))
+			f.write("fsent-Beta adjustedMScores (random): %s%s" %(adjustedMScore, os.linesep))
+			f.flush()
+			optPDict['fsent-random'] = fsent_lambda
+
+		return optPDict
+
+
 	def _runClusteringOnValidation(self, pd, rbase, gs, dataset_name):
 		############# Validation ############################		
 		optPDict = {}
@@ -705,17 +822,22 @@ class DocumentReader:
 			
 
 			# # fixed full 
-			# os.environ["NBR_TYPE"]=str(0)
-			# os.environ["FULL_DATA"]=str(1)
-			# f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda-full-fixed"], os.linesep))	
-			# jointL = JointSupervisedRunner(self.dbstring)
-			# jointL.window = optPDict["window"]
-			# jointL.lambda_val = optPDict["lambda-full-fixed"]
-			# jointL.prepareData(pd)
-			# jointL.runTheBaseline(rbase, latent_space_size)
-			# jointL.runEvaluationTask()
-			# self.__writeResult("%s"%jointL.latReprName, f)
-			# jointL.doHouseKeeping()
+			os.environ["NBR_TYPE"]=str(0)
+			os.environ["FULL_DATA"]=str(0)
+			optPDict["lambda-full-fixed"] = 1.0 
+			optPDict["window"] = "10"
+
+			os.environ["NBR_TYPE"]=str(0)
+			os.environ["FULL_DATA"]=str(1)
+			f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda-full-fixed"], os.linesep))	
+			jointL = JointSupervisedRunner(self.dbstring)
+			jointL.window = optPDict["window"]
+			jointL.lambda_val = optPDict["lambda-full-fixed"]
+			jointL.prepareData(pd)
+			jointL.runTheBaseline(rbase, latent_space_size)
+			jointL.runEvaluationTask()
+			self.__writeResult("%s"%jointL.latReprName, f)
+			jointL.doHouseKeeping()
 			f.flush()
 
 			
@@ -734,7 +856,7 @@ class DocumentReader:
 
 			os.environ["NBR_TYPE"]=str(0)
 			os.environ["FULL_DATA"]=str(0)
-			optPDict["lambda-random-fixed"] = 0.3 
+			optPDict["lambda-random-fixed"] = 1.0 
 			optPDict["window"] = "10"
 
 			f.write("Optimal lambda random fixed: %.2f%s" %(optPDict["lambda-random-fixed"], os.linesep))	
@@ -761,3 +883,45 @@ class DocumentReader:
 			# self.__writeResult("%s"%jointL.latReprName, f)
 			# jointL.doHouseKeeping()
 			f.flush()
+
+
+	def doTesting_FastSent(self, optPDict, dataset_name, rbase, pd, gs, classification=True):
+		os.environ["EVAL"]='TEST'
+		latent_space_size = 300
+
+		if classification==True:
+			os.environ['TEST_FOR'] = 'CLASS'
+		else:
+			os.environ['TEST_FOR'] = 'CLUST'
+
+		f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fsent_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+		niter = 5
+		for i in range(0,niter):
+			f.write("###### Iteration: %s ######%s" %(i, os.linesep))
+			f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))	
+
+			os.environ["FULL_DATA"]=str(1)
+			os.environ["LAMBDA"]=str(optPDict['fsent-full'])
+
+
+			fsent =  FastSentVariantRunner(self.dbstring)	
+			fsent.window = optPDict["window"]
+			fsent.prepareData(pd)
+			fsent.runTheBaseline(rbase, latent_space_size)
+			fsent.runEvaluationTask()
+			self.__writeResult("%s"%fsent.latReprName, f)
+			fsent.doHouseKeeping()
+			f.flush()
+
+			os.environ["FULL_DATA"]=str(0)
+			os.environ["LAMBDA"]=str(optPDict['fsent-random'])
+
+			fsent =  FastSentVariantRunner(self.dbstring)	
+			fsent.window = optPDict["window"]
+			fsent.prepareData(pd)
+			fsent.runTheBaseline(rbase, latent_space_size)
+			fsent.runEvaluationTask()
+			self.__writeResult("%s"%fsent.latReprName, f)
+			fsent.doHouseKeeping()
+			f.flush()
+				

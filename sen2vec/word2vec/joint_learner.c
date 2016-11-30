@@ -706,6 +706,15 @@ void *TrainModelThread(void *id) {
             if (nbr>=start_xb && nbr<end_xb) {
               nbrindex = nbrs[l1n+nbr]; 
               if (nbrindex <0) break; 
+              if (labelFile[0]!= 0){
+                if (label_sent[last_word]>0 && label_sent[nbrindex]>0)
+                {
+                  if (label_sent[last_word] != label_sent[nbrindex])
+                  {
+                    continue;
+                  }
+                }
+              }
               for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
               if (negative > 0) for (d = 0; d < negative + 1; d++) {
                 if (d == 0) {
@@ -732,37 +741,7 @@ void *TrainModelThread(void *id) {
           }}
         }
 
-        // Teach supervised discrimination
-        if (labelFile[0]!=0){
-          if (label_sent[last_word] >=0){
-            for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
-            for (nlab = 0; nlab < nlabels ; nlab++){
-              l1n = nlab * max_occupant;
-              for (nbr=0; nbr < max_neighbors; nbr++){
-                nbrindex = label_occupant[l1n + nbr];
-                if (nbrindex < 0) break; 
-              }
-              if (nlab == label_sent[last_word]){            
-                target = label_occupant[l1n + rand()%nbr];
-                label = 1; 
-              }
-              else{
-                label = 0; 
-                target = label_occupant[l1n + rand()%nbr]; 
-              }
-              l2 = target * layer1_size;
-              f = 0;
-              for (c = 0; c < layer1_size; c++) f += syn0[c+l1] * syn1neg[c + l2];
-              if (f > MAX_EXP) g = (label - 1) * alpha;
-              else if (f < -MAX_EXP) g = (label - 0) * alpha;
-              else g = (label - expTable[(int)((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]) * alpha;
-              for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1neg[c + l2];
-              for (c = 0; c < layer1_size; c++) syn1neg[c + l2] += g * syn0[c+l1];
-            }
-            for (c = 0; c < layer1_size; c++) syn0[c+l1] += neu1e[c];
-          }
-        } 
-
+       
         if (lambda > 0.0){
         for (c = 0; c < layer1_size; c++){
         l1n = last_word * max_neighbors;
