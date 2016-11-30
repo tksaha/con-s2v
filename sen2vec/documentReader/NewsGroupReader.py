@@ -178,24 +178,10 @@ class NewsGroupReader(DocumentReader):
 		#optDict ={}
 		#self.doTesting_Sup(optDict, "news", rbase, pd, gs, True)
 
-		optDict = self._runFastSentClassificationValidation(pd, rbase, gs, "news")
-		self.doTesting_FastSent(optDict, "news", rbase, pd, gs, True)
+		#optDict = self._runFastSentClassificationValidation(pd, rbase, gs, "news")
+		#self.doTesting_FastSent(optDict, "news", rbase, pd, gs, True)
 
-		# os.environ['EVAL'] = 'TEST'
-		# os.environ['TEST_FOR'] = 'CLASS'
-		# jointL = JointLearningSen2VecRunner(self.dbstring)
-		# jointL.jointbeta = 0.91
-		# #jointL.prepareData(pd)
-		# jointL.runTheBaseline(rbase, 300)
-		# jointL.runEvaluationTask()
+		optDict = self._runFastSentClusteringValidation(pd, rbase, gs, "news")
+		self.doTesting_FastSent(optDict, "news", rbase, pd, gs, False)
 
-		# frunner = FastSentVariantRunner(self.dbstring)
-		# frunner.fastsentbeta = 0.3
-		# frunner.prepareData(pd)
-		# frunner.runTheBaseline(rbase, 300)
-		# frunner.runEvaluationTask()
-
-		# jsrunner = JointSupervisedRunner(self.dbstring)
-		# jsrunner.prepareData(pd)
-		# jsrunner.runTheBaseline(rbase, 300)
-		# jsrunner.runEvaluationTask()
+		
