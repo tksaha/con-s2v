@@ -538,8 +538,8 @@ class DocumentReader:
 				Logger.logr.info("Adjusted Mutual Score for lambda,%s = %s" %(lambda_,adjustedMScore[lambda_]))
 				
 			fsent_lambda = max(adjustedMScore, key=adjustedMScore.get) 
-			Logger.logr.info("Optimal lambda for full  = %s" %adjustedMScore_lambda)		
-			f.write("Optimal lambda for full fixed nbr is %.2f%s"%(adjustedMScore, os.linesep))
+			Logger.logr.info("Optimal lambda for full  = %s" %fsent_lambda)		
+			f.write("Optimal lambda for full is %.2f%s"%(fsent_lambda, os.linesep))
 			f.write("fsent beta adjustedMScore full: %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
 			optPDict['fsent-full'] = fsent_lambda
@@ -562,7 +562,7 @@ class DocumentReader:
 
 			fsent_lambda = max(adjustedMScore, key=adjustedMScore.get) 
 			Logger.logr.info("Optimal lambda for random  = %s" %fsent_lambda)		
-			f.write("Optimal lambda for random nbr is %.2f%s"%(fsent_lambda, os.linesep))
+			f.write("Optimal lambda for random is %.2f%s"%(fsent_lambda, os.linesep))
 			f.write("fsent-Beta adjustedMScores (random): %s%s" %(adjustedMScore, os.linesep))
 			f.flush()
 			optPDict['fsent-random'] = fsent_lambda
