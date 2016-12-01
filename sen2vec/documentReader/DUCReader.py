@@ -477,7 +477,7 @@ class DUCReader(DocumentReader):
                 recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
                 Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
             fsent_rnd_opt = max(recalls, key=recalls.get) 
-            f.write("Optimal lambda is %s%s"%(fsent_rnd_opt, os.linesep))
+            f.write("Optimal lambda for rnd is %s%s"%(fsent_rnd_opt, os.linesep))
             f.write("Recalls fsent: %s%s" %(recalls, os.linesep))
             f.flush()
 
