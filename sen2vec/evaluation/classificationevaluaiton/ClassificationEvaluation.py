@@ -58,6 +58,7 @@ class ClassificationEvaluation:
 	 		vec_str = ','.join(str(x) for x in vec)
 	 		fileToWrite.write("%s,%s,%s%s"%(id_,vec_str,topic, os.linesep))
 
+
 	def __writeClassificationReport(self, evaluationResultFile, dummyName=""):
 
 		evaluationResultFile.write("%s%s%s%s" %("######Classification Report",\
@@ -127,6 +128,71 @@ class ClassificationEvaluation:
 		testFileToWrite.flush()
 		trainFileToWrite.close()
 		testFileToWrite.close()
+
+
+	def runClassificationTaskTFIDF(self, summaryMethodID, latReprName):
+		from sklearn.feature_extraction.text import TfidfVectorizer
+
+		trainFileToWrite = open("%s/%strain_%i.csv"%(self.trainTestFolder,\
+			 latReprName, summaryMethodID), "w")
+		testFileToWrite = open("%s/%stest_%i.csv"%(self.trainTestFolder,\
+			 latReprName, summaryMethodID), "w")
+
+
+		train_corpus = []
+		train_ids = []
+		train_labels = []
+
+		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id",\
+			 "sentence.content", "sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'YES'"]\
+			 	 ], [], []):
+				for nrows in range(0,len(result)):
+					train_ids.append(result[nrows][0])
+					train_corpus.append(result[nrows][1])
+					train_labels.append(result[nrows][2])
+				
+
+		test_corpus = []
+		test_ids = []
+		test_labels = []
+		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id",\
+			 "sentence.content",	"sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'NO'"] ], [], []):
+				for nrows in range(0,len(result)):
+					test_ids.append(result[nrows][0])
+					test_corpus.append(result[nrows][1])
+					test_labels.append(result[nrows][2])
+		
+		vectorizer = TfidfVectorizer(stop_words='english')
+		train_X = vectorizer.fit_transform(train_corpus)
+		test_X = vectorizer.fit_transform(test_corpus)
+		logistic = linear_model.LogisticRegression()
+		logit = logistic.fit(train_X, train_labels)
+
+		result = pd.DataFrame()
+		result['predicted_values'] = logit.predict(test_X)
+		result['true_values'] = test_labels
+
+		result.to_csv("%s/%sresult_%i.csv"%(self.trainTestFolder,\
+			latReprName, summaryMethodID), index=False)
+			
+		labels = set(result['true_values'])
+		class_labels = {}
+		for i, label in enumerate(labels):
+			class_labels[label] = label
+			
+		self.true_values =  result['true_values']
+		self.predicted_values = result['predicted_values']
+		self.class_keys = sorted(class_labels)
+		self.class_names = [class_labels[key] for key in self.class_keys]
+		evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
+				latReprName, summaryMethodID), "w")
+		
+		self.__writeClassificationReport(evaluationResultFile, latReprName)
+
 
 	def runClassificationTask(self, summaryMethodID, latReprName):
 		"""

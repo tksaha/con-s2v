@@ -42,7 +42,7 @@ class ClusteringEvaluation:
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
 			 	["summary.method_id", "=", summaryMethodID]\
-			 	 ], [], []):
+			 	 , ['sentence.istrain','=',"'NO'"]], [], []):
 				self.__writeClusteringData (result, datafileToWrite, vecDict)
 
 
@@ -79,6 +79,41 @@ class ClusteringEvaluation:
 
 		estimator = KMeans(init='k-means++', n_clusters=len(np.unique(Y)), n_init=10)
 		estimator.fit(X)
+
+		evaluationResultFile = open("%s/%sclustereval_%i.txt"%(self.dataFolder,\
+				latReprName, summaryMethodID), "w")
+		evaluationResultFile.write("#######%s#############%s"%(latReprName,os.linesep))
+		evaluationResultFile.write("HomoGeneity:%0.3f   Completeness:%.3f "\
+			"  v_measure:%.3f   Adjusted Mutual Info Score:%.3f %s"\
+    		% (mt.homogeneity_score(Y, estimator.labels_),\
+    			mt.completeness_score(Y, estimator.labels_),\
+    			mt.v_measure_score(Y, estimator.labels_),\
+    			mt.adjusted_mutual_info_score(Y,  estimator.labels_), os.linesep))
+
+	# Latent Representation name should pass "TFIDF"
+	def runClusteringTask_TFIDF(self, summaryMethodID, latReprName): 
+		datafileToWrite = open("%s/%sclusterData_%i.csv"%(self.dataFolder,\
+			 latReprName, summaryMethodID), "w")
+		
+		test_corpus = []
+		test_ids = []
+		Y = []
+		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id",\
+			 "sentence.content",	"sentence.topic"],\
+			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
+			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'NO'"] ], [], []):
+				for nrows in range(0,len(result)):
+					test_ids.append(result[nrows][0])
+					test_corpus.append(result[nrows][1])
+					Y.append(result[nrows][2])
+		
+		vectorizer = TfidfVectorizer(stop_words='english')
+		test_X = vectorizer.fit_transform(test_corpus)
+
+		n_clusters=np.unique(Y)
+
+		estimator = KMeans(init='k-means++', n_clusters=len(np.unique(Y)), n_init=10)
+		estimator.fit(test_X)				
 
 		evaluationResultFile = open("%s/%sclustereval_%i.txt"%(self.dataFolder,\
 				latReprName, summaryMethodID), "w")
