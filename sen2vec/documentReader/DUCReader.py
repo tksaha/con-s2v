@@ -236,8 +236,8 @@ class DUCReader(DocumentReader):
         evaluation._prepareFiles()
         evaluation._getRankingEvaluation(rPDict, rougeInstance)
 
-        rPDict['-l'] = str(10)
-        evaluation._getRankingEvaluation(rPDict, rougeInstance)
+        #rPDict['-l'] = str(10)
+        #evaluation._getRankingEvaluation(rPDict, rougeInstance)
     
     
     def __runCombinedEvaluation(self,system_list):
@@ -261,7 +261,7 @@ class DUCReader(DocumentReader):
         for system in systems:
             output_file_name += "_"+str(system)
         output_file_name += "_output"
-        output_file_name += "_%s.txt" %(str(10))
+        output_file_name += "_%s.txt" %(str(100))
         
         with open('%s%s%s' %(os.environ["SUMMARYFOLDER"],"/",output_file_name), 'r') as f:
             content = f.read()
