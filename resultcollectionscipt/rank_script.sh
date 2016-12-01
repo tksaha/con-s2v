@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-method=( 2 14 15 16 17 )
-year=( 2001)
+method=( 18 19 )
+year=( 2002)
 word=( 1 2 )
 
 for y in "${year[@]}"

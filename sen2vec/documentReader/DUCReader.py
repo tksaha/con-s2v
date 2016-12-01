@@ -15,6 +15,7 @@ from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
 from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRunner
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
+from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from rouge.Rouge import Rouge 
 
 # There are some summaries [ex:fbis4-45908, FT932-15960] for which the 
@@ -233,7 +234,7 @@ class DUCReader(DocumentReader):
 
         evaluation = RankingEvaluation(topics = [self.duc_topic], models = models, systems = systems)
         evaluation._prepareFiles()
-        evaluation._getRankingEvaluation(rPDict, rougeInstance)
+        #evaluation._getRankingEvaluation(rPDict, rougeInstance)
 
         rPDict['-l'] = str(10)
         evaluation._getRankingEvaluation(rPDict, rougeInstance)
@@ -284,6 +285,7 @@ class DUCReader(DocumentReader):
             # createValidationSet() Need to implement this function
             os.environ['DUC_EVAL']='VALID'
     
+            
             recalls = {}
             window_opt = None #var for the optimal window
             for window in ["8", "10", "12"]:
@@ -305,11 +307,14 @@ class DUCReader(DocumentReader):
             f.write("P2V Window Recalls: %s%s" %(recalls, os.linesep))
             f.flush()
 
-            Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
-            self.postgres_recorder.truncateSummaryTable()
-            paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-            paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
-            paraBaseline.doHouseKeeping()
+            # Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
+            # self.postgres_recorder.truncateSummaryTable()
+            # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+            # paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) 
+            # paraBaseline.generateSummary(gs,\
+            #         lambda_val=self.lambda_val, diversity=diversity)
+            # #we need the p2v vectors created with optimal window
+            # paraBaseline.doHouseKeeping()
 
 #           n2vBaseline = Node2VecRunner(self.dbstring)
 #           n2vBaseline.prepareData(pd)
@@ -317,120 +322,170 @@ class DUCReader(DocumentReader):
 #           n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
 #           n2vBaseline.doHouseKeeping()
 
-            recalls = {}
-            joint_beta_opt = None 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
-            method_id = 14
+            # recalls = {}
+            # joint_beta_opt = None 
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # method_id = 14
                 
-            for lambda_ in  lambda_list:
-                Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            # for lambda_ in  lambda_list:
+            #     Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["NBR_TYPE"]=str(0)
+            #     os.environ["FULL_DATA"]=str(1)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     jointL = JointLearningSen2VecRunner(self.dbstring)
+            #     jointL.window = window_opt
+            #     if lambda_==lambda_list[0]:
+            #         jointL.prepareData(pd)
+            #     jointL.runTheBaseline(rbase, latent_space_size)
+            #     jointL.generateSummary(gs,method_id,"",\
+            #             lambda_val=self.lambda_val, diversity=diversity)
+            #     jointL.doHouseKeeping()
+            #     self.__runSpecificEvaluation(models = [20], systems = [method_id]) #Running Rouge for method_id = 2 only
+            #     recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
+            #     Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
+            # joint_beta_opt_full_fixed = max(recalls, key=recalls.get) #get the window for the max recall
+            # f.write("Optimal lambda is %s%s"%(joint_beta_opt_full_fixed, os.linesep))
+            # f.write("Recalls joint_beta_opt_full_fixed: %s%s" %(recalls, os.linesep))
+            # f.flush()
+
+
+            # recalls = {}
+            # joint_beta_opt = None 
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # method_id = 15
+                
+            # for lambda_ in  lambda_list:
+            #     Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["NBR_TYPE"]=str(1)
+            #     os.environ["FULL_DATA"]=str(1)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     jointL = JointLearningSen2VecRunner(self.dbstring)
+            #     jointL.window = window_opt
+            #     if lambda_==lambda_list[0]:
+            #         jointL.prepareData(pd)
+            #     jointL.runTheBaseline(rbase, latent_space_size)
+            #     jointL.generateSummary(gs,method_id,"",\
+            #             lambda_val=self.lambda_val, diversity=diversity)
+            #     jointL.doHouseKeeping()
+            #     self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
+            #     recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
+            #     Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
+            # joint_beta_opt_full_n2v = max(recalls, key=recalls.get) 
+            # f.write("Optimal lambda is %s%s"%(joint_beta_opt_full_n2v, os.linesep))
+            # f.write("Recalls joint_beta_opt_full_n2v: %s%s" %(recalls, os.linesep))
+            # f.flush()
+
+            # recalls = {}
+            # joint_beta_opt = None 
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # method_id = 16
+                
+            # for lambda_ in  lambda_list:
+            #     Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["NBR_TYPE"]=str(0)
+            #     os.environ["FULL_DATA"]=str(0)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     jointL = JointLearningSen2VecRunner(self.dbstring)
+            #     jointL.window = window_opt
+            #     if lambda_==lambda_list[0]:
+            #         jointL.prepareData(pd)
+            #     jointL.runTheBaseline(rbase, latent_space_size)
+            #     jointL.generateSummary(gs,method_id,"",\
+            #             lambda_val=self.lambda_val, diversity=diversity)
+            #     jointL.doHouseKeeping()
+            #     self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
+            #     recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
+            #     Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
+            # joint_beta_opt_random_fixed = max(recalls, key=recalls.get) 
+            # f.write("Optimal lambda is %s%s"%(joint_beta_opt_random_fixed, os.linesep))
+            # f.write("Recalls joint_beta_opt_random_fixed: %s%s" %(recalls, os.linesep))
+            # f.flush()
+
+            # recalls = {}
+            # joint_beta_opt = None 
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # method_id = 17
+                
+            # for lambda_ in  lambda_list:
+            #     Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["NBR_TYPE"]=str(1)
+            #     os.environ["FULL_DATA"]=str(0)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     jointL = JointLearningSen2VecRunner(self.dbstring)
+            #     jointL.window = window_opt
+            #     if lambda_==lambda_list[0]:
+            #         jointL.prepareData(pd)
+            #     jointL.runTheBaseline(rbase, latent_space_size)
+            #     jointL.generateSummary(gs,method_id,"",\
+            #             lambda_val=self.lambda_val, diversity=diversity)
+            #     jointL.doHouseKeeping()
+            #     self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
+            #     recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
+            #     Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
+            # joint_beta_opt_random_n2v = max(recalls, key=recalls.get) 
+            # f.write("Optimal lambda is %s%s"%(joint_beta_opt_random_n2v, os.linesep))
+            # f.write("Recalls joint_beta_opt_random_n2v: %s%s" %(recalls, os.linesep))
+            # f.flush()
+            recalls = {}
+            
+            lambda_list = [0.05,0.10,0.20,0.30]
+            method_id = 18
+            for lambda_ in lambda_list:
                 self.postgres_recorder.truncateSummaryTable()
-                os.environ["NBR_TYPE"]=str(0)
                 os.environ["FULL_DATA"]=str(1)
                 os.environ["LAMBDA"]=str(lambda_)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                if lambda_==lambda_list[0]:
-                    jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                jointL.generateSummary(gs,method_id,"",\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                jointL.doHouseKeeping()
-                self.__runSpecificEvaluation(models = [20], systems = [method_id]) #Running Rouge for method_id = 2 only
-                recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
-                Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
-            joint_beta_opt_full_fixed = max(recalls, key=recalls.get) #get the window for the max recall
-            f.write("Optimal lambda is %s%s"%(joint_beta_opt_full_fixed, os.linesep))
-            f.write("Recalls joint_beta_opt_full_fixed: %s%s" %(recalls, os.linesep))
-            f.flush()
+                fsent =  FastSentVariantRunner(self.dbstring)   
+                fsent.window = window_opt
+                if  lambda_ == lambda_list[0]:
+                    fsent.prepareData(pd)
 
-
-            recalls = {}
-            joint_beta_opt = None 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
-            method_id = 15
-                
-            for lambda_ in  lambda_list:
-                Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-                self.postgres_recorder.truncateSummaryTable()
-                os.environ["NBR_TYPE"]=str(1)
-                os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(lambda_)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                if lambda_==lambda_list[0]:
-                    jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                jointL.generateSummary(gs,method_id,"",\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                jointL.doHouseKeeping()
+                fsent.runTheBaseline(rbase, latent_space_size)
+                fsent.generateSummary(gs,method_id,"",\
+                         lambda_val=self.lambda_val, diversity=diversity)
+                fsent.doHouseKeeping()
                 self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
                 recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
                 Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
-            joint_beta_opt_full_n2v = max(recalls, key=recalls.get) 
-            f.write("Optimal lambda is %s%s"%(joint_beta_opt_full_n2v, os.linesep))
-            f.write("Recalls joint_beta_opt_full_n2v: %s%s" %(recalls, os.linesep))
+            fsent_full_opt = max(recalls, key=recalls.get) 
+            f.write("Optimal lambda is %s%s"%(fsent_full_opt, os.linesep))
+            f.write("Recalls fsent: %s%s" %(recalls, os.linesep))
             f.flush()
+            
 
             recalls = {}
-            joint_beta_opt = None 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
-            method_id = 16
-                
-            for lambda_ in  lambda_list:
-                Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
+            
+            lambda_list = [0.05,0.10,0.20,0.30]
+            method_id = 19 
+            for lambda_ in lambda_list:
                 self.postgres_recorder.truncateSummaryTable()
-                os.environ["NBR_TYPE"]=str(0)
                 os.environ["FULL_DATA"]=str(0)
                 os.environ["LAMBDA"]=str(lambda_)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                if lambda_==lambda_list[0]:
-                    jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                jointL.generateSummary(gs,method_id,"",\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                jointL.doHouseKeeping()
+                fsent =  FastSentVariantRunner(self.dbstring)   
+                fsent.window = window_opt
+                if  lambda_ == lambda_list[0]:
+                    fsent.prepareData(pd)
+
+                fsent.runTheBaseline(rbase, latent_space_size)
+                fsent.generateSummary(gs,method_id,"",\
+                         lambda_val=self.lambda_val, diversity=diversity)
+                fsent.doHouseKeeping()
                 self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
                 recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
                 Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
-            joint_beta_opt_random_fixed = max(recalls, key=recalls.get) 
-            f.write("Optimal lambda is %s%s"%(joint_beta_opt_random_fixed, os.linesep))
-            f.write("Recalls joint_beta_opt_random_fixed: %s%s" %(recalls, os.linesep))
+            fsent_rnd_opt = max(recalls, key=recalls.get) 
+            f.write("Optimal lambda for rnd is %s%s"%(fsent_rnd_opt, os.linesep))
+            f.write("Recalls fsent: %s%s" %(recalls, os.linesep))
             f.flush()
 
-            recalls = {}
-            joint_beta_opt = None 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
-            method_id = 17
-                
-            for lambda_ in  lambda_list:
-                Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
-                self.postgres_recorder.truncateSummaryTable()
-                os.environ["NBR_TYPE"]=str(1)
-                os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(lambda_)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                if lambda_==lambda_list[0]:
-                    jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                jointL.generateSummary(gs,method_id,"",\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                jointL.doHouseKeeping()
-                self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
-                recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
-                Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
-            joint_beta_opt_random_n2v = max(recalls, key=recalls.get) 
-            f.write("Optimal lambda is %s%s"%(joint_beta_opt_random_n2v, os.linesep))
-            f.write("Recalls joint_beta_opt_random_n2v: %s%s" %(recalls, os.linesep))
-            f.flush()
-    
             
 # ######## Test ########################################
             os.environ["DUC_EVAL"]='TEST'
             system_list = [2]
-            for system_id in range(14,18):
+            for system_id in range(18,20):
                 system_list.append(system_id)
             niter = 5
             for i in range(0,niter):
@@ -438,59 +493,84 @@ class DUCReader(DocumentReader):
                 f.write("Optimal Window: %s%s" %(window_opt, os.linesep))           
                 self.postgres_recorder.truncateSummaryTable()
                 paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-                paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
+                paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) 
+                #We need the p2v vectors created with optimal window
                 paraBaseline.generateSummary(gs,\
                         lambda_val=self.lambda_val, diversity=diversity)
                 paraBaseline.doHouseKeeping()
                 f.flush()
 
-                method_id = 14
-                os.environ["NBR_TYPE"]=str(0)
+                # method_id = 14
+                # os.environ["NBR_TYPE"]=str(0)
+                # os.environ["FULL_DATA"]=str(1)
+                # os.environ["LAMBDA"]=str(joint_beta_opt_full_fixed)
+                # jointL = JointLearningSen2VecRunner(self.dbstring)
+                # jointL.window = window_opt
+                # jointL.prepareData(pd)
+                # jointL.runTheBaseline(rbase, latent_space_size)
+                # jointL.generateSummary(gs,method_id,"",\
+                #         lambda_val=self.lambda_val, diversity=diversity)
+                # jointL.doHouseKeeping()
+
+                # method_id = 15
+                # os.environ["NBR_TYPE"]=str(1)
+                # os.environ["FULL_DATA"]=str(1)
+                # os.environ["LAMBDA"]=str(joint_beta_opt_full_n2v)
+                # jointL = JointLearningSen2VecRunner(self.dbstring)
+                # jointL.window = window_opt
+                # jointL.prepareData(pd)
+                # jointL.runTheBaseline(rbase, latent_space_size)
+                # jointL.generateSummary(gs,method_id,"",\
+                #         lambda_val=self.lambda_val, diversity=diversity)
+                # jointL.doHouseKeeping()
+
+                # method_id = 16 
+                # os.environ["NBR_TYPE"]=str(0)
+                # os.environ["FULL_DATA"]=str(0)
+                # os.environ["LAMBDA"]=str(joint_beta_opt_random_fixed)
+                # jointL = JointLearningSen2VecRunner(self.dbstring)
+                # jointL.window = window_opt
+                # jointL.prepareData(pd)
+                # jointL.runTheBaseline(rbase, latent_space_size)
+                # jointL.generateSummary(gs,method_id,"",\
+                #         lambda_val=self.lambda_val, diversity=diversity)
+                # jointL.doHouseKeeping()
+
+                # method_id = 17
+                # os.environ["NBR_TYPE"]=str(1)
+                # os.environ["FULL_DATA"]=str(0)
+                # os.environ["LAMBDA"]=str(joint_beta_opt_random_n2v)
+                # jointL = JointLearningSen2VecRunner(self.dbstring)
+                # jointL.window = window_opt
+                # jointL.prepareData(pd)
+                # jointL.runTheBaseline(rbase, latent_space_size)
+                # jointL.generateSummary(gs,method_id,"",\
+                #         lambda_val=self.lambda_val, diversity=diversity)
+                # jointL.doHouseKeeping()
+                # self.__runCombinedEvaluation(system_list)
+
+                method_id = 18
                 os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(joint_beta_opt_full_fixed)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                jointL.generateSummary(gs,method_id,"",\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                jointL.doHouseKeeping()
+                os.environ["LAMBDA"]=str(fsent_full_opt)
+                fsent =  FastSentVariantRunner(self.dbstring)   
+                fsent.window = window_opt
+                fsent.prepareData(pd)
+                fsent.runTheBaseline(rbase, latent_space_size)
+                fsent.generateSummary(gs,method_id,"",\
+                         lambda_val=self.lambda_val, diversity=diversity)
+                fsent.doHouseKeeping()
 
-                method_id = 15
-                os.environ["NBR_TYPE"]=str(1)
-                os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(joint_beta_opt_full_n2v)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                jointL.generateSummary(gs,method_id,"",\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                jointL.doHouseKeeping()
-
-                method_id = 16 
-                os.environ["NBR_TYPE"]=str(0)
+                method_id = 19
                 os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(joint_beta_opt_random_fixed)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                jointL.generateSummary(gs,method_id,"",\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                jointL.doHouseKeeping()
+                os.environ["LAMBDA"]=str(fsent_rnd_opt)
+                fsent =  FastSentVariantRunner(self.dbstring)   
+                fsent.window = window_opt
+                fsent.prepareData(pd)
+                fsent.runTheBaseline(rbase, latent_space_size)
+                fsent.generateSummary(gs,method_id,"",\
+                         lambda_val=self.lambda_val, diversity=diversity)
+                fsent.doHouseKeeping()
 
-                method_id = 17
-                os.environ["NBR_TYPE"]=str(1)
-                os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(joint_beta_opt_random_n2v)
-                jointL = JointLearningSen2VecRunner(self.dbstring)
-                jointL.window = window_opt
-                jointL.prepareData(pd)
-                jointL.runTheBaseline(rbase, latent_space_size)
-                jointL.generateSummary(gs,method_id,"",\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                jointL.doHouseKeeping()
                 self.__runCombinedEvaluation(system_list)
                 
                 f.write ("%s%s"%("#########################Running for Test (100) ###########################################", os.linesep))

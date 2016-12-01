@@ -18,6 +18,9 @@ from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
 from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
 from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
+from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
+from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
+
 
 class SICKReader(DocumentReader):
     """ 
@@ -125,7 +128,7 @@ class SICKReader(DocumentReader):
         """
 
         dataset= 'sick'
-        os.environ['TEST_AND_TRAIN'] = 'YES'
+        os.environ['TEST_AND_TRAIN'] = 'NO'
         latent_space_size = 300
 
         ############# Validation ############################       
@@ -133,7 +136,7 @@ class SICKReader(DocumentReader):
             os.environ['EVAL']='VALID'
     
             spearman = {}  #spearman or pearson correlation
-            window_opt = None #var for the optimal window
+           
             for window in ["8", "10", "12"]:
             #for window in ["8"]:
                 Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
@@ -151,7 +154,7 @@ class SICKReader(DocumentReader):
             f.write("spearman: %s%s" %(spearman, os.linesep))
             f.flush()
 
-          
+           
 
             # n2vBaseline = Node2VecRunner(self.dbstring)
             # n2vBaseline.prepareData(pd)
@@ -258,6 +261,26 @@ class SICKReader(DocumentReader):
             # f.write("Optimal joint_beta_opt_random_n2v is %s%s"%(joint_beta_opt_random_n2v, os.linesep))
             # f.write("spearman: %s%s" %(spearman, os.linesep))
             # f.flush()
+
+            lambda_list = [0.3, 0.5, 0.8, 1.0]
+            unw_corr = {}
+            for beta in lambda_list:
+            #for beta in [0.3]:
+                Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
+                regs2v = RegularizedSen2VecRunner(self.dbstring)
+                regs2v.regBetaUNW = beta
+                if beta==0.3:
+                   regs2v.prepareData(pd)
+                regs2v.runTheBaseline(rbase, latent_space_size)
+                val = regs2v.evaluateRankCorrelation(dataset)
+                unw_corr[beta] = val 
+                Logger.logr.info("UNW_corr for %s = %s" %(beta, unw_corr[beta]))
+           
+            unw_opt_reg = max(unw_corr, key=unw_corr.get)
+            Logger.logr.info("Optimal regBetaUNW=%s" %(unw_opt_reg))
+          
+
+
     
             
 # ######## Test ########################################
@@ -274,14 +297,22 @@ class SICKReader(DocumentReader):
                 f.write("Optimal Window: %s%s" %(window_opt, os.linesep))           
                 self.postgres_recorder.truncateSummaryTable()
                 paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+                paraBaseline.prepareData(pd)
                 paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
                 sp,pearson = paraBaseline.evaluateRankCorrelation(dataset)
                 paraBaseline.doHouseKeeping()
                 self.insertevals(sp, pearson, paraBaseline.latReprName)
-
                 f.flush()
 
-               
+
+                iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+                iterrunner.prepareData(pd)
+                iterrunner.runTheBaseline(rbase)    
+                sp, pearson = iterrunner.evaluateRankCorrelation(dataset)
+                iterrunner.doHouseKeeping()
+                self.insertevals(sp, pearson, iterrunner.latReprName)
+                f.flush()
+
                 # os.environ["NBR_TYPE"]=str(0)
                 # os.environ["FULL_DATA"]=str(1)
                 # os.environ["LAMBDA"]=str(joint_beta_opt_full_fixed)
@@ -332,9 +363,19 @@ class SICKReader(DocumentReader):
                 # self.insertevals(sp, pearson, jointL.latReprName)
                 # f.flush()
 
-        for k,v in self.sp_methods.items():
+                regs2v = RegularizedSen2VecRunner(self.dbstring)
+                regs2v.regBetaUNW = unw_opt_reg
+                regs2v.prepareData(pd)
+                regs2v.runTheBaseline(rbase, latent_space_size)
+                sp, pearson = regs2v.evaluateRankCorrelation(dataset)
+                regs2v.doHouseKeeping()
+                self.insertevals(sp, pearson, regs2v.latReprName)
+                f.flush()
+            
+
+        for k,v in sorted(self.sp_methods.items()):
             print (k, sum(v) / float(len(v)))
 
         print (os.linesep, os.linesep)
-        for k,v in self.pearson_methods.items():
+        for k,v in sorted(self.pearson_methods.items()):
             print (k, sum(v) / float(len(v)))

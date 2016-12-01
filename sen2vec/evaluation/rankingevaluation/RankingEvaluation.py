@@ -135,7 +135,10 @@ class RankingEvaluation:
 		for system in self.systems:
 			document_ids = []
 			for result in self.postgresConnection.memoryEfficientSelect(\
-							['distinct(doc_id)'],['summary', 'document_topic', 'topic'],[['method_id', '=', system], ['summary.doc_id', '=', 'document_topic.document_id'], ['document_topic.topic_id', '=', 'topic.id'], ['topic.name', 'in', '(%s)' %self.topics]],[],[]):
+							['distinct(doc_id)'],['summary', 'document_topic', 'topic'],[['method_id', '=', system],\
+							['summary.doc_id', '=', 'document_topic.document_id'],\
+							['document_topic.topic_id', '=', 'topic.id'],\
+							['topic.name', 'in', '(%s)' %self.topics]],[],[]):
 				for row_id in range(0,len(result)):
 					document_ids += [result[row_id][0]]
 			

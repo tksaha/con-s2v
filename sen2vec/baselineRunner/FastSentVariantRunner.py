@@ -184,6 +184,7 @@ class FastSentVariantRunner(BaselineRunner):
         summGen = SummaryGenerator (diverse_summ=diversity,\
              postgres_connection = self.postgresConnection,\
              lambda_val = lambda_val)
+        summGen.populateSummary(methodId, fastsentvDict)
 
         # Need a method id for the joint 
     
