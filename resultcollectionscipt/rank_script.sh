@@ -2,7 +2,7 @@
 
 
 method=( 18 19 )
-year=( 2001)
+year=( 2002)
 word=( 1 2 )
 
 for y in "${year[@]}"

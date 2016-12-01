@@ -234,7 +234,7 @@ class DUCReader(DocumentReader):
 
         evaluation = RankingEvaluation(topics = [self.duc_topic], models = models, systems = systems)
         evaluation._prepareFiles()
-        evaluation._getRankingEvaluation(rPDict, rougeInstance)
+        #evaluation._getRankingEvaluation(rPDict, rougeInstance)
 
         rPDict['-l'] = str(10)
         evaluation._getRankingEvaluation(rPDict, rougeInstance)
@@ -285,27 +285,27 @@ class DUCReader(DocumentReader):
             # createValidationSet() Need to implement this function
             os.environ['DUC_EVAL']='VALID'
     
-            window_opt = 10
-            # recalls = {}
-            # window_opt = None #var for the optimal window
-            # for window in ["8", "10", "12"]:
-            # #for window in ["8"]:
-            #     Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
-            #     self.postgres_recorder.truncateSummaryTable()
-            #     paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-            #     if  window=="8":  
-            #         paraBaseline.prepareData(pd)
-            #     paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-            #     paraBaseline.generateSummary(gs,\
-            #         lambda_val=self.lambda_val, diversity=diversity)
-            #     paraBaseline.doHouseKeeping()           
-            #     self.__runSpecificEvaluation(models = [20], systems = [2]) #Running Rouge for method_id = 2 only
-            #     recalls[window] = self.__getRecall(method_id=2, models = [20], systems = [2])
-            #     Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
-            # window_opt = max(recalls, key=recalls.get) #get the window for the max recall
-            # f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
-            # f.write("P2V Window Recalls: %s%s" %(recalls, os.linesep))
-            # f.flush()
+            
+            recalls = {}
+            window_opt = None #var for the optimal window
+            for window in ["8", "10", "12"]:
+            #for window in ["8"]:
+                Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
+                self.postgres_recorder.truncateSummaryTable()
+                paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+                if  window=="8":  
+                    paraBaseline.prepareData(pd)
+                paraBaseline.runTheBaseline(rbase,latent_space_size, window)
+                paraBaseline.generateSummary(gs,\
+                    lambda_val=self.lambda_val, diversity=diversity)
+                paraBaseline.doHouseKeeping()           
+                self.__runSpecificEvaluation(models = [20], systems = [2]) #Running Rouge for method_id = 2 only
+                recalls[window] = self.__getRecall(method_id=2, models = [20], systems = [2])
+                Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
+            window_opt = max(recalls, key=recalls.get) #get the window for the max recall
+            f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
+            f.write("P2V Window Recalls: %s%s" %(recalls, os.linesep))
+            f.flush()
 
             # Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
             # self.postgres_recorder.truncateSummaryTable()
@@ -484,7 +484,7 @@ class DUCReader(DocumentReader):
             
 # ######## Test ########################################
             os.environ["DUC_EVAL"]='TEST'
-            system_list = []
+            system_list = [2]
             for system_id in range(18,20):
                 system_list.append(system_id)
             niter = 5
@@ -492,13 +492,13 @@ class DUCReader(DocumentReader):
                 f.write("###### Iteration: %s ######%s" %(i, os.linesep))
                 f.write("Optimal Window: %s%s" %(window_opt, os.linesep))           
                 self.postgres_recorder.truncateSummaryTable()
-                # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-                # paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) 
-                # #We need the p2v vectors created with optimal window
-                # paraBaseline.generateSummary(gs,\
-                #         lambda_val=self.lambda_val, diversity=diversity)
-                # paraBaseline.doHouseKeeping()
-                # f.flush()
+                paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+                paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) 
+                #We need the p2v vectors created with optimal window
+                paraBaseline.generateSummary(gs,\
+                        lambda_val=self.lambda_val, diversity=diversity)
+                paraBaseline.doHouseKeeping()
+                f.flush()
 
                 # method_id = 14
                 # os.environ["NBR_TYPE"]=str(0)
