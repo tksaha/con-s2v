@@ -151,7 +151,7 @@ class SICKReader(DocumentReader):
             f.write("spearman: %s%s" %(spearman, os.linesep))
             f.flush()
 
-          
+           
 
             # n2vBaseline = Node2VecRunner(self.dbstring)
             # n2vBaseline.prepareData(pd)
@@ -281,7 +281,16 @@ class SICKReader(DocumentReader):
 
                 f.flush()
 
-               
+
+                iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+                iterrunner.myalpha = alpha #reinitializing myalpha
+                iterrunner.prepareData(pd)
+                iterrunner.runTheBaseline(rbase)    
+                sp, pearson = iterrunner.evaluateRankCorrelation(dataset)
+                iterrunner.doHouseKeeping()
+                self.insertevals(sp, pearson, paraBaseline.latReprName)
+
+
                 # os.environ["NBR_TYPE"]=str(0)
                 # os.environ["FULL_DATA"]=str(1)
                 # os.environ["LAMBDA"]=str(joint_beta_opt_full_fixed)
@@ -332,9 +341,9 @@ class SICKReader(DocumentReader):
                 # self.insertevals(sp, pearson, jointL.latReprName)
                 # f.flush()
 
-        for k,v in self.sp_methods.items():
+        for k,v in sorted(self.sp_methods.items()):
             print (k, sum(v) / float(len(v)))
 
         print (os.linesep, os.linesep)
-        for k,v in self.pearson_methods.items():
+        for k,v in sorted(self.pearson_methods.items()):
             print (k, sum(v) / float(len(v)))
