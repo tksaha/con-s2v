@@ -432,7 +432,7 @@ class DUCReader(DocumentReader):
             # f.flush()
             recalls = {}
             
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
+            lambda_list = [0.05,0.10,0.20,0.30]
             method_id = 18
             for lambda_ in lambda_list:
                 self.postgres_recorder.truncateSummaryTable()
@@ -458,7 +458,7 @@ class DUCReader(DocumentReader):
 
             recalls = {}
             
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
+            lambda_list = [0.05,0.10,0.20,0.30]
             method_id = 19 
             for lambda_ in lambda_list:
                 self.postgres_recorder.truncateSummaryTable()
