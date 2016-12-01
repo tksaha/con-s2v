@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-method=( 2 14 15 16 17 )
+method=( 18 19 )
 year=( 2001)
 word=( 1 2 )
 
