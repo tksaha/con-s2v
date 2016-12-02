@@ -324,7 +324,7 @@ class DocumentReader:
 
 			f1 = {}
 			joint_beta_opt = None
-			#lambda_list = [0.3, 0.5, 0.8, 1.0]
+			lambda_list = [0.3, 0.5, 0.8, 1.0]
 				
 			for lambda_ in  lambda_list:
 				Logger.logr.info("Starting running jl with lambda = %s" %(lambda_))
@@ -734,42 +734,42 @@ class DocumentReader:
 		niter = 5
 		for i in range(0,niter):
 			f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-			# f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))				
+			f.write("Optimal Window: %s%s" %(optPDict["window"], os.linesep))				
 
-			# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			# paraBaseline.prepareData(pd)
-			# paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"])
-			# paraBaseline.runEvaluationTask()
-			# self.__writeResult(paraBaseline.latReprName, f)
-			# paraBaseline.doHouseKeeping()
-			# f.flush()
+			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			paraBaseline.prepareData(pd)
+			paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"])
+			paraBaseline.runEvaluationTask()
+			self.__writeResult(paraBaseline.latReprName, f)
+			paraBaseline.doHouseKeeping()
+			f.flush()
 			
 
-			# # fixed full 
-			# os.environ["NBR_TYPE"]=str(0)
-			# os.environ["FULL_DATA"]=str(1)
-			# f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda-full-fixed"], os.linesep))	
-			# jointL = JointLearningSen2VecRunner(self.dbstring)
-			# jointL.window = optPDict["window"]
-			# jointL.lambda_val = optPDict["lambda-full-fixed"]
-			# jointL.prepareData(pd)
-			# jointL.runTheBaseline(rbase, latent_space_size)
-			# jointL.runEvaluationTask()
-			# self.__writeResult("%s"%jointL.latReprName, f)
-			# jointL.doHouseKeeping()
+			# fixed full 
+			os.environ["NBR_TYPE"]=str(0)
+			os.environ["FULL_DATA"]=str(1)
+			f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda-full-fixed"], os.linesep))	
+			jointL = JointLearningSen2VecRunner(self.dbstring)
+			jointL.window = optPDict["window"]
+			jointL.lambda_val = optPDict["lambda-full-fixed"]
+			jointL.prepareData(pd)
+			jointL.runTheBaseline(rbase, latent_space_size)
+			jointL.runEvaluationTask()
+			self.__writeResult("%s"%jointL.latReprName, f)
+			jointL.doHouseKeeping()
 
 			
-			# os.environ["NBR_TYPE"]=str(1)
-			# os.environ["FULL_DATA"]=str(1)
-			# f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda-full-n2v"], os.linesep))	
-			# jointL = JointLearningSen2VecRunner(self.dbstring)
-			# jointL.window = optPDict["window"]
-			# jointL.lambda_val = optPDict["lambda-full-n2v"]
-			# jointL.prepareData(pd)
-			# jointL.runTheBaseline(rbase, latent_space_size)
-			# jointL.runEvaluationTask()
-			# self.__writeResult("%s"%jointL.latReprName, f)
-			# jointL.doHouseKeeping()
+			os.environ["NBR_TYPE"]=str(1)
+			os.environ["FULL_DATA"]=str(1)
+			f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda-full-n2v"], os.linesep))	
+			jointL = JointLearningSen2VecRunner(self.dbstring)
+			jointL.window = optPDict["window"]
+			jointL.lambda_val = optPDict["lambda-full-n2v"]
+			jointL.prepareData(pd)
+			jointL.runTheBaseline(rbase, latent_space_size)
+			jointL.runEvaluationTask()
+			self.__writeResult("%s"%jointL.latReprName, f)
+			jointL.doHouseKeeping()
 
 			os.environ["NBR_TYPE"]=str(0)
 			os.environ["FULL_DATA"]=str(0)
@@ -784,17 +784,17 @@ class DocumentReader:
 			jointL.doHouseKeeping()
 
 			
-			# os.environ["NBR_TYPE"]=str(1)
-			# os.environ["FULL_DATA"]=str(0)
-			# f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda-random-n2v"], os.linesep))	
-			# jointL = JointLearningSen2VecRunner(self.dbstring)
-			# jointL.window = optPDict["window"]
-			# jointL.lambda_val = optPDict["lambda-random-n2v"]
-			# jointL.prepareData(pd)
-			# jointL.runTheBaseline(rbase, latent_space_size)
-			# jointL.runEvaluationTask()
-			# self.__writeResult("%s"%jointL.latReprName, f)
-			# jointL.doHouseKeeping()
+			os.environ["NBR_TYPE"]=str(1)
+			os.environ["FULL_DATA"]=str(0)
+			f.write("Optimal lambda fixed full: %.2f%s" %(optPDict["lambda-random-n2v"], os.linesep))	
+			jointL = JointLearningSen2VecRunner(self.dbstring)
+			jointL.window = optPDict["window"]
+			jointL.lambda_val = optPDict["lambda-random-n2v"]
+			jointL.prepareData(pd)
+			jointL.runTheBaseline(rbase, latent_space_size)
+			jointL.runEvaluationTask()
+			self.__writeResult("%s"%jointL.latReprName, f)
+			jointL.doHouseKeeping()
 
 	def doTesting_Sup(self, optPDict, dataset_name, rbase, pd, gs, classification=True):
 		######### Test ########################################
