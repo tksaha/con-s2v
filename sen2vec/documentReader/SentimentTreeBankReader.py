@@ -13,7 +13,7 @@ from baselineRunner.Paragraph2VecCEXERunner import Paragraph2VecCEXERunner
 from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
 
 
-class SentimentTreeBank2WayReader(DocumentReader):
+class SentimentTreeBank5WayReader(DocumentReader):
     def __init__(self, *args, **kwargs):
         """
         Initialization assumes that SENTTREE_PATH environment is set. 

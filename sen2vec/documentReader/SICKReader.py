@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import os 
+import re
+import numpy as np 
+import pickle
+import operator
 import logging 
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from log_manager.log_config import Logger
-import re
-import numpy as np 
-import pickle
-import operator;
 from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
 from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
@@ -20,7 +20,7 @@ from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
-
+from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
 
 class SICKReader(DocumentReader):
     """ 
@@ -126,9 +126,15 @@ class SICKReader(DocumentReader):
     def runBaselines(self, pd, rbase, gs):
         """
         """
-
         dataset= 'sick'
-        os.environ['TEST_AND_TRAIN'] = 'NO'
+        os.environ['TEST_AND_TRAIN'] = 'YES'
+        tfidfrunner  = TFIDFBaselineRunner(self.dbstring)
+        sp, pearson = tfidfrunner.evaluateRankCorrelation(dataset)
+        print (sp, pearson)
+        return 0
+
+        
+        
         latent_space_size = 300
 
         ############# Validation ############################       

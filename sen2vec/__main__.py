@@ -32,7 +32,7 @@ module_dict ={"reuter": "documentReader.ReutersReader", "news": "documentReader.
 		"stree2way":"documentReader.SentimentTreeBankReader", "duc": "documentReader.DUCReader",
 		"sick": "documentReader.SICKReader" }
 class_dict = {"reuter": "ReutersReader", "news": "NewsGroupReader","imdb": "IMDBReader",
-		"rt": "RTReader", "stree2way": "SentimentTreeBank2WayReader", "duc": "DUCReader", "sick": "SICKReader"}
+		"rt": "RTReader", "stree5way": "SentimentTreeBank5WayReader", "duc": "DUCReader", "sick": "SICKReader"}
 
 def main():
 	"""
