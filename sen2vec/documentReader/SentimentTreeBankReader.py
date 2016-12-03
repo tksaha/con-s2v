@@ -10,6 +10,7 @@ from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRun
 from baselineRunner.Node2VecRunner  import Node2VecRunner
 from baselineRunner.Paragraph2VecRunner import Paragraph2VecRunner
 from baselineRunner.Paragraph2VecCEXERunner import Paragraph2VecCEXERunner
+from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
 
 
 class SentimentTreeBank2WayReader(DocumentReader):
@@ -61,19 +62,22 @@ class SentimentTreeBank2WayReader(DocumentReader):
         return sentenceDict
         Logger.logr.info("Finished reading %i sentence"%line_count)
 
-    def phraseToSentiment(self, fileName):
-        line_count = 0 
-        phraseToSentimentDict = {}
+    def readSentimentValues(self, sentfile):
+        sentiment_val_dict = {}
+        for line in open(sentfile):
+            sentiment_pair = line.strip().split("\t")
+            sentiment_val_dict[int(sentiment_pair[0])] = float(sentiment_pair[1])
 
-        for line in open(fileName, 'rb'):
-            if line_count == 0:
-                pass
-            else:
-                phrase_id,_, sentiment = (line.decode('utf-8').strip()).partition("|")
-                phraseToSentimentDict[int(phrase_id)] = float(sentiment)
-            line_count = line_count + 1
-        return phraseToSentimentDict
-        Logger.logr.info("Finished reading %i phrases"%line_count)
+        return sentiment_val_dict
+
+    def getIstrain(self, splitid):
+        if splitid ==1:
+            istrain = 'YES'
+        elif splitid ==2:
+            istrain = 'NO'
+        else:
+            istrain = 'VALID'
+        return (istrain, istrain)
 
     def getTopicCategory(self, sentiment_val):
         """
@@ -112,34 +116,22 @@ class SentimentTreeBank2WayReader(DocumentReader):
         self.postgres_recorder.alterSequences()
         topic_names = self.readTopic()
 
-        allPhrasesFile = "%s/dictionary.txt"%(self.folderPath)
         dSPlitDict = self.readDSplit("%s/datasetSplit.txt"%self.folderPath)
         sentenceDict = self.readSentences("%s/datasetSentences.txt"%self.folderPath)
-        phraseToSentimentDict = self.phraseToSentiment("%s/sentiment_labels.txt"%self.folderPath)
+        sentiment_val_dict = self.readSentimentValues("%s/sent_sentiment.txt"%self.folderPath)
 
         sentence_id = 0
 
         for sent_id, sentence in sentenceDict.items():
             is_a_sentence = False
             sentence_id = sent_id
-            sentiment_val = -1
+            splitid = dSPlitDict[sentence_id]
 
-            for line in open(allPhrasesFile,'rb'):
-                phrase, _ , phrase_id = (line.decode('utf-8').strip()).partition("|")
-                sentence_mod = sentence.replace("-LRB-","(").replace("-RRB-",")")
-                if phrase == sentence or phrase==sentence_mod:
-                    sentiment_val = phraseToSentimentDict[int(phrase_id)]           
-                    topic, category = self.getTopicCategory(sentiment_val)
-                    is_a_sentence = True 
-                    break 
-                    #self.insertIntoDatabase(phrase, sentence_id, topic, istrain, metadata)
-        
+            istrain, metadata = self.getIstrain(splitid)
 
-            
-            print ("%s\t%s"%(sent_id,sentiment_val))
+            topic, category = self.getTopicCategory(sentiment_val_dict[sentence_id])
+            self.insertIntoDatabase(sentence, sentence_id, topic, istrain, metadata)
 
-
-           
     
         Logger.logr.info("Document reading complete.")
         return 1
@@ -148,20 +140,20 @@ class SentimentTreeBank2WayReader(DocumentReader):
         """
         Discuss with Joty about the clustering settings. 
         """
-        optDict = self._runClassificationOnValidation(pd, rbase, gs,"stree")
-        self.doTesting(optDict, "stree", rbase, pd, gs, True)
+        os.environ['TEST_FOR']='CLASS'
+        os.environ['EVAL'] ='TEST'
+        tfrunner = TFIDFBaselineRunner(self.dbstring)
+        tfrunner.prepareData(pd)
+        tfrunner.runTheBaseline(rbase)
+        tfrunner.runEvaluationTask()
+
+        #optDict = self._runClassificationOnValidation(pd, rbase, gs,"stree")
+        #self.doTesting(optDict, "stree", rbase, pd, gs, True)
 
 
-        #optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
-        #self.doTesting(optDict, "news", rbase, pd, gs, False)
+      
+        #optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"stree")
+        #self.doTesting_Sup(optDict, "stree", rbase, pd, gs, True)
 
-        #optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"news")
-        #optDict ={}
-        #self.doTesting_Sup(optDict, "news", rbase, pd, gs, True)
-
-        #optDict = self._runFastSentClassificationValidation(pd, rbase, gs, "news")
-        #self.doTesting_FastSent(optDict, "news", rbase, pd, gs, True)
-
-        #optDict = self._runFastSentClusteringValidation(pd, rbase, gs, "news")
-        #self.doTesting_FastSent(optDict, "news", rbase, pd, gs, False)
+       
         

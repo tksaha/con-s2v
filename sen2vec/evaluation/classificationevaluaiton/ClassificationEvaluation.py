@@ -168,7 +168,7 @@ class ClassificationEvaluation:
 		
 		vectorizer = TfidfVectorizer(stop_words='english')
 		train_X = vectorizer.fit_transform(train_corpus)
-		test_X = vectorizer.fit_transform(test_corpus)
+		test_X = vectorizer.transform(test_corpus)
 		logistic = linear_model.LogisticRegression()
 		logit = logistic.fit(train_X, train_labels)
 

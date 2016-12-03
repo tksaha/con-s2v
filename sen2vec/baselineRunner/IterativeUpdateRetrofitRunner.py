@@ -156,9 +156,9 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
             reprName = "%s_unweighted"%self.latReprName
             self.__runEval(summaryMethodID, vecFile, reprName)
             
-        vecFile = "%s_weighted"%self.retrofittedsen2vReprFile
-        reprName = "%s_weighted"%self.latReprName
-        self.__runEval(summaryMethodID, vecFile, reprName)
+        # vecFile = "%s_weighted"%self.retrofittedsen2vReprFile
+        # reprName = "%s_weighted"%self.latReprName
+        # self.__runEval(summaryMethodID, vecFile, reprName)
         
         # vecFile = "%s_randomwalk"%self.retrofittedsen2vReprFile
         # reprName = "%s_randomwalk"%self.latReprName

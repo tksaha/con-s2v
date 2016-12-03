@@ -53,6 +53,16 @@ class BaselineRunner:
 		clusterEval.generateData(summaryMethodID, reprName, vDict)
 		clusterEval.runClusteringTask(summaryMethodID, reprName)
 
+
+	def _runClassificationTF(self, summaryMethodID,  reprName, vDict):
+		classeval = ClassificationEvaluation(postgres_connection=self.postgresConnection)
+		classeval.runClassificationTaskTFIDF(summaryMethodID, reprName)
+
+	def _runClustering(self, summaryMethodID, reprName, vDict):
+		clusterEval = ClusteringEvaluation(postgres_connection=self.postgresConnection)
+		clusterEval.runClusteringTaskTFIDF(summaryMethodID, reprName)
+
+
 	@abstractmethod
 	def prepareData(self):
 		"""

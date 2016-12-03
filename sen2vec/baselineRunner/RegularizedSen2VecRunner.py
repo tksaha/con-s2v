@@ -29,6 +29,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
         self.regBetaUNW = float(os.environ['REG_BETA_UNW'])
         self.regBetaW = float(os.environ['REG_BETA_W'])
         self.Graph = nx.Graph()
+        self.window_size = str(10)
         self.cores = multiprocessing.cpu_count()
         self.graphFile = os.environ["GRAPHFILE"]
         self.latReprName = "reg_s2v"
@@ -118,6 +119,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
         wPDict["sentence-vectors"] = str(1)
         wPDict["min-count"] = str(0)
         wPDict["train"] = "%s.txt"%self.sentsFile
+        wPDict["window"] = self.window_size
         
         wPDict["size"]= str(latent_space_size * 2)
         args = []
@@ -222,9 +224,9 @@ class RegularizedSen2VecRunner(BaselineRunner):
         summaryMethodID = 2 
         Logger.logr.info("Starting Regularized Sentence 2 Vector Evaluation")
         
-        regvecFile = "%s_neighbor_w"%(self.regsen2vReprFile)
-        reprName = "%s_neighbor_w"%self.latReprName
-        self.__runEval(summaryMethodID, regvecFile, reprName)
+        # regvecFile = "%s_neighbor_w"%(self.regsen2vReprFile)
+        # reprName = "%s_neighbor_w"%self.latReprName
+        # self.__runEval(summaryMethodID, regvecFile, reprName)
 
         regvecFile = "%s_neighbor_unw"%(self.regsen2vReprFile)
         reprName = "%s_neighbor_unw"%self.latReprName
