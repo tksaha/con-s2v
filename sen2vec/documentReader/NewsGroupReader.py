@@ -185,9 +185,17 @@ class NewsGroupReader(DocumentReader):
         #optDict = self._runFastSentClusteringValidation(pd, rbase, gs, "news")
         #self.doTesting_FastSent(optDict, "news", rbase, pd, gs, False)
 
-        os.environ['TEST_FOR']='CLASS'
+        # os.environ['TEST_FOR']='CLASS'
+        # os.environ['EVAL'] ='TEST'
+        # tfrunner = TFIDFBaselineRunner(self.dbstring)
+        # tfrunner.prepareData(pd)
+        # tfrunner.runTheBaseline(rbase)
+        # tfrunner.runEvaluationTask()
+
+        os.environ['TEST_FOR']='CLUST'
         os.environ['EVAL'] ='TEST'
         tfrunner = TFIDFBaselineRunner(self.dbstring)
         tfrunner.prepareData(pd)
         tfrunner.runTheBaseline(rbase)
         tfrunner.runEvaluationTask()
+

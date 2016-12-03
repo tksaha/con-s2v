@@ -91,9 +91,9 @@ class ClusteringEvaluation:
     			mt.adjusted_mutual_info_score(Y,  estimator.labels_), os.linesep))
 
 	# Latent Representation name should pass "TFIDF"
-	def runClusteringTask_TFIDF(self, summaryMethodID, latReprName): 
-		datafileToWrite = open("%s/%sclusterData_%i.csv"%(self.dataFolder,\
-			 latReprName, summaryMethodID), "w")
+	def runClusteringTaskTFIDF(self, summaryMethodID, latReprName): 
+		from sklearn.feature_extraction.text import TfidfVectorizer
+		
 		
 		test_corpus = []
 		test_ids = []
@@ -101,16 +101,19 @@ class ClusteringEvaluation:
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id",\
 			 "sentence.content",	"sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
-			 	["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'NO'"] ], [], []):
+			 	["summary.method_id", "=", summaryMethodID]], [], []):
 				for nrows in range(0,len(result)):
 					test_ids.append(result[nrows][0])
 					test_corpus.append(result[nrows][1])
 					Y.append(result[nrows][2])
 		
+		
+
 		vectorizer = TfidfVectorizer(stop_words='english')
 		test_X = vectorizer.fit_transform(test_corpus)
-
+		print (test_X.shape)
 		n_clusters=np.unique(Y)
+		print(n_clusters)
 
 		estimator = KMeans(init='k-means++', n_clusters=len(np.unique(Y)), n_init=10)
 		estimator.fit(test_X)				
