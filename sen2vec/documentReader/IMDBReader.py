@@ -3,10 +3,10 @@
 
 import os 
 import logging 
+import re
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from log_manager.log_config import Logger
-import re
 from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner
 from baselineRunner.Node2VecRunner  import Node2VecRunner
 from baselineRunner.Paragraph2VecRunner import Paragraph2VecRunner
@@ -34,15 +34,10 @@ class IMDBReader(DocumentReader):
 		"""
 		rootDir = "%s/train" %self.folderPath
 		return self._getTopics(rootDir)
-	
-	def readDocument(self, ld): 
-		"""
-		"""
-		if ld <= 0: return 0 	
-		self.postgres_recorder.trucateTables()
-		self.postgres_recorder.alterSequences()
-		topic_names = self.readTopic()
-		
+
+
+	def __readAPass(self, load=0):
+		train_doc_ids = []
 		
 		document_id = 0
 		for first_level_folder in next(os.walk(self.folderPath))[1]:
@@ -60,17 +55,23 @@ class IMDBReader(DocumentReader):
 						try:
 							trainortest = first_level_folder
 							metadata = "SPLIT:%s"%trainortest
-							istrain = 'YES' if trainortest.lower() == 'train' else 'NO'			
+							if trainortest.lower() == 'train' and topic !='unsup':
+							   train_doc_ids.append(document_id)
 						except:
 							Logger.logr.info("NO MetaData or Train Test Tag")
-						self.postgres_recorder.insertIntoDocTable(document_id, title, \
-									doc_content, file_, metadata) 
-						category = topic.split('.')[0]
-						self.postgres_recorder.insertIntoDocTopTable(document_id, \
-									[topic], [category]) 		
-						self._recordParagraphAndSentence(document_id, doc_content, self.postgres_recorder, topic, istrain)
-					
-					
+	
+	def readDocument(self, ld): 
+		"""
+		"""
+		if ld <= 0: return 0            
+        self.postgres_recorder.trucateTables()
+        self.postgres_recorder.alterSequences()
+
+        train_doc_ids = self.__readAPass(0)
+        print (len(train_doc_ids))
+        #self.__createValidationSet(train_doc_ids)
+        #self.__readAPass(1)
+        			
 		Logger.logr.info("Document reading complete.")
 		return 1
 	
