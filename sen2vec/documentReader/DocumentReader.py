@@ -391,7 +391,7 @@ class DocumentReader:
 			f1 = {}
 			window_opt = None #var for the optimal window
 			window_size_list = ["8", "10", "12"]
-			window_size_list= ["10"]
+			#window_size_list= ["10"]
 			for window in window_size_list:
 				Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)				
 				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
