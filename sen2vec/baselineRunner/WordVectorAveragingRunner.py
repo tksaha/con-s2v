@@ -5,6 +5,7 @@ import os
 import sys
 import pickle
 import numpy as np
+import scipy.stats
 from gensim.models import Doc2Vec
 import gensim.models.doc2vec
 from log_manager.log_config import Logger 
@@ -15,13 +16,12 @@ from word2vec.WordDoc2Vec import WordDoc2Vec
 from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
 from summaryGenerator.SummaryGenerator import SummaryGenerator
 from baselineRunner.BaselineRunner import BaselineRunner
-import scipy.stats
 
 
 label_sent = lambda id_: 'SENT_%s' %(id_)
 
 
-class P2VSENTCExecutableRunner(BaselineRunner):
+class WordVectorAveragingRunner(BaselineRunner):
 	def __init__(self, *args, **kwargs):
 		"""
 		"""
@@ -31,7 +31,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		self.doc2vecOut = os.environ['P2VECSENTDOC2VECOUT']
 		self.postgresConnection.connectDatabase()
 		self.utFunction = Utility("Text Utility")
-		self.latReprName = "p2vsent"
+		self.latReprName = "wordaverage"
 		self.rootdir = os.environ['SEN2VEC_DIR']
 	
 	def prepareData(self, pd):
@@ -106,14 +106,29 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		sent2vec_raw_dict = {}
 
 
-		for result in self.postgresConnection.memoryEfficientSelect(["id"],\
+		for result in self.postgresConnection.memoryEfficientSelect(["id", "content"],\
 			 ["sentence"], [], [], ["id"]):
 			for row_id in range(0,len(result)):
 				id_ = result[row_id][0]	
-				vec1 = sent2vecModel[label_sent(id_)]
-				vec2 = sent2vecModelDBOW[label_sent(id_)]
+				sentence = result[row_id][1]
+
+				content = gensim.utils.to_unicode(sentence) 
+				content = self.utFunction.normalizeText(content, remove_stopwords=0)
+
+				if len(content) == 0:
+					continue 
+				vec1 = np.zeros(latent_space_size)
+				vec2 = np.zeros(latent_space_size)
+				for word in content: 
+					vec1 += sent2vecModel[word]
+					vec2 += sent2vecModelDBOW[word]
+
+				vec1 = vec1 / len(content)
+				vec2 = vec2 / len(content)
+
 				vec = np.hstack((vec1,vec2))
 				sent2vec_raw_dict[id_] = vec 
+
 				#Logger.logr.info("Reading a vector of length %s"%vec.shape)
 				sent2vecFileRaw.write("%s "%(str(id_)))	
 				vec_str = self.convert_to_str(vec)

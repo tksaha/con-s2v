@@ -143,11 +143,11 @@ class SentimentTreeBank2WayReader(DocumentReader):
         Discuss with Joty about the clustering settings. 
         """
         
-        #optDict = self._runClassificationOnValidation(pd, rbase, gs,"stree2way")
-        #self.doTesting(optDict, "stree2way", rbase, pd, gs, True)
+        optDict = self._runClassificationOnValidation(pd, rbase, gs,"stree2way")
+        self.doTesting(optDict, "stree2way", rbase, pd, gs, True)
       
-        optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"stree")
-        self.doTesting_Sup(optDict, "stree", rbase, pd, gs, True)
+        #optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"stree")
+        #self.doTesting_Sup(optDict, "stree", rbase, pd, gs, True)
 
        
         # os.environ['TEST_FOR']='CLASS'
