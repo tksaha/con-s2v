@@ -1,7 +1,7 @@
 #!/bin/bash
 # Path to Reuters data
 #export REUTERS_PATH=~/Documents/sen2vec/Data/reuter21578_temp
-export SEN2VEC_DIR=~/Documents/SICK/sen2vec
+export SEN2VEC_DIR=~/Documents/STree2Way/sen2vec
 export REUTERS_PATH=$SEN2VEC_DIR/reuters21578
 export SICK_PATH=$SEN2VEC_DIR/Data/sick_data
 
@@ -14,11 +14,13 @@ export REUTERS_DBSTRING=reuter,postgres,postgres,localhost,5432
 export NEWSGROUP_DBSTRING=news,postgres,postgres,localhost,5432
 export IMDB_DBSTRING=imdb,postgres,postgres,localhost,5432
 export SENTTREE_DBSTRING=senttree,postgres,postgres,localhost,5432
+export SENTTREE2WAY_DBSTRING=senttree2way,postgres,postgres,localhost,5432
 export SICK_DBSTRING=sick,postgres,postgres,localhost,5432
 
 export NEWSGROUP_PATH=$SEN2VEC_DIR/Data/newsgroup/
 export IMDB_PATH=$SEN2VEC_DIR/Data/aclImdb
 export SENTTREE_PATH=$SEN2VEC_DIR/Data/stanfordSentimentTreebank
+
 
 
 export P2VECSENTRUNNERINFILE=$SEN2VEC_DIR/Data/sents
@@ -41,7 +43,7 @@ export P2VECSENTDOC2VECOUT=$SEN2VEC_DIR/Data/sentCEXE_repr
 export TRTESTFOLDER=$SEN2VEC_DIR/Data
 
 export N2VOUTFILE=$SEN2VEC_DIR/Data/node_repr
-export GINTERTHR=0.5
+export GINTERTHR=0.8
 export GINTRATHR=0.3
 
 export GTHRSUMTFIDF=0.1
@@ -56,7 +58,7 @@ export KNEIGHBOR=20
 
 
 export ITERUPDATESEN2VECFILE=$SEN2VEC_DIR/Data/retrofitted_repr
-export GRAPHFILE=$SEN2VEC_DIR/Data/graph_0.5
+export GRAPHFILE=$SEN2VEC_DIR/Data/graph_0.8
 
 export ROUGE=$SEN2VEC_DIR/sen2vec/rouge/ROUGE-1.5.5.pl
 export ROUGE_EVAL_HOME=$SEN2VEC_DIR/sen2vec/rouge/data

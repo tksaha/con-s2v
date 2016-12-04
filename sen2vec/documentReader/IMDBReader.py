@@ -79,35 +79,4 @@ class IMDBReader(DocumentReader):
 		"""
 		"""
 		latent_space_size = 300
-		Logger.logr.info("Starting Running Para2vec (Doc) Baseline")
-		# paraBaseline = Paragraph2VecSentenceRunner(self.dbstring)
-		# paraBaseline.prepareData()
-		# paraBaseline.runTheBaseline(latent_space_size)
-
-		# Logger.logr.info("Starting Running Node2vec Baseline")
-		# n2vBaseline = Node2VecRunner(self.dbstring)
-		# n2vBaseline.prepareData()
-
-		# paraBaseline.runEvaluationTask()
-		# paraBaseline.runClassificationTask()
-		
-		#n2vBaseline.runTheBaseline(latent_space_size)
-
-		#Logger.logr.info("Starting Running Iterative Update Method")
-		#iterUdateBaseline = IterativeUpdateRetrofitRunner(self.dbstring)
-		#iterUdateBaseline.prepareData()
-		#iterUdateBaseline.runTheBaseline()
-		
-		#docBaseLine = Paragraph2VecRunner(self.dbstring)
-		#docBaseLine.prepareData()
-		#docBaseLine.runTheBaseline(latent_space_size)
-		#docBaseLine.runEvaluationTask()
-		#docBaseLine.runClassificationTask()
-
-		docBaseLineCEXE = Paragraph2VecCEXERunner(self.dbstring)
-		docBaseLineCEXE.prepareData()
-		docBaseLineCEXE.runTheBaseline(latent_space_size)
-		docBaseLineCEXE.runEvaluationTask()
-		docBaseLineCEXE.runClassificationTask()
-
 	

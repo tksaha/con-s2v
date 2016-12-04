@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import os 
 import logging 
 import re
@@ -13,7 +14,7 @@ from baselineRunner.Paragraph2VecCEXERunner import Paragraph2VecCEXERunner
 from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
 
 
-class SentimentTreeBank5WayReader(DocumentReader):
+class SentimentTreeBank2WayReader(DocumentReader):
     def __init__(self, *args, **kwargs):
         """
         Initialization assumes that SENTTREE_PATH environment is set. 
@@ -24,8 +25,8 @@ class SentimentTreeBank5WayReader(DocumentReader):
         self.folderPath = os.environ['SENTTREE_PATH']
 
     def readTopic(self):
-        topic_names =  ['vneg', 'neg','ntrl', 'pos', 'vpos']
-        categories  =  ['vneg', 'neg','ntrl', 'pos', 'vpos']
+        topic_names =  ['pos', 'neg']
+        categories  =  ['pos', 'neg']
 
         self.postgres_recorder.insertIntoTopTable(topic_names, categories)              
         Logger.logr.info("[%i] Topic reading complete." %(len(topic_names)))
@@ -87,16 +88,13 @@ class SentimentTreeBank5WayReader(DocumentReader):
         (0.6, 0.8] positive 
         (0.8, 1.0] very positive
         """
-        if sentiment_val <= 0.2: 
-            return ('vng', 'vng')
-        elif sentiment_val > 0.2 and sentiment_val <= 0.4:
+        if sentiment_val <= 0.4:
             return ('ng', 'ng')
         elif sentiment_val > 0.4 and sentiment_val<= 0.6:
             return ('ntrl','ntrl')
-        elif sentiment_val > 0.6 and sentiment_val<= 0.8:
+        elif sentiment_val > 0.6:
             return ('pos', 'pos')
-        else:
-            return ('vpos', 'vpos')
+      
 
     def insertIntoDatabase(self, sent_, document_id, topic, istrain, metadata):
         self.postgres_recorder.insertIntoDocTable(document_id, 'senttree', \
@@ -130,6 +128,10 @@ class SentimentTreeBank5WayReader(DocumentReader):
             istrain, metadata = self.getIstrain(splitid)
 
             topic, category = self.getTopicCategory(sentiment_val_dict[sentence_id])
+
+            if topic =='ntrl':
+               continue 
+
             self.insertIntoDatabase(sentence, sentence_id, topic, istrain, metadata)
 
     
@@ -140,20 +142,19 @@ class SentimentTreeBank5WayReader(DocumentReader):
         """
         Discuss with Joty about the clustering settings. 
         """
-        os.environ['TEST_FOR']='CLASS'
-        os.environ['EVAL'] ='TEST'
-        tfrunner = TFIDFBaselineRunner(self.dbstring)
-        tfrunner.prepareData(pd)
-        tfrunner.runTheBaseline(rbase)
-        tfrunner.runEvaluationTask()
-
-        #optDict = self._runClassificationOnValidation(pd, rbase, gs,"stree")
-        #self.doTesting(optDict, "stree", rbase, pd, gs, True)
-
-
+        
+        optDict = self._runClassificationOnValidation(pd, rbase, gs,"stree2way")
+        self.doTesting(optDict, "stree2way", rbase, pd, gs, True)
       
         #optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"stree")
         #self.doTesting_Sup(optDict, "stree", rbase, pd, gs, True)
 
        
+        # os.environ['TEST_FOR']='CLASS'
+        # os.environ['EVAL'] ='TEST'
+        # tfrunner = TFIDFBaselineRunner(self.dbstring)
+        # tfrunner.prepareData(pd)
+        # tfrunner.runTheBaseline(rbase)
+        # tfrunner.runEvaluationTask()
+
         

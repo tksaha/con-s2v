@@ -1,11 +1,11 @@
 
 # Using -Ofast instead of -O3 might result in faster code, but is supported only by newer GCC versions
-CC = gcc 
-CFLAGS = -lm -pthread -Ofast -march=native -Wall -funroll-loops -Wno-unused-result -Wmaybe-uninitialized
+#CC = gcc 
+#CFLAGS = -lm -pthread -Ofast -march=native -Wall -funroll-loops -Wno-unused-result -Wmaybe-uninitialized
 
 # for Debugging purposes, please turn on the following version of CC and CFLAGS
-#CC = gcc -g -o0 
-#CFLAGS = -lm -pthread  -march=native -Wall -funroll-loops -Wno-unused-result
+CC = gcc -g -o0 
+CFLAGS = -lm -pthread  -march=native -Wall -funroll-loops -Wno-unused-result
 
 all: word2vec retrofit_word2vec_one reg_sen2vec_net  joint_learner
 
