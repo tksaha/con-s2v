@@ -19,6 +19,7 @@
 #include <pthread.h>
 
 #define MAX_STRING 100
+#define FILE_NAME_LENGTH 1000
 #define EXP_TABLE_SIZE 1000
 #define MAX_EXP 6
 #define MAX_SENTENCE_LENGTH 1000
@@ -40,11 +41,11 @@ struct n2vword {
 };
 
 
-char train_file[MAX_STRING], output_file[MAX_STRING];
-char save_vocab_file[MAX_STRING], read_vocab_file[MAX_STRING];
-char initfromFile[MAX_STRING];
-char neighborFile[MAX_STRING];
-char labelFile[MAX_STRING];
+char train_file[FILE_NAME_LENGTH], output_file[FILE_NAME_LENGTH];
+char save_vocab_file[FILE_NAME_LENGTH], read_vocab_file[FILE_NAME_LENGTH];
+char initfromFile[FILE_NAME_LENGTH];
+char neighborFile[FILE_NAME_LENGTH];
+char labelFile[FILE_NAME_LENGTH];
 
 struct vocab_word *vocab;
 struct n2vword *n2vvocab; 
@@ -60,11 +61,9 @@ real lambda = 0.0;
 
 
 real *syn0, *syn0temp, *temp,  *syn1, *syn1neg, *initembed, *expTable, *templabel, *syn1label; 
-long long *label_occupant;
 long long  *nbrs;
 long long  *label_sent; 
 int nlabels = 1; 
-long long max_occupant; 
 
 
 clock_t start;
@@ -73,7 +72,7 @@ int hs = 0, negative = 5;
 const int table_size = 1e8;
 int *table;
 int *table_n2v; 
-//real *tempclassw; 
+real *tempclassw; 
 
 
 /* 
@@ -412,26 +411,16 @@ void loadLabelFile()
 {
 
   char *word;
-  long long a, labelval,index, it, nnodes;
+  long long a, labelval,index, it, nnodes; 
   word = (char*)malloc(MAX_STRING* sizeof(char));
-  long long nbr; 
 
   a = posix_memalign((void **)&label_sent, 128, (long long)vocab_size * 1 *sizeof(long long));
   if (label_sent == NULL){printf("Memory allocation failed\n"); exit(1);}
   for (a = 0; a < vocab_size; a++) label_sent[a] = -1;
 
-
-
   FILE *finit = fopen(labelFile, "rb");
-  fscanf(finit, "%lld %d %lld", &nnodes, &nlabels, &max_occupant);
-  if (debug_mode > 3) printf("nnodes=%lld, nlabels=%d, max_occupant= %lld \n", nnodes, nlabels, max_occupant);
-
-  a = posix_memalign((void **)&label_occupant, 128, (long long)nlabels * max_occupant *sizeof(long long));
-  if (label_occupant==NULL) {printf("Memory allocation failed\n");}
-
-  for (a=0; a <nlabels; a++){
-    for (nbr =0; nbr<max_occupant; nbr++){label_occupant[a*max_neighbors+nbr] = -1; }
-  }
+  fscanf(finit, "%lld %d", &nnodes, &nlabels);
+  if (debug_mode > 3) printf("nnodes=%lld, nlabels=%d\n", nnodes, nlabels);
 
   for (it=0; it<nnodes; it++) {
     fscanf(finit,"%s",word);
@@ -441,13 +430,6 @@ void loadLabelFile()
     else{
       if (debug_mode > 3) printf("index=%lld label=%lld\n",index, labelval);
       label_sent[index] = labelval; 
-      for (nbr=0; nbr<max_occupant; nbr++)
-      {
-        if (label_occupant[labelval*max_occupant+nbr] <0)
-        {
-          label_occupant[labelval*max_occupant+nbr] = index;
-        }
-      }
     }  
   }
   free(word); 
@@ -519,8 +501,8 @@ void *TrainModelThread(void *id) {
 
   unsigned long long next_random = (long long)id;
   int start_xb, end_xb, nlab; 
-  //long long sentence_label;
-  real f, g,  diff;
+  long long sentence_label;
+  real f, g, class_w, diff;
   clock_t now;
   real *neu1 = (real *)calloc(layer1_size, sizeof(real));
   real *neu1e = (real *)calloc(layer1_size, sizeof(real));
@@ -528,7 +510,7 @@ void *TrainModelThread(void *id) {
   tempclassw = (real *)calloc(nlabels, sizeof(real));
   
 
-  //real max_weight; 
+  real max_weight; 
   FILE *fi = fopen(train_file, "rb");
 
   printf("Num threads =%d\n", num_threads);
@@ -706,15 +688,6 @@ void *TrainModelThread(void *id) {
             if (nbr>=start_xb && nbr<end_xb) {
               nbrindex = nbrs[l1n+nbr]; 
               if (nbrindex <0) break; 
-              if (labelFile[0]!= 0){
-                if (label_sent[last_word]>0 && label_sent[nbrindex]>0)
-                {
-                  if (label_sent[last_word] != label_sent[nbrindex])
-                  {
-                    continue;
-                  }
-                }
-              }
               for (c = 0; c < layer1_size; c++) neu1e[c] = 0;
               if (negative > 0) for (d = 0; d < negative + 1; d++) {
                 if (d == 0) {
@@ -741,7 +714,41 @@ void *TrainModelThread(void *id) {
           }}
         }
 
-       
+
+        if (labelFile[0]!=0){
+        // https://hips.seas.harvard.edu/blog/2013/01/09/computing-log-sum-exp/
+        sentence_label = label_sent[sen[0]];
+        if (sentence_label >=0){
+          max_weight = 0; 
+          for (nlab =  0; nlab < nlabels; nlab++){
+            class_w = 0.0 ; 
+            for(c=0 ; c<layer1_size; c++) class_w = class_w + (syn0[c+l1] * syn1label[c + nlab*layer1_size]);
+
+            if (nlab == 0) max_weight = class_w;
+            else{
+              if (class_w > max_weight) max_weight = class_w;
+            }
+            tempclassw[nlab] = class_w;
+          }
+
+          f = 0.0;
+          for (nlab =  0; nlab < nlabels; nlab++){
+            f = f + exp(tempclassw[nlab] - max_weight);
+          }
+          //f = max_weight + log (f);
+          for (c = 0; c < layer1_size; c++) neu1e[c] = 0.0;
+          for (nlab = 0; nlab <nlabels; nlab++){
+            if (nlab == sentence_label) label = 1.0; 
+            else label = 0.0; 
+
+            l2 = nlab * layer1_size; 
+            g = (label - (exp(tempclassw[nlab] - max_weight) / f)) * alpha; 
+            for (c = 0; c < layer1_size; c++) neu1e[c] += g * syn1label[c + l2];
+            for (c = 0; c < layer1_size; c++) syn1label[c + l2] += g * syn0[c+l1];
+          }
+          for (c = 0; c < layer1_size; c++) syn0[c+l1] += neu1e[c];
+        }} 
+
         if (lambda > 0.0){
         for (c = 0; c < layer1_size; c++){
         l1n = last_word * max_neighbors;
