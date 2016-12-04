@@ -139,8 +139,8 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 			 lambda_val = lambda_val)
 
 		summGen.populateSummary(2, s2vDict)
-		summGen.populateSummary(21, {})
-		summGen.populateSummary(1, {})
+		#summGen.populateSummary(21, {})
+		#summGen.populateSummary(1, {})
 
 
 	def runEvaluationTask(self):

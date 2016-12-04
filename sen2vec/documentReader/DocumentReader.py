@@ -205,41 +205,42 @@ class DocumentReader:
 
 			generate_walk = True 
 	
-			f1 = {}
-			window_opt = None #var for the optimal window
-			window_size_list = ["8", "10", "12"]
-			for window in window_size_list:
-				Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)				
-				paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-				if 	window == window_size_list[0]:  
-					self.postgres_recorder.truncateSummaryTable()
-					paraBaseline.prepareData(pd)		
-				paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-				if window == window_size_list[0]:
-					paraBaseline.generateSummary(gs)
-				paraBaseline.runEvaluationTask()
-				paraBaseline.doHouseKeeping()	
-				f1[window] = self.__getF1(paraBaseline.latReprName)
-				Logger.logr.info("F1 for %s = %s" %(window, f1[window]))
-			window_opt = max(f1, key=f1.get) 
-			f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
-			f.write("P2V Window F1s: %s%s" %(f1, os.linesep))
-			f.flush()
-			optPDict["window"] = window_opt
+			# f1 = {}
+			# window_opt = None #var for the optimal window
+			# window_size_list = ["8", "10", "12"]
+			# for window in window_size_list:
+			# 	Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)				
+			# 	paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			# 	if 	window == window_size_list[0]:  
+			# 		self.postgres_recorder.truncateSummaryTable()
+			# 		paraBaseline.prepareData(pd)		
+			# 	paraBaseline.runTheBaseline(rbase,latent_space_size, window)
+			# 	if window == window_size_list[0]:
+			# 		paraBaseline.generateSummary(gs)
+			# 	paraBaseline.runEvaluationTask()
+			# 	paraBaseline.doHouseKeeping()	
+			# 	f1[window] = self.__getF1(paraBaseline.latReprName)
+			# 	Logger.logr.info("F1 for %s = %s" %(window, f1[window]))
+			# window_opt = max(f1, key=f1.get) 
+			# f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
+			# f.write("P2V Window F1s: %s%s" %(f1, os.linesep))
+			# f.flush()
+			# optPDict["window"] = window_opt
 
-			Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
+			# Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
 			
-			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
-			self.postgres_recorder.truncateSummaryTable()
-			paraBaseline.generateSummary(gs)
-			paraBaseline.doHouseKeeping()
+			# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			# paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
+			# self.postgres_recorder.truncateSummaryTable()
+			# paraBaseline.generateSummary(gs)
+			# paraBaseline.doHouseKeeping()
 
-			# if generate_walk == True:
-			#    n2vBaseline = Node2VecRunner(self.dbstring)
-			#    n2vBaseline.prepareData(pd)
-			#    n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
-			#    generate_walk = False 
+			optPDict["window"] = "10"
+			if generate_walk == True:
+			   n2vBaseline = Node2VecRunner(self.dbstring)
+			   n2vBaseline.prepareData(pd)
+			   n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
+			   generate_walk = False 
 			
 			# for full fixed nbr
 			f1 = {}

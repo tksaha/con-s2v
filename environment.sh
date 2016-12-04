@@ -1,7 +1,7 @@
 #!/bin/bash
 # Path to Reuters data
 #export REUTERS_PATH=~/Documents/sen2vec/Data/reuter21578_temp
-export SEN2VEC_DIR=~/Documents/STree2Way/sen2vec
+export SEN2VEC_DIR=~/Documents/imdb/sen2vec
 export REUTERS_PATH=$SEN2VEC_DIR/reuters21578
 export SICK_PATH=$SEN2VEC_DIR/Data/sick_data
 
@@ -44,7 +44,7 @@ export TRTESTFOLDER=$SEN2VEC_DIR/Data
 
 export N2VOUTFILE=$SEN2VEC_DIR/Data/node_repr
 export GINTERTHR=0.8
-export GINTRATHR=0.3
+export GINTRATHR=0.6
 
 export GTHRSUMTFIDF=0.1
 export GTHRSUMLAT=0.1
@@ -58,7 +58,7 @@ export KNEIGHBOR=20
 
 
 export ITERUPDATESEN2VECFILE=$SEN2VEC_DIR/Data/retrofitted_repr
-export GRAPHFILE=$SEN2VEC_DIR/Data/graph_0.8
+export GRAPHFILE=$SEN2VEC_DIR/Data/graph_0.8_0.6
 
 export ROUGE=$SEN2VEC_DIR/sen2vec/rouge/ROUGE-1.5.5.pl
 export ROUGE_EVAL_HOME=$SEN2VEC_DIR/sen2vec/rouge/data

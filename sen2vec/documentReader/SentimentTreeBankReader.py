@@ -140,12 +140,7 @@ class SentimentTreeBank5WayReader(DocumentReader):
         """
         Discuss with Joty about the clustering settings. 
         """
-        os.environ['TEST_FOR']='CLASS'
-        os.environ['EVAL'] ='TEST'
-        tfrunner = TFIDFBaselineRunner(self.dbstring)
-        tfrunner.prepareData(pd)
-        tfrunner.runTheBaseline(rbase)
-        tfrunner.runEvaluationTask()
+        
 
         #optDict = self._runClassificationOnValidation(pd, rbase, gs,"stree")
         #self.doTesting(optDict, "stree", rbase, pd, gs, True)
@@ -154,6 +149,13 @@ class SentimentTreeBank5WayReader(DocumentReader):
       
         #optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"stree")
         #self.doTesting_Sup(optDict, "stree", rbase, pd, gs, True)
+
+        os.environ['TEST_FOR']='CLASS'
+        os.environ['EVAL'] ='TEST'
+        tfrunner = TFIDFBaselineRunner(self.dbstring)
+        tfrunner.prepareData(pd)
+        tfrunner.runTheBaseline(rbase)
+        tfrunner.runEvaluationTask()
 
        
         
