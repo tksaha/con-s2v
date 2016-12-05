@@ -170,8 +170,8 @@ class NewsGroupReader(DocumentReader):
     def runBaselines(self, pd, rbase, gs):
         """
         """
-        #optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
-        #self.doTesting(optDict, "news", rbase, pd, gs, True)
+        optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
+        self.doTesting(optDict, "news", rbase, pd, gs, True)
         #optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
         #self.doTesting(optDict, "news", rbase, pd, gs, False)
 
@@ -192,10 +192,10 @@ class NewsGroupReader(DocumentReader):
         # tfrunner.runTheBaseline(rbase)
         # tfrunner.runEvaluationTask()
 
-        os.environ['TEST_FOR']='CLUST'
-        os.environ['EVAL'] ='TEST'
-        tfrunner = TFIDFBaselineRunner(self.dbstring)
-        tfrunner.prepareData(pd)
-        tfrunner.runTheBaseline(rbase)
-        tfrunner.runEvaluationTask()
+        # os.environ['TEST_FOR']='CLUST'
+        # os.environ['EVAL'] ='TEST'
+        # tfrunner = TFIDFBaselineRunner(self.dbstring)
+        # tfrunner.prepareData(pd)
+        # tfrunner.runTheBaseline(rbase)
+        # tfrunner.runEvaluationTask()
 

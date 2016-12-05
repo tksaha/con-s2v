@@ -231,12 +231,12 @@ class DocumentReader:
 
 			# Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
 			
-			window_opt = "8"
-			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-			paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
-			self.postgres_recorder.truncateSummaryTable()
-			paraBaseline.generateSummary(gs)
-			paraBaseline.doHouseKeeping()
+			# window_opt = "8"
+			# paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			# paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt)
+			# self.postgres_recorder.truncateSummaryTable()
+			# paraBaseline.generateSummary(gs)
+			# paraBaseline.doHouseKeeping()
 
 
 
@@ -794,13 +794,14 @@ class DocumentReader:
 			# paraBaseline.doHouseKeeping()
 			# f.flush()
 			
-
+			f.write("Optimal Window for word averaging is: %s%s" %(optPDict["window-avg"], os.linesep))	
 			wvBaseline = WordVectorAveragingRunner (self.dbstring)
 			wvBaseline.prepareData(pd)		
 			wvBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window-avg"])
 			wvBaseline.runEvaluationTask()
 			self.__writeResult("%s"%wvBaseline.latReprName, f)
 			wvBaseline.doHouseKeeping()	
+			f.flush()
 
 			# fixed full 
 			# os.environ["NBR_TYPE"]=str(0)
