@@ -184,10 +184,11 @@ class ReutersReader(DocumentReader):
         """
         """
         #optDict = self._runClassificationOnValidation(pd, rbase, gs,"reuter")
-        #optDict = {}
         #self.doTesting(optDict, "reuter", rbase, pd, gs, True)
-        #optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
-        #self.doTesting(optDict, "reuter", rbase, pd, gs, False)
+
+
+        optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
+        self.doTesting(optDict, "reuter", rbase, pd, gs, False)
 
 
         #optDict = self._runFastSentClassificationValidation(pd, rbase, gs, "reuter")
@@ -203,12 +204,12 @@ class ReutersReader(DocumentReader):
         # tfrunner.runTheBaseline(rbase)
         # tfrunner.runEvaluationTask()
 
-        os.environ['TEST_FOR']='CLUST'
-        os.environ['EVAL'] ='TEST'
-        tfrunner = TFIDFBaselineRunner(self.dbstring)
-        tfrunner.prepareData(pd)
-        tfrunner.runTheBaseline(rbase)
-        tfrunner.runEvaluationTask()
+        # os.environ['TEST_FOR']='CLUST'
+        # os.environ['EVAL'] ='TEST'
+        # tfrunner = TFIDFBaselineRunner(self.dbstring)
+        # tfrunner.prepareData(pd)
+        # tfrunner.runTheBaseline(rbase)
+        # tfrunner.runEvaluationTask()
 
 
 
