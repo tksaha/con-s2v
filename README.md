@@ -78,6 +78,11 @@ the dataset:
 pg_restore --jobs=3 --exit-on-error --no-owner --dbname=news sql_dump.dump
 ```
 
+or 
+```
+pg_restore --jobs=3 -n public --exit-on-error --no-owner --dbname=news sql_dump.dump
+```
+
 We are assuming that either you are using `postgres` as the username or any other username
 which already has all the required privileges. To change the password for the `postgres` user,
 use the following command-
@@ -113,6 +118,13 @@ type the following command for creating executable:
 make clean
 make
 ```
+
+## Installation of Theano for Skip-Thought
+```
+pip install theano
+sudo apt install nvidia-cuda-toolkit
+```
+
 
 ## Running the Project 
 Run sen2vec with -h argument to see all possible options:
