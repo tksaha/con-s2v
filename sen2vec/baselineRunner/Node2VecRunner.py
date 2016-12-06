@@ -57,11 +57,6 @@ class Node2VecRunner(BaselineRunner):
 		Logger.logr.info ("Inserted %d nodes in the graph"\
 			 %(self.Graph.number_of_nodes()))
 
-	def getDocID(self, sentence_id):
-		for result in self.postgresConnection.memoryEfficientSelect(['doc_id'],\
-			['sentence'],[['id','=',str(sentence_id)]],[],[]):
-			return int(result[0][0])
-
 	def insertGraphEdges(self):
 		"""
 		Process sentences differently for inter and 
@@ -123,13 +118,10 @@ class Node2VecRunner(BaselineRunner):
 				#Logger.logr.info("Number of sentence in sentence"\
 				#	 "dictionary is %i"%len(self.sentenceDict))
 				for sentence_result in self.postgresConnection.memoryEfficientSelect(\
-					['id','content'],['sentence'],[["doc_id","=",document_id]],[],[]):
+					['id'],['sentence'],[["doc_id","=",document_id]],[],[]):
 					for inrow_id in range(0, len(sentence_result)):
 						sentence_id = int(sentence_result[inrow_id][0])
-						sentence = sentence_result[inrow_id][1]
-						self.sentenceDict[sentence_id] = sentence
-				#Logger.logr.info("Number of sentence in sentence"\
-				#		 "dictionary is %i"%len(self.sentenceDict))
+						self.sentenceDict[sentence_id] = 1
 				self.insertGraphEdges() 
 					
 		nx.write_gpickle(self.Graph, self.graphFile)
