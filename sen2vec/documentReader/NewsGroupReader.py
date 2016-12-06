@@ -17,6 +17,7 @@ from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
 from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
 from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
+from baselineRunner.SkipThoughtRunner import SkipThoughtRunner
 
 class NewsGroupReader(DocumentReader):
     """ 
@@ -170,8 +171,9 @@ class NewsGroupReader(DocumentReader):
     def runBaselines(self, pd, rbase, gs):
         """
         """
-        optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
-        self.doTesting(optDict, "news", rbase, pd, gs, True)
+        #optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
+        #self.doTesting(optDict, "news", rbase, pd, gs, True)
+
         #optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
         #self.doTesting(optDict, "news", rbase, pd, gs, False)
 
@@ -198,4 +200,6 @@ class NewsGroupReader(DocumentReader):
         # tfrunner.prepareData(pd)
         # tfrunner.runTheBaseline(rbase)
         # tfrunner.runEvaluationTask()
+
+        sthought = SkipThoughtRunner(self.dbstring)
 

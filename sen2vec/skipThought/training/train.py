@@ -1,27 +1,35 @@
 """
 Main trainer function
+Converted to python 3 compatible mode using following reference: 
+http://python-future.org/automatic_conversion.html
+
+Commands: 
+futurize  --stage1 -w  train.py
 """
-import theano
-import theano.tensor as tensor
-
-import cPickle as pkl
-import numpy
-import copy
-
+from __future__ import Logger.logr.info_function
+from __future__ import absolute_import
 import os
 import warnings
 import sys
 import time
+import numpy
+import copy
+from . import homogeneous_data
+import theano
+from .utils import *
+from .optim import adam
+from .model import init_params, build_model
+from .vocab import load_dictionary
 
-import homogeneous_data
-
+import theano.tensor as tensor
+import pickle as pkl
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+from .layers import get_layer, param_init_fflayer, fflayer, param_init_gru, gru_layer
+from log_manager.log_config import Logger 
 
-from utils import *
-from layers import get_layer, param_init_fflayer, fflayer, param_init_gru, gru_layer
-from optim import adam
-from model import init_params, build_model
-from vocab import load_dictionary
+
+
+
 
 # main trainer
 def trainer(X, 
@@ -61,16 +69,16 @@ def trainer(X,
     model_options['saveFreq'] = saveFreq
     model_options['reload_'] = reload_
 
-    print model_options
+    Logger.logr.info(model_options)
 
     # reload options
     if reload_ and os.path.exists(saveto):
-        print 'reloading...' + saveto
+        Logger.logr.info('reloading...' + saveto)
         with open('%s.pkl'%saveto, 'rb') as f:
             models_options = pkl.load(f)
 
     # load dictionary
-    print 'Loading dictionary...'
+    Logger.logr.info('Loading dictionary...')
     worddict = load_dictionary(dictionary)
 
     # Inverse dictionary
@@ -80,7 +88,7 @@ def trainer(X,
     word_idict[0] = '<eos>'
     word_idict[1] = 'UNK'
 
-    print 'Building model'
+    Logger.logr.info('Building model')
     params = init_params(model_options)
     # reload parameters
     if reload_ and os.path.exists(saveto):
@@ -95,9 +103,9 @@ def trainer(X,
     inps = [x, x_mask, y, y_mask, z, z_mask]
 
     # before any regularizer
-    print 'Building f_log_probs...',
+    Logger.logr.info('Building f_log_probs...', end=' ')
     f_log_probs = theano.function(inps, cost, profile=False)
-    print 'Done'
+    Logger.logr.info('Done')
 
     # weight decay, if applicable
     if decay_c > 0.:
@@ -109,12 +117,12 @@ def trainer(X,
         cost += weight_decay
 
     # after any regularizer
-    print 'Building f_cost...',
+    Logger.logr.info('Building f_cost...', end=' ')
     f_cost = theano.function(inps, cost, profile=False)
-    print 'Done'
+    Logger.logr.info('Done')
 
-    print 'Done'
-    print 'Building f_grad...',
+    Logger.logr.info('Done')
+    Logger.logr.info('Building f_grad...', end=' ')
     grads = tensor.grad(cost, wrt=itemlist(tparams))
     f_grad_norm = theano.function(inps, [(g**2).sum() for g in grads], profile=False)
     f_weight_norm = theano.function([], [(t**2).sum() for k,t in tparams.iteritems()], profile=False)
@@ -131,11 +139,11 @@ def trainer(X,
         grads = new_grads
 
     lr = tensor.scalar(name='lr')
-    print 'Building optimizers...',
+    Logger.logr.info('Building optimizers...', end=' ')
     # (compute gradients), (updates parameters)
     f_grad_shared, f_update = eval(optimizer)(lr, tparams, grads, inps, cost)
 
-    print 'Optimization'
+    Logger.logr.info('Optimization')
 
     # Each sentence in the minibatch have same length (for encoder)
     trainX = homogeneous_data.grouper(X)
@@ -146,7 +154,7 @@ def trainer(X,
     for eidx in xrange(max_epochs):
         n_samples = 0
 
-        print 'Epoch ', eidx
+        Logger.logr.info('Epoch ', eidx)
 
         for x, y, z in train_iter:
             n_samples += len(x)
@@ -155,7 +163,7 @@ def trainer(X,
             x, x_mask, y, y_mask, z, z_mask = homogeneous_data.prepare_data(x, y, z, worddict, maxlen=maxlen_w, n_words=n_words)
 
             if x == None:
-                print 'Minibatch with zero sample under length ', maxlen_w
+                Logger.logr.info('Minibatch with zero sample under length ', maxlen_w)
                 uidx -= 1
                 continue
 
@@ -165,21 +173,21 @@ def trainer(X,
             ud = time.time() - ud_start
 
             if numpy.isnan(cost) or numpy.isinf(cost):
-                print 'NaN detected'
+                Logger.logr.info('NaN detected')
                 return 1., 1., 1.
 
             if numpy.mod(uidx, dispFreq) == 0:
-                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'UD ', ud
+                Logger.logr.info('Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'UD ', ud)
 
             if numpy.mod(uidx, saveFreq) == 0:
-                print 'Saving...',
+                Logger.logr.info('Saving...', end=' ')
 
                 params = unzip(tparams)
                 numpy.savez(saveto, history_errs=[], **params)
                 pkl.dump(model_options, open('%s.pkl'%saveto, 'wb'))
-                print 'Done'
+                Logger.logr.info('Done')
 
-        print 'Seen %d samples'%n_samples
+        Logger.logr.info('Seen %d samples'%n_samples)
 
 if __name__ == '__main__':
     pass
