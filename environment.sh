@@ -106,4 +106,4 @@ export FULL_DATA=1
 
 
 # Theano Stuffs : device=gpu0,lib.cnmem=1' 
-export THEANO_FLAGS='floatX=float32'
+export THEANO_FLAGS='floatX=float32, device=gpu0'
