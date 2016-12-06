@@ -3,16 +3,16 @@
 import os 
 import sys 
 import networkx as nx 
-from gensim.models import Word2Vec
-from log_manager.log_config import Logger 
-from gensim.models import Doc2Vec
-from baselineRunner.BaselineRunner import BaselineRunner
 import pickle
 import math 
 import operator 
 import multiprocessing 
 import subprocess 
 import numpy as np 
+from gensim.models import Word2Vec
+from log_manager.log_config import Logger 
+from gensim.models import Doc2Vec
+from baselineRunner.BaselineRunner import BaselineRunner
 from word2vec.WordDoc2Vec import WordDoc2Vec
 from summaryGenerator.SummaryGenerator import SummaryGenerator
 
@@ -32,7 +32,7 @@ class FastSentVariantRunner(BaselineRunner):
         self.dbow_only = int(os.environ["DBOW_ONLY"])
         self.latReprName = "fsent_s2v"
         self.full_data = int (os.environ["FULL_DATA"])
-        self.window = 10
+        self.window = str(10)
         self.jointbeta_label = 0.0
         self.cores = multiprocessing.cpu_count()
         self.postgresConnection.connectDatabase()

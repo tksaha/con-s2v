@@ -71,6 +71,9 @@ class HomogeneousData():
 
         return caps, feats, feats2
 
+    # For python 3
+    __next__ = next
+
     def __iter__(self):
         return self
 

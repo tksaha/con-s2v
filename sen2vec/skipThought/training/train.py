@@ -6,7 +6,7 @@ http://python-future.org/automatic_conversion.html
 Commands: 
 futurize  --stage1 -w  train.py
 """
-from __future__ import Logger.logr.info_function
+
 from __future__ import absolute_import
 import os
 import warnings
@@ -83,7 +83,7 @@ def trainer(X,
 
     # Inverse dictionary
     word_idict = dict()
-    for kk, vv in worddict.iteritems():
+    for kk, vv in worddict.items():
         word_idict[vv] = kk
     word_idict[0] = '<eos>'
     word_idict[1] = 'UNK'
@@ -103,7 +103,7 @@ def trainer(X,
     inps = [x, x_mask, y, y_mask, z, z_mask]
 
     # before any regularizer
-    Logger.logr.info('Building f_log_probs...', end=' ')
+    Logger.logr.info('Building f_log_probs...')
     f_log_probs = theano.function(inps, cost, profile=False)
     Logger.logr.info('Done')
 
@@ -111,21 +111,21 @@ def trainer(X,
     if decay_c > 0.:
         decay_c = theano.shared(numpy.float32(decay_c), name='decay_c')
         weight_decay = 0.
-        for kk, vv in tparams.iteritems():
+        for kk, vv in tparams.items():
             weight_decay += (vv ** 2).sum()
         weight_decay *= decay_c
         cost += weight_decay
 
     # after any regularizer
-    Logger.logr.info('Building f_cost...', end=' ')
+    Logger.logr.info('Building f_cost...')
     f_cost = theano.function(inps, cost, profile=False)
     Logger.logr.info('Done')
 
     Logger.logr.info('Done')
-    Logger.logr.info('Building f_grad...', end=' ')
+    Logger.logr.info('Building f_grad...')
     grads = tensor.grad(cost, wrt=itemlist(tparams))
     f_grad_norm = theano.function(inps, [(g**2).sum() for g in grads], profile=False)
-    f_weight_norm = theano.function([], [(t**2).sum() for k,t in tparams.iteritems()], profile=False)
+    f_weight_norm = theano.function([], [(t**2).sum() for k,t in tparams.items()], profile=False)
 
     if grad_clip > 0.:
         g2 = 0.
@@ -139,22 +139,23 @@ def trainer(X,
         grads = new_grads
 
     lr = tensor.scalar(name='lr')
-    Logger.logr.info('Building optimizers...', end=' ')
+    Logger.logr.info('Building optimizers...')
     # (compute gradients), (updates parameters)
     f_grad_shared, f_update = eval(optimizer)(lr, tparams, grads, inps, cost)
 
     Logger.logr.info('Optimization')
 
     # Each sentence in the minibatch have same length (for encoder)
+   
     trainX = homogeneous_data.grouper(X)
     train_iter = homogeneous_data.HomogeneousData(trainX, batch_size=batch_size, maxlen=maxlen_w)
 
     uidx = 0
     lrate = 0.01
-    for eidx in xrange(max_epochs):
+    for eidx in range(max_epochs):
         n_samples = 0
 
-        Logger.logr.info('Epoch ', eidx)
+        Logger.logr.info('Epoch %i', eidx)
 
         for x, y, z in train_iter:
             n_samples += len(x)
@@ -162,8 +163,8 @@ def trainer(X,
 
             x, x_mask, y, y_mask, z, z_mask = homogeneous_data.prepare_data(x, y, z, worddict, maxlen=maxlen_w, n_words=n_words)
 
-            if x == None:
-                Logger.logr.info('Minibatch with zero sample under length ', maxlen_w)
+            if x is None:
+                Logger.logr.info('Minibatch with zero sample under length %i', maxlen_w)
                 uidx -= 1
                 continue
 
@@ -177,10 +178,10 @@ def trainer(X,
                 return 1., 1., 1.
 
             if numpy.mod(uidx, dispFreq) == 0:
-                Logger.logr.info('Epoch ', eidx, 'Update ', uidx, 'Cost ', cost, 'UD ', ud)
+                Logger.logr.info('Epoch %i Updated %i Cost %lf  UD %lf', eidx,  uidx, cost, ud)
 
             if numpy.mod(uidx, saveFreq) == 0:
-                Logger.logr.info('Saving...', end=' ')
+                Logger.logr.info('Saving...')
 
                 params = unzip(tparams)
                 numpy.savez(saveto, history_errs=[], **params)

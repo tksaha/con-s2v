@@ -5,6 +5,7 @@ import os
 import logging 
 import re
 import numpy as np 
+import gensim 
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from log_manager.log_config import Logger
@@ -200,6 +201,7 @@ class NewsGroupReader(DocumentReader):
         # tfrunner.prepareData(pd)
         # tfrunner.runTheBaseline(rbase)
         # tfrunner.runEvaluationTask()
-
+        latent_space_size = 300
         sthought = SkipThoughtRunner(self.dbstring)
-
+        sthought.prepareData(pd)
+        sthought.runTheBaseline(rbase, latent_space_size)
