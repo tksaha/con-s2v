@@ -175,8 +175,8 @@ class NewsGroupReader(DocumentReader):
         #optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
         #self.doTesting(optDict, "news", rbase, pd, gs, True)
 
-        optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
-        self.doTesting(optDict, "news", rbase, pd, gs, False)
+        #optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
+        #self.doTesting(optDict, "news", rbase, pd, gs, False)
 
         #optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"news")
         #optDict ={}
@@ -202,7 +202,7 @@ class NewsGroupReader(DocumentReader):
         # tfrunner.runTheBaseline(rbase)
         # tfrunner.runEvaluationTask()
 
-        # latent_space_size = 300
-        # sthought = SkipThoughtRunner(self.dbstring)
-        # sthought.prepareData(pd)
-        # sthought.runTheBaseline(rbase, latent_space_size)
+        latent_space_size = 300
+        sthought = SkipThoughtRunner(self.dbstring)
+        sthought.prepareData(pd)
+        sthought.runTheBaseline(rbase, latent_space_size)

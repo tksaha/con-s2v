@@ -76,6 +76,8 @@ class ClusteringEvaluation:
 		X, Y = self.__getXY(data)
 
 		n_clusters=np.unique(Y)
+		Logger.logr.info("Data Shape of the Clustering %s"%X.Shape)
+		Logger.logr.info("Number of clusters =%i" %len(n_clusters))
 
 		estimator = KMeans(init='k-means++', n_clusters=len(np.unique(Y)), n_init=10)
 		estimator.fit(X)
@@ -111,9 +113,9 @@ class ClusteringEvaluation:
 
 		vectorizer = TfidfVectorizer(stop_words='english')
 		test_X = vectorizer.fit_transform(test_corpus)
-		print (test_X.shape)
+		Logger.logr.info (test_X.shape)
 		n_clusters=np.unique(Y)
-		print(n_clusters)
+		Logger.logr.info (n_clusters)
 
 		estimator = KMeans(init='k-means++', n_clusters=len(np.unique(Y)), n_init=10)
 		estimator.fit(test_X)				

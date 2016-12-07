@@ -58,9 +58,6 @@ class SkipThoughtRunner(BaselineRunner):
         if  pd >0:    
             loc = os.path.join(self.dataDir, "dictionary.p" )
             worddict, wordcount = vocab.build_dictionary (self.sentenceList)
-
-            print (len(worddict))
-            print (len(wordcount))
             vocab.save_dictionary (worddict, wordcount, loc)
 
     def runTheBaseline(self, rbase, latent_space_size):

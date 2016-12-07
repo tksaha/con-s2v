@@ -1,7 +1,7 @@
 #!/bin/bash
 # Path to Reuters data
 #export REUTERS_PATH=~/Documents/sen2vec/Data/reuter21578_temp
-export SEN2VEC_DIR=~/Documents/DUC2001/sen2vec
+export SEN2VEC_DIR=~/Documents/sen2vec
 export REUTERS_PATH=$SEN2VEC_DIR/reuters21578
 export SICK_PATH=$SEN2VEC_DIR/Data/sick_data
 
@@ -51,7 +51,7 @@ export GTHRSUMLAT=0.1
 export DUMPFACTOR=0.85
 
 # TOPNSUMMARY should be set to 0.2 for classification tasks (20%) and to 1.0 for ranking tasks
-export TOPNSUMMARY=1.0
+export TOPNSUMMARY=0.2
 export KNEIGHBOR=20
 
 
@@ -106,4 +106,4 @@ export FULL_DATA=1
 
 
 # Theano Stuffs : device=gpu0,lib.cnmem=1' 
-export THEANO_FLAGS='floatX=float32'
+export THEANO_FLAGS='floatX=float32, device=gpu'
