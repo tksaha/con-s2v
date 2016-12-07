@@ -17,6 +17,7 @@ from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
 from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
 from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from rouge.Rouge import Rouge 
+from baselineRunner.WordVectorAveragingRunner import WordVectorAveragingRunner
 
 # There are some summaries [ex:fbis4-45908, FT932-15960] for which the 
 # original document is not present
@@ -286,26 +287,27 @@ class DUCReader(DocumentReader):
             os.environ['DUC_EVAL']='VALID'
     
             
-            recalls = {}
-            window_opt = None #var for the optimal window
-            for window in ["8", "10", "12"]:
-            #for window in ["8"]:
-                Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
-                self.postgres_recorder.truncateSummaryTable()
-                paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-                if  window=="8":  
-                    paraBaseline.prepareData(pd)
-                paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-                paraBaseline.generateSummary(gs,\
-                    lambda_val=self.lambda_val, diversity=diversity)
-                paraBaseline.doHouseKeeping()           
-                self.__runSpecificEvaluation(models = [20], systems = [2]) #Running Rouge for method_id = 2 only
-                recalls[window] = self.__getRecall(method_id=2, models = [20], systems = [2])
-                Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
-            window_opt = max(recalls, key=recalls.get) #get the window for the max recall
-            f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
-            f.write("P2V Window Recalls: %s%s" %(recalls, os.linesep))
-            f.flush()
+            # recalls = {}
+            # window_opt = None #var for the optimal window
+            # for window in ["8", "10", "12"]:
+            #     Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+            #     if  window=="8":  
+            #         paraBaseline.prepareData(pd)
+            #     paraBaseline.runTheBaseline(rbase,latent_space_size, window)
+            #     paraBaseline.generateSummary(gs,\
+            #         lambda_val=self.lambda_val, diversity=diversity)
+            #     paraBaseline.doHouseKeeping()           
+            #     self.__runSpecificEvaluation(models = [20], systems = [2]) #Running Rouge for method_id = 2 only
+            #     recalls[window] = self.__getRecall(method_id=2, models = [20], systems = [2])
+            #     Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
+            # window_opt = max(recalls, key=recalls.get) #get the window for the max recall
+            # f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
+            # f.write("P2V Window Recalls: %s%s" %(recalls, os.linesep))
+            # f.flush()
+
+
 
             # Logger.logr.info("Starting Running Para2vec Baseline for Optimal Window = %s" %window_opt)
             # self.postgres_recorder.truncateSummaryTable()
@@ -316,11 +318,34 @@ class DUCReader(DocumentReader):
             # #we need the p2v vectors created with optimal window
             # paraBaseline.doHouseKeeping()
 
-#           n2vBaseline = Node2VecRunner(self.dbstring)
-#           n2vBaseline.prepareData(pd)
-#           generate_walk = True 
-#           n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
-#           n2vBaseline.doHouseKeeping()
+            method_id = 80
+            recalls = {}
+            window_opt = None #var for the optimal window
+            window_size_list = ["8", "10", "12"]
+            for window in window_size_list:
+                Logger.logr.info("Starting Running WVAvg Baseline for Window = %s" %window)             
+                wvBaseline = WordVectorAveragingRunner (self.dbstring)
+                if  window == window_size_list[0]: 
+                    wvBaseline.prepareData(pd)      
+                wvBaseline.runTheBaseline(rbase,latent_space_size, window)
+                wvBaseline.generateSummary(gs,method_id,"",\
+                         lambda_val=self.lambda_val, diversity=diversity)
+                wvBaseline.doHouseKeeping()           
+                self.__runSpecificEvaluation(models = [20], systems = [80]) 
+                recalls[window] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
+                Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
+
+            window_opt_avg = max(recalls, key=recalls.get) 
+            f.write("Optimal window size for wvavg is %s%s"%(window_opt, os.linesep))
+            f.write("wvavg window Recalls: %s%s" %(recalls, os.linesep))
+            f.flush()
+
+
+            # n2vBaseline = Node2VecRunner(self.dbstring)
+            # n2vBaseline.prepareData(pd)
+            # generate_walk = True 
+            # n2vBaseline.runTheBaseline(rbase, latent_space_size, generate_walk)
+            # n2vBaseline.doHouseKeeping()
 
             # recalls = {}
             # joint_beta_opt = None 
@@ -430,75 +455,87 @@ class DUCReader(DocumentReader):
             # f.write("Optimal lambda is %s%s"%(joint_beta_opt_random_n2v, os.linesep))
             # f.write("Recalls joint_beta_opt_random_n2v: %s%s" %(recalls, os.linesep))
             # f.flush()
-            recalls = {}
+            # recalls = {}
             
-            lambda_list = [0.05,0.10,0.20,0.30]
-            method_id = 18
-            for lambda_ in lambda_list:
-                self.postgres_recorder.truncateSummaryTable()
-                os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(lambda_)
-                fsent =  FastSentVariantRunner(self.dbstring)   
-                fsent.window = window_opt
-                if  lambda_ == lambda_list[0]:
-                    fsent.prepareData(pd)
+            # lambda_list = [0.05,0.10,0.20,0.30]
+            # method_id = 18
+            # for lambda_ in lambda_list:
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["FULL_DATA"]=str(1)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     fsent =  FastSentVariantRunner(self.dbstring)   
+            #     fsent.window = window_opt
+            #     if  lambda_ == lambda_list[0]:
+            #         fsent.prepareData(pd)
 
-                fsent.runTheBaseline(rbase, latent_space_size)
-                fsent.generateSummary(gs,method_id,"",\
-                         lambda_val=self.lambda_val, diversity=diversity)
-                fsent.doHouseKeeping()
-                self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
-                recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
-                Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
-            fsent_full_opt = max(recalls, key=recalls.get) 
-            f.write("Optimal lambda is %s%s"%(fsent_full_opt, os.linesep))
-            f.write("Recalls fsent: %s%s" %(recalls, os.linesep))
-            f.flush()
+            #     fsent.runTheBaseline(rbase, latent_space_size)
+            #     fsent.generateSummary(gs,method_id,"",\
+            #              lambda_val=self.lambda_val, diversity=diversity)
+            #     fsent.doHouseKeeping()
+            #     self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
+            #     recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
+            #     Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
+            # fsent_full_opt = max(recalls, key=recalls.get) 
+            # f.write("Optimal lambda is %s%s"%(fsent_full_opt, os.linesep))
+            # f.write("Recalls fsent: %s%s" %(recalls, os.linesep))
+            # f.flush()
             
 
-            recalls = {}
+            # recalls = {}
             
-            lambda_list = [0.05,0.10,0.20,0.30]
-            method_id = 19 
-            for lambda_ in lambda_list:
-                self.postgres_recorder.truncateSummaryTable()
-                os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(lambda_)
-                fsent =  FastSentVariantRunner(self.dbstring)   
-                fsent.window = window_opt
-                if  lambda_ == lambda_list[0]:
-                    fsent.prepareData(pd)
+            # lambda_list = [0.05,0.10,0.20,0.30]
+            # method_id = 19 
+            # for lambda_ in lambda_list:
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     os.environ["FULL_DATA"]=str(0)
+            #     os.environ["LAMBDA"]=str(lambda_)
+            #     fsent =  FastSentVariantRunner(self.dbstring)   
+            #     fsent.window = window_opt
+            #     if  lambda_ == lambda_list[0]:
+            #         fsent.prepareData(pd)
 
-                fsent.runTheBaseline(rbase, latent_space_size)
-                fsent.generateSummary(gs,method_id,"",\
-                         lambda_val=self.lambda_val, diversity=diversity)
-                fsent.doHouseKeeping()
-                self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
-                recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
-                Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
-            fsent_rnd_opt = max(recalls, key=recalls.get) 
-            f.write("Optimal lambda for rnd is %s%s"%(fsent_rnd_opt, os.linesep))
-            f.write("Recalls fsent: %s%s" %(recalls, os.linesep))
-            f.flush()
+            #     fsent.runTheBaseline(rbase, latent_space_size)
+            #     fsent.generateSummary(gs,method_id,"",\
+            #              lambda_val=self.lambda_val, diversity=diversity)
+            #     fsent.doHouseKeeping()
+            #     self.__runSpecificEvaluation(models = [20], systems = [method_id]) 
+            #     recalls[lambda_] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
+            #     Logger.logr.info("Recall for %s = %s" %(lambda_, recalls[lambda_]))
+            # fsent_rnd_opt = max(recalls, key=recalls.get) 
+            # f.write("Optimal lambda for rnd is %s%s"%(fsent_rnd_opt, os.linesep))
+            # f.write("Recalls fsent: %s%s" %(recalls, os.linesep))
+            # f.flush()
 
             
 # ######## Test ########################################
             os.environ["DUC_EVAL"]='TEST'
-            system_list = [2]
-            for system_id in range(18,20):
+            system_list = []
+            for system_id in range(80,81):
                 system_list.append(system_id)
+
+
             niter = 5
             for i in range(0,niter):
                 f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-                f.write("Optimal Window: %s%s" %(window_opt, os.linesep))           
-                self.postgres_recorder.truncateSummaryTable()
-                paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-                paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) 
-                #We need the p2v vectors created with optimal window
-                paraBaseline.generateSummary(gs,\
-                        lambda_val=self.lambda_val, diversity=diversity)
-                paraBaseline.doHouseKeeping()
-                f.flush()
+                
+
+
+                # f.write("Optimal Window: %s%s" %(window_opt, os.linesep))          
+                # self.postgres_recorder.truncateSummaryTable()
+                # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+                # paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) 
+                # paraBaseline.generateSummary(gs,\
+                #         lambda_val=self.lambda_val, diversity=diversity)
+                # paraBaseline.doHouseKeeping()
+                # f.flush()
+
+                method_id = 80
+                wvBaseline = WordVectorAveragingRunner (self.dbstring)
+                wvBaseline.prepareData(pd)      
+                wvBaseline.runTheBaseline(rbase,latent_space_size, window_opt_avg)
+                wvBaseline.generateSummary(gs,method_id,"",\
+                         lambda_val=self.lambda_val, diversity=diversity)
+                wvBaseline.doHouseKeeping()           
 
                 # method_id = 14
                 # os.environ["NBR_TYPE"]=str(0)
@@ -549,27 +586,27 @@ class DUCReader(DocumentReader):
                 # jointL.doHouseKeeping()
                 # self.__runCombinedEvaluation(system_list)
 
-                method_id = 18
-                os.environ["FULL_DATA"]=str(1)
-                os.environ["LAMBDA"]=str(fsent_full_opt)
-                fsent =  FastSentVariantRunner(self.dbstring)   
-                fsent.window = window_opt
-                fsent.prepareData(pd)
-                fsent.runTheBaseline(rbase, latent_space_size)
-                fsent.generateSummary(gs,method_id,"",\
-                         lambda_val=self.lambda_val, diversity=diversity)
-                fsent.doHouseKeeping()
+                # method_id = 18
+                # os.environ["FULL_DATA"]=str(1)
+                # os.environ["LAMBDA"]=str(fsent_full_opt)
+                # fsent =  FastSentVariantRunner(self.dbstring)   
+                # fsent.window = window_opt
+                # fsent.prepareData(pd)
+                # fsent.runTheBaseline(rbase, latent_space_size)
+                # fsent.generateSummary(gs,method_id,"",\
+                #          lambda_val=self.lambda_val, diversity=diversity)
+                # fsent.doHouseKeeping()
 
-                method_id = 19
-                os.environ["FULL_DATA"]=str(0)
-                os.environ["LAMBDA"]=str(fsent_rnd_opt)
-                fsent =  FastSentVariantRunner(self.dbstring)   
-                fsent.window = window_opt
-                fsent.prepareData(pd)
-                fsent.runTheBaseline(rbase, latent_space_size)
-                fsent.generateSummary(gs,method_id,"",\
-                         lambda_val=self.lambda_val, diversity=diversity)
-                fsent.doHouseKeeping()
+                # method_id = 19
+                # os.environ["FULL_DATA"]=str(0)
+                # os.environ["LAMBDA"]=str(fsent_rnd_opt)
+                # fsent =  FastSentVariantRunner(self.dbstring)   
+                # fsent.window = window_opt
+                # fsent.prepareData(pd)
+                # fsent.runTheBaseline(rbase, latent_space_size)
+                # fsent.generateSummary(gs,method_id,"",\
+                #          lambda_val=self.lambda_val, diversity=diversity)
+                # fsent.doHouseKeeping()
 
                 self.__runCombinedEvaluation(system_list)
                 
