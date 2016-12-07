@@ -323,7 +323,8 @@ class DUCReader(DocumentReader):
             window_opt = None #var for the optimal window
             window_size_list = ["8", "10", "12"]
             for window in window_size_list:
-                Logger.logr.info("Starting Running WVAvg Baseline for Window = %s" %window)             
+                Logger.logr.info("Starting Running WVAvg Baseline for Window = %s" %window)  
+                self.postgres_recorder.truncateSummaryTable()           
                 wvBaseline = WordVectorAveragingRunner (self.dbstring)
                 if  window == window_size_list[0]: 
                     wvBaseline.prepareData(pd)      
@@ -530,6 +531,7 @@ class DUCReader(DocumentReader):
                 # f.flush()
 
                 method_id = 80
+                self.postgres_recorder.truncateSummaryTable()
                 wvBaseline = WordVectorAveragingRunner (self.dbstring)
                 wvBaseline.prepareData(pd)      
                 wvBaseline.runTheBaseline(rbase,latent_space_size, window_opt_avg)
