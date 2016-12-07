@@ -144,7 +144,9 @@ class WordVectorAveragingRunner(BaselineRunner):
 		sent2vecFile_raw.close()	
 		sent2vecFile.close()
 	
-	def generateSummary(self, gs,  lambda_val=1.0, diversity=False):
+	def generateSummary(self, gs, methodId, filePrefix,\
+		 lambda_val=1.0, diversity=False):
+
 		if gs <= 0: return 0
 		sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
 		s2vDict = pickle.load (sent2vecFile)
@@ -153,10 +155,7 @@ class WordVectorAveragingRunner(BaselineRunner):
 			 postgres_connection = self.postgresConnection,\
 			 lambda_val = lambda_val)
 
-		summGen.populateSummary(2, s2vDict)
-		#summGen.populateSummary(21, {}) // Should move this to a new Runner called FastSentRunner
-		#summGen.populateSummary(1, {})  // Should move this generator to TF-IDF
-
+		summGen.populateSummary(methodId, s2vDict)
 
 	def runEvaluationTask(self):
 		"""
@@ -168,9 +167,6 @@ class WordVectorAveragingRunner(BaselineRunner):
 		For example. validation set or unsup set
 		"""
 		summaryMethodID = 2
-		# sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
-		# s2vDict = pickle.load (sent2vecFile)
-		# self._runClassification(summaryMethodID, self.latReprName, s2vDict)
 		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
 		s2vDict_raw = pickle.load(sent2vecFile_raw)
 

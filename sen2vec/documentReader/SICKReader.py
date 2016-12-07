@@ -21,6 +21,8 @@ from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
 from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
 from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
+from baselineRunner.WordVectorAveragingRunner import WordVectorAveragingRunner
+
 
 class SICKReader(DocumentReader):
     """ 
@@ -127,11 +129,14 @@ class SICKReader(DocumentReader):
         """
         """
         dataset= 'sick'
-        os.environ['TEST_AND_TRAIN'] = 'YES'
-        tfidfrunner  = TFIDFBaselineRunner(self.dbstring)
-        sp, pearson = tfidfrunner.evaluateRankCorrelation(dataset)
-        print (sp, pearson)
-        return 0
+        os.environ['TEST_AND_TRAIN'] = 'NO'
+        
+
+
+        # tfidfrunner  = TFIDFBaselineRunner(self.dbstring)
+        # sp, pearson = tfidfrunner.evaluateRankCorrelation(dataset)
+        # print (sp, pearson)
+       
 
         
         
@@ -143,24 +148,40 @@ class SICKReader(DocumentReader):
     
             spearman = {}  #spearman or pearson correlation
            
-            for window in ["8", "10", "12"]:
-            #for window in ["8"]:
-                Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
-                self.postgres_recorder.truncateSummaryTable()
-                paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-                if  window=="8":  
-                    paraBaseline.prepareData(pd)
-                paraBaseline.runTheBaseline(rbase,latent_space_size, window)
-                val = paraBaseline.evaluateRankCorrelation(dataset)
-                paraBaseline.doHouseKeeping()           
-                spearman[window] = val
-                Logger.logr.info("correlation for %s = %s" %(window, spearman[window]))
-            window_opt = max(spearman, key=spearman.get) #get the window for the max recall
-            f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
-            f.write("spearman: %s%s" %(spearman, os.linesep))
-            f.flush()
+            # for window in ["8", "10", "12"]:
+            #     Logger.logr.info("Starting Running Para2vec Baseline for Window = %s" %window)
+            #     self.postgres_recorder.truncateSummaryTable()
+            #     paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+            #     if  window=="8":  
+            #         paraBaseline.prepareData(pd)
+            #     paraBaseline.runTheBaseline(rbase,latent_space_size, window)
+            #     val = paraBaseline.evaluateRankCorrelation(dataset)
+            #     paraBaseline.doHouseKeeping()           
+            #     spearman[window] = val
+            #     Logger.logr.info("correlation for %s = %s" %(window, spearman[window]))
+            # window_opt = max(spearman, key=spearman.get) #get the window for the max recall
+            # f.write("Optimal window size is %s%s"%(window_opt, os.linesep))
+            # f.write("spearman: %s%s" %(spearman, os.linesep))
+            # f.flush()
 
            
+            f1 = {}
+            window_opt = None #var for the optimal window
+            window_size_list = ["8", "10", "12"]
+            for window in window_size_list:
+                Logger.logr.info("Starting Running WVAvg Baseline for Window = %s" %window)             
+                wvBaseline = WordVectorAveragingRunner (self.dbstring)
+                if  window == window_size_list[0]: 
+                    wvBaseline.prepareData(pd)      
+                wvBaseline.runTheBaseline(rbase,latent_space_size, window)
+                val = wvBaseline.evaluateRankCorrelation(dataset)
+                wvBaseline.doHouseKeeping()           
+                spearman[window] = val
+                Logger.logr.info("WVavg correlation for %s = %s" %(window, spearman[window]))
+            window_opt_avg = max(spearman, key=spearman.get) #get the window for the max recall
+            f.write("Optimal window size is %s%s"%(window_opt_avg, os.linesep))
+            f.write("spearman: %s%s" %(spearman, os.linesep))
+            f.flush()
 
             # n2vBaseline = Node2VecRunner(self.dbstring)
             # n2vBaseline.prepareData(pd)
@@ -268,22 +289,22 @@ class SICKReader(DocumentReader):
             # f.write("spearman: %s%s" %(spearman, os.linesep))
             # f.flush()
 
-            lambda_list = [0.3, 0.5, 0.8, 1.0]
-            unw_corr = {}
-            for beta in lambda_list:
-            #for beta in [0.3]:
-                Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
-                regs2v = RegularizedSen2VecRunner(self.dbstring)
-                regs2v.regBetaUNW = beta
-                if beta==0.3:
-                   regs2v.prepareData(pd)
-                regs2v.runTheBaseline(rbase, latent_space_size)
-                val = regs2v.evaluateRankCorrelation(dataset)
-                unw_corr[beta] = val 
-                Logger.logr.info("UNW_corr for %s = %s" %(beta, unw_corr[beta]))
+            # lambda_list = [0.3, 0.5, 0.8, 1.0]
+            # unw_corr = {}
+            # for beta in lambda_list:
+            # #for beta in [0.3]:
+            #     Logger.logr.info("Starting Running Regularized Baseline for Beta = %s" %beta)
+            #     regs2v = RegularizedSen2VecRunner(self.dbstring)
+            #     regs2v.regBetaUNW = beta
+            #     if beta==0.3:
+            #        regs2v.prepareData(pd)
+            #     regs2v.runTheBaseline(rbase, latent_space_size)
+            #     val = regs2v.evaluateRankCorrelation(dataset)
+            #     unw_corr[beta] = val 
+            #     Logger.logr.info("UNW_corr for %s = %s" %(beta, unw_corr[beta]))
            
-            unw_opt_reg = max(unw_corr, key=unw_corr.get)
-            Logger.logr.info("Optimal regBetaUNW=%s" %(unw_opt_reg))
+            # unw_opt_reg = max(unw_corr, key=unw_corr.get)
+            # Logger.logr.info("Optimal regBetaUNW=%s" %(unw_opt_reg))
           
 
 
@@ -300,24 +321,34 @@ class SICKReader(DocumentReader):
 
             for i in range(0,niter):
                 f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-                f.write("Optimal Window: %s%s" %(window_opt, os.linesep))           
-                self.postgres_recorder.truncateSummaryTable()
-                paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
-                paraBaseline.prepareData(pd)
-                paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
-                sp,pearson = paraBaseline.evaluateRankCorrelation(dataset)
-                paraBaseline.doHouseKeeping()
-                self.insertevals(sp, pearson, paraBaseline.latReprName)
+               	Logger.logr.info("###### Iteration: %s ######%s" %(i, os.linesep))
+ 
+		#f.write("Optimal Window: %s%s" %(window_opt, os.linesep))           
+                # self.postgres_recorder.truncateSummaryTable()
+                # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+                # paraBaseline.prepareData(pd)
+                # paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) #we need the p2v vectors created with optimal window
+                # sp,pearson = paraBaseline.evaluateRankCorrelation(dataset)
+                # paraBaseline.doHouseKeeping()
+                # self.insertevals(sp, pearson, paraBaseline.latReprName)
+                # f.flush()
+
+                f.write("Optimal Window: %s%s" %(window_opt_avg, os.linesep))      
+                wvBaseline = WordVectorAveragingRunner (self.dbstring)
+                wvBaseline.prepareData(pd)    
+                wvBaseline.runTheBaseline(rbase,latent_space_size, window)
+                sp,pearson = wvBaseline.evaluateRankCorrelation(dataset)
+                wvBaseline.doHouseKeeping()
+                self.insertevals(sp, pearson, wvBaseline.latReprName)
                 f.flush()
 
-
-                iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
-                iterrunner.prepareData(pd)
-                iterrunner.runTheBaseline(rbase)    
-                sp, pearson = iterrunner.evaluateRankCorrelation(dataset)
-                iterrunner.doHouseKeeping()
-                self.insertevals(sp, pearson, iterrunner.latReprName)
-                f.flush()
+                # iterrunner = IterativeUpdateRetrofitRunner(self.dbstring)
+                # iterrunner.prepareData(pd)
+                # iterrunner.runTheBaseline(rbase)    
+                # sp, pearson = iterrunner.evaluateRankCorrelation(dataset)
+                # iterrunner.doHouseKeeping()
+                # self.insertevals(sp, pearson, iterrunner.latReprName)
+                # f.flush()
 
                 # os.environ["NBR_TYPE"]=str(0)
                 # os.environ["FULL_DATA"]=str(1)
@@ -369,14 +400,14 @@ class SICKReader(DocumentReader):
                 # self.insertevals(sp, pearson, jointL.latReprName)
                 # f.flush()
 
-                regs2v = RegularizedSen2VecRunner(self.dbstring)
-                regs2v.regBetaUNW = unw_opt_reg
-                regs2v.prepareData(pd)
-                regs2v.runTheBaseline(rbase, latent_space_size)
-                sp, pearson = regs2v.evaluateRankCorrelation(dataset)
-                regs2v.doHouseKeeping()
-                self.insertevals(sp, pearson, regs2v.latReprName)
-                f.flush()
+                # regs2v = RegularizedSen2VecRunner(self.dbstring)
+                # regs2v.regBetaUNW = unw_opt_reg
+                # regs2v.prepareData(pd)
+                # regs2v.runTheBaseline(rbase, latent_space_size)
+                # sp, pearson = regs2v.evaluateRankCorrelation(dataset)
+                # regs2v.doHouseKeeping()
+                # self.insertevals(sp, pearson, regs2v.latReprName)
+                # f.flush()
             
 
         for k,v in sorted(self.sp_methods.items()):
