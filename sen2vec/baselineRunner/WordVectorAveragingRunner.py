@@ -154,8 +154,8 @@ class WordVectorAveragingRunner(BaselineRunner):
 			 lambda_val = lambda_val)
 
 		summGen.populateSummary(2, s2vDict)
-		#summGen.populateSummary(21, {})
-		#summGen.populateSummary(1, {})
+		#summGen.populateSummary(21, {}) // Should move this to a new Runner called FastSentRunner
+		#summGen.populateSummary(1, {})  // Should move this generator to TF-IDF
 
 
 	def runEvaluationTask(self):
