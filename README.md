@@ -1,22 +1,6 @@
 # Discourse Informed Sentence To Vector 
-Vector representation of sentences is important for many text processing tasks that involve clustering, 
-classifying, or ranking sentences. Recently, distributed representation of sentences learned by neural 
-models from unlabeled data has been shown to outperform the traditional bag-of-words representation. 
-However, most of these learning methods  consider only the content of a sentence and disregard the 
-relations among sentences in a discourse by and large.   
+Latent Representation for the sentences.
  
-In this paper, we propose a series of novel models for learning latent representations of sentences (Sen2Vec) 
-that consider the content of a sentence as well as inter-sentence relations. We first represent 
-the inter-sentence relations with a language network and then use the network to induce contextual 
-information into the content-based Sen2Vec models. Two different approaches are introduced to exploit the information in the network. 
-Our first approach retrofits (already trained) Sen2Vec vectors with 
-respect to the network in two different ways: (1) using the adjacency relations of a node, 
-and (2) using a stochastic sampling method which is more flexible in sampling neighbors of a node. 
-The second approach uses a regularizer to encode the information in the network into the existing Sen2Vec model. 
-Experimental results show that our proposed models outperform existing methods in 
-three fundamental information system tasks demonstrating the effectiveness of our approach. 
-The models leverage the computational power of multi-core CPUs to achieve fine-grained computational efficiency. 
-We make our code publicly available upon acceptance.
 
 ## Requirements
 * [Anaconda with Python 3.5](https://www.continuum.io/downloads)
@@ -78,6 +62,11 @@ the dataset:
 pg_restore --jobs=3 --exit-on-error --no-owner --dbname=news sql_dump.dump
 ```
 
+or 
+```
+pg_restore --jobs=3 -n public --exit-on-error --no-owner --dbname=news sql_dump.dump
+```
+
 We are assuming that either you are using `postgres` as the username or any other username
 which already has all the required privileges. To change the password for the `postgres` user,
 use the following command-
@@ -113,6 +102,13 @@ type the following command for creating executable:
 make clean
 make
 ```
+
+## Installation of Theano for Skip-Thought
+```
+pip install theano
+sudo apt install nvidia-cuda-toolkit
+```
+
 
 ## Running the Project 
 Run sen2vec with -h argument to see all possible options:
