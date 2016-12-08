@@ -449,8 +449,8 @@ class FastSent(utils.SaveLoad):
         """
         if FAST_VERSION < 0:
             import warnings
-            warnings.warn("C extension not loaded for FastSent, training will be slow. "
-                          "Install a C compiler and reinstall gensim for fast training.")
+            #warnings.warn("C extension not loaded for FastSent, training will be slow. "
+            #              "Install a C compiler and reinstall gensim for fast training.")
             self.neg_labels = []
 
         logger.info(

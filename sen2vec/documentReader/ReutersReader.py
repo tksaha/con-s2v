@@ -19,6 +19,8 @@ from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
 from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
+from baselineRunner.FastSentFHVersionRunner import FastSentFHVersionRunner
+
 
 
 class ReutersReader(DocumentReader):
@@ -187,8 +189,8 @@ class ReutersReader(DocumentReader):
         #self.doTesting(optDict, "reuter", rbase, pd, gs, True)
 
 
-        optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
-        self.doTesting(optDict, "reuter", rbase, pd, gs, False)
+        #optDict = self._runClusteringOnValidation(pd, rbase, gs, "reuter")
+        #self.doTesting(optDict, "reuter", rbase, pd, gs, False)
 
 
         #optDict = self._runFastSentClassificationValidation(pd, rbase, gs, "reuter")
@@ -210,6 +212,11 @@ class ReutersReader(DocumentReader):
         # tfrunner.prepareData(pd)
         # tfrunner.runTheBaseline(rbase)
         # tfrunner.runEvaluationTask()
+
+        latent_space_size = 600
+        fhrunner = FastSentFHVersionRunner (self.dbstring)
+        fhrunner.prepareData(pd)
+        fhrunner.runTheBaseline(rbase, latent_space_size)
 
 
 

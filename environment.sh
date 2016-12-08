@@ -1,8 +1,8 @@
 #!/bin/bash
 # Path to Reuters data
 #export REUTERS_PATH=~/Documents/sen2vec/Data/reuter21578_temp
-export SEN2VEC_DIR=~/Documents/imdb/sen2vec
-export REUTERS_PATH=$SEN2VEC_DIR/reuters21578
+export SEN2VEC_DIR=~/Documents/sen2vec
+export REUTERS_PATH=$SEN2VEC_DIR/Data/reuters21578
 export SICK_PATH=$SEN2VEC_DIR/Data/sick_data
 
 
@@ -106,4 +106,4 @@ export FULL_DATA=1
 
 
 # Theano Stuffs : device=gpu0,lib.cnmem=1' 
-export THEANO_FLAGS='floatX=float32, device=gpu'
+export THEANO_FLAGS='floatX=float32'

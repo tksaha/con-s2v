@@ -16,7 +16,6 @@ from baselineRunner.BaselineRunner import BaselineRunner
 from word2vec.WordDoc2Vec import WordDoc2Vec
 from summaryGenerator.SummaryGenerator import SummaryGenerator
 
-
 label_sent = lambda id_: 'SENT_%s' %(id_)
 
 
