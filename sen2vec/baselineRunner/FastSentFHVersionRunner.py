@@ -7,7 +7,7 @@ import re
 import numpy as np 
 import gensim 
 import multiprocessing
-import gensim.models.doc2vec
+from gensim.models import Doc2Vec
 from baselineRunner.BaselineRunner import BaselineRunner
 from fastsent.fastsent  import FastSent 
 from log_manager.log_config import Logger 
@@ -25,12 +25,12 @@ class MySentences(object):
 
 class FastSentFHVersionRunner(BaselineRunner):
     
-    def __init__(self, *args, **kwargs):
-        BaselineRunner.__init__(self, *args, **kwargs)
+    def __init__(self, dbstring, autoencode, **kwargs):
+        BaselineRunner.__init__(self, dbstring, **kwargs)
         self.sentIDList = list()
         self.sentenceList = list()
         self.cores = multiprocessing.cpu_count()
-        self.window = str(window)
+        self.window = str(10)
         self.autoencode = autoencode
         self.dataDir = os.environ['TRTESTFOLDER']
         self.latReprName = 'felixhillfastsent'
@@ -68,8 +68,7 @@ class FastSentFHVersionRunner(BaselineRunner):
                  sample=1e-4, autoencode=self.autoencode) 
         model.build_vocab(sentences)
         model.train(sentences, chunksize=1000)
-        outFile = os.path.join(self.dataDir,\
-            "%s_repr"%self.latReprName)
+        outFile = os.path.join(self.dataDir,"%s_repr"%self.latReprName)
         model.save_fastsent_format(outFile, binary=False)  
 
         fhvecModel = Doc2Vec.load_word2vec_format(outFile, binary=False)
@@ -97,7 +96,7 @@ class FastSentFHVersionRunner(BaselineRunner):
                 fhvec_raw_dict[id_] = vec 
                 fhvec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
-        Logger.logr.info("Total Number of Sentences written=%i", len(sent2vec_dict))
+        Logger.logr.info("Total Number of Sentences written=%i", len(fhvec_dict))
         pickle.dump(fhvec_dict, fhvecFile)    
         pickle.dump(fhvec_raw_dict, fhvecFile_raw)    
 
@@ -123,8 +122,7 @@ class FastSentFHVersionRunner(BaselineRunner):
 
     def runEvaluationTask():
         summaryMethodID = 2
-         outFile = os.path.join(self.dataDir,\
-            "%s_repr"%self.latReprName)
+        outFile = os.path.join(self.dataDir,"%s_repr"%self.latReprName)
         vecFile_raw = open("%s_raw.p"%(outFile),"rb")
         vDict_raw = pickle.load(vecFile_raw)
 

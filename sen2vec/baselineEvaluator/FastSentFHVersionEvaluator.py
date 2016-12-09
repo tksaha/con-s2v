@@ -4,16 +4,18 @@
 import os 
 import sys 
 import math 
+import pickle
 from abc import ABCMeta, abstractmethod
+from log_manager.log_config import Logger
 from baselineRunner.FastSentFHVersionRunner import FastSentFHVersionRunner
-from baselinevaluator.BaselineEvaluator import BaselineEvaluator
+from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
 
 
 class FastSentFHVersionEvalutor(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
 		"""
-		BaselineRunner.__init__(self, *args, **kwargs)
+		BaselineEvaluator.__init__(self, *args, **kwargs)
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		metric = {}
@@ -29,7 +31,7 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 			fhBaseline.window  = window
 			if 	window == self.window_size_list[0]: 
 				fhBaseline.prepareData(1)		
-			metric[window] = evaluate(fhBaseline)
+			metric[window] = self.evaluate(fhBaseline, latent_space_size)
 			Logger.logr.info("%s for window %s = %s" %(metric_str, window, metric[window]))
 		window_opt_avg = max(metric, key=metric.get) 
 		f.write("Optimal window size for %s in fhbaseline is %s%s"\
@@ -48,7 +50,7 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 			fhBaseline.window  = window
 			if 	window == self.window_size_list[0]: 
 				fhBaseline.prepareData(1)		
-			metric[window] = evaluate(fhBaseline)
+			metric[window] = self.evaluate(fhBaseline, latent_space_size)
 			Logger.logr.info("%s for window %s = %s" %(metric_str, window, metric[window]))
 		window_opt_avg = max(metric, key=metric.get) 
 		f.write("Optimal window size for %s in fhbaseline is %s%s"\

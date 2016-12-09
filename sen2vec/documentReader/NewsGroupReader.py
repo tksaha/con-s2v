@@ -202,7 +202,27 @@ class NewsGroupReader(DocumentReader):
         # tfrunner.runTheBaseline(rbase)
         # tfrunner.runEvaluationTask()
 
-        latent_space_size = 300
-        sthought = SkipThoughtRunner(self.dbstring)
-        sthought.prepareData(pd)
-        sthought.runTheBaseline(rbase, latent_space_size)
+        # latent_space_size = 300
+        # sthought = SkipThoughtRunner(self.dbstring)
+        # sthought.prepareData(pd)
+        # sthought.runTheBaseline(rbase, latent_space_size)
+
+        from  baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
+        optPDict = {}   
+        dataset_name = "news"
+        os.environ['VALID_FOR'] = 'CLASS'
+        with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_hyperparameters_class.txt"), 'w') as f:  
+            latent_space_size = 600
+            os.environ['EVAL'] = 'VALID' 
+            fheval = FastSentFHVersionEvalutor (self.dbstring)
+            optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+
+
+        os.environ["EVAL"]='TEST'
+        latent_space_size = 600
+        os.environ['TEST_FOR'] = 'CLASS'
+        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+        niter = 5
+        for i in range(0,niter):
+            fheval = FastSentFHVersionEvalutor (self.dbstring)
+            fheval.evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f)

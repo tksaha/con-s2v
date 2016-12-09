@@ -44,7 +44,7 @@ class BaselineEvaluator:
 			for line in open(file_):
 				f.write(line)
 
-	def evaluate(self, fhBaseline):
+	def evaluate(self, fhBaseline, latent_space_size):
 		if os.environ['VALID_FOR'] == 'CLASS':
 			fhBaseline.runTheBaseline(1, latent_space_size)
 			fhBaseline.runEvaluationTask()
