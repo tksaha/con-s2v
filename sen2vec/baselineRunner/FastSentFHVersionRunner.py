@@ -7,6 +7,7 @@ import re
 import numpy as np 
 import gensim 
 import multiprocessing
+import gensim.models.doc2vec
 from baselineRunner.BaselineRunner import BaselineRunner
 from fastsent.fastsent  import FastSent 
 from log_manager.log_config import Logger 
@@ -30,10 +31,14 @@ class FastSentFHVersionRunner(BaselineRunner):
         self.sentenceList = list()
         self.cores = multiprocessing.cpu_count()
         self.window = str(10)
+        self.autoencode = autoencode
         self.dataDir = os.environ['TRTESTFOLDER']
         self.latReprName = 'felixhillfastsent'
         self.utFunction = Utility("Text Utility")
         self.postgresConnection.connectDatabase()
+
+        if self.autoencode == True:
+           self.latReprName = "%s_(AE)"%self.latReprName
 
     def prepareData(self, pd):
         Logger.logr.info ("Preparing Data for FastSent")
@@ -53,24 +58,84 @@ class FastSentFHVersionRunner(BaselineRunner):
 
         
     def runTheBaseline(self, rbase, latent_space_size):
-        # What is auto-encode +AE version, AE =0
+        # What is auto-encode +AE version, AE = 0
+        # AutoEncode will enable us to perform experiment 
+        # on both the simple and +AE version of Fastsent
         sentences = MySentences(self.sentenceList)
 
         model = FastSent(sentences, size=latent_space_size,\
-            window=self.window, min_count=0, workers=self.cores*2, sample=1e-4) 
+            window=self.window, min_count=0, workers=self.cores*2,\
+                 sample=1e-4, autoencode=self.autoencode) 
         model.build_vocab(sentences)
         model.train(sentences, chunksize=1000)
-        model.save_fastsent_format(os.path.join(self.dataDir,\
-            "%s_repr"%self.latReprName), binary=False)  
+        outFile = os.path.join(self.dataDir,\
+            "%s_repr"%self.latReprName)
+        model.save_fastsent_format(outFile, binary=False)  
+
+        fhvecModel = Doc2Vec.load_word2vec_format(outFile, binary=False)
+
+        fhvecFile = open("%s.p"%(outFile),"wb")
+        fhvec_dict = {}
+
+        fhvecFile_raw = open("%s_raw.p"%(outFile),"wb")
+        fhvec_raw_dict = {}
+
+        for result in self.postgresConnection.memoryEfficientSelect(["id", "content"],\
+             ["sentence"], [], [], ["id"]):
+            for row_id in range(0,len(result)):
+                id_ = result[row_id][0] 
+                sentence = result[row_id][1]
+
+                content = gensim.utils.to_unicode(sentence) 
+                content = self.utFunction.normalizeText(content, remove_stopwords=0)
+
+                if len(content) == 0: continue 
+                vec = np.zeros(latent_space_size)
+                for word in content: 
+                    vec += fhvecModel[word]
+
+                fhvec_raw_dict[id_] = vec 
+                fhvec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
+
+        Logger.logr.info("Total Number of Sentences written=%i", len(sent2vec_dict))
+        pickle.dump(fhvec_dict, fhvecFile)    
+        pickle.dump(fhvec_raw_dict, fhvecFile_raw)    
+
+        fhvecFile_raw.close()    
+        fhvecFile.close()
 
 
-              
 
-    def generateSummary():
-        pass
+    def generateSummary(self, gs, methodId, filePrefix,\
+         lambda_val=1.0, diversity=False):
+
+        if gs <= 0: return 0
+        outFile = os.path.join(self.dataDir,\
+            "%s_repr"%self.latReprName)
+        vecFile = open("%s.p"%(self.outFile),"rb")
+        vDict = pickle.load (vecFile)
+
+        summGen = SummaryGenerator (diverse_summ=diversity,\
+             postgres_connection = self.postgresConnection,\
+             lambda_val = lambda_val)
+
+        summGen.populateSummary(methodId, vDict)
 
     def runEvaluationTask():
-        
+        summaryMethodID = 2
+         outFile = os.path.join(self.dataDir,\
+            "%s_repr"%self.latReprName)
+        vecFile_raw = open("%s_raw.p"%(outFile),"rb")
+        vDict_raw = pickle.load(vecFile_raw)
+
+        if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
+            self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
+        elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
+            self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
+        elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':    
+            self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
+        else:
+            self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
 
     def doHouseKeeping():
-        pass 
+        self.postgresConnection.disconnectDatabase()

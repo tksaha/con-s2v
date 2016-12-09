@@ -115,8 +115,7 @@ class WordVectorAveragingRunner(BaselineRunner):
 				content = gensim.utils.to_unicode(sentence) 
 				content = self.utFunction.normalizeText(content, remove_stopwords=0)
 
-				if len(content) == 0:
-					continue 
+				if len(content) == 0: continue 
 				vec1 = np.zeros(latent_space_size)
 				vec2 = np.zeros(latent_space_size)
 				for word in content: 
