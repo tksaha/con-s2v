@@ -48,13 +48,11 @@ class BaselineEvaluator:
 		if os.environ['VALID_FOR'] == 'CLASS':
 			fhBaseline.runTheBaseline(1, latent_space_size)
 			fhBaseline.runEvaluationTask()
-			fhBaseline.doHouseKeeping()	
 			f1 = self._getF1(fhBaseline.latReprName)
 			return f1
 		else:
 			fhBaseline.runTheBaseline(1, latent_space_size)
 			fhBaseline.runEvaluationTask()
-			fhBaseline.doHouseKeeping()	
 			adj = self._getAdjustedMutulScore(fhBaseline.latReprName)
 			return adj
 
