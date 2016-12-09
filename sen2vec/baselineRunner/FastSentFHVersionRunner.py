@@ -4,7 +4,8 @@
 import os 
 import logging 
 import re
-import numpy as np 
+import numpy as np
+import pickle 
 import gensim 
 import multiprocessing
 from gensim.models import Doc2Vec
@@ -56,7 +57,8 @@ class FastSentFHVersionRunner(BaselineRunner):
                         self.sentenceList.append(' '.join(content))
                         self.sentIDList.append(sentence_id) 
 
-        
+        Logger.logr.info ("Total sentences loaded = %i"%len(self.sentenceList))
+
     def runTheBaseline(self, rbase, latent_space_size):
         # What is auto-encode +AE version, AE = 0
         # AutoEncode will enable us to perform experiment 
@@ -120,7 +122,7 @@ class FastSentFHVersionRunner(BaselineRunner):
 
         summGen.populateSummary(methodId, vDict)
 
-    def runEvaluationTask():
+    def runEvaluationTask(self):
         summaryMethodID = 2
         outFile = os.path.join(self.dataDir,"%s_repr"%self.latReprName)
         vecFile_raw = open("%s_raw.p"%(outFile),"rb")
@@ -135,5 +137,5 @@ class FastSentFHVersionRunner(BaselineRunner):
         else:
             self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
 
-    def doHouseKeeping():
+    def doHouseKeeping(self):
         self.postgresConnection.disconnectDatabase()

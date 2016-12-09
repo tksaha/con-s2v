@@ -24,10 +24,10 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 		   metric_str = "AdjMIScore"
 
 		window_opt = None 
+		fhBaseline =  FastSentFHVersionRunner(self.dbstring, autoencode=False)
 		for window in self.window_size_list:
 			Logger.logr.info("Starting Running FastsentFHVersion "+\
 					" Baseline for Window = %s" %window)				
-			fhBaseline =  FastSentFHVersionRunner(self.dbstring, autoencode=False)
 			fhBaseline.window  = window
 			if 	window == self.window_size_list[0]: 
 				fhBaseline.prepareData(1)		
@@ -43,10 +43,10 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 
 		metric = {}
 		window_opt = None 
+		fhBaseline =  FastSentFHVersionRunner(self.dbstring, autoencode=True)
 		for window in self.window_size_list:
 			Logger.logr.info("Starting Running FastsentFHVersion (AE) "+\
 					" Baseline for Window = %s" %window)				
-			fhBaseline =  FastSentFHVersionRunner(self.dbstring, autoencode=True)
 			fhBaseline.window  = window
 			if 	window == self.window_size_list[0]: 
 				fhBaseline.prepareData(1)		
