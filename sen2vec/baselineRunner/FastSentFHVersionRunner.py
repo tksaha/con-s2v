@@ -30,7 +30,7 @@ class FastSentFHVersionRunner(BaselineRunner):
         self.sentIDList = list()
         self.sentenceList = list()
         self.cores = multiprocessing.cpu_count()
-        self.window = str(10)
+        self.window = str(window)
         self.autoencode = autoencode
         self.dataDir = os.environ['TRTESTFOLDER']
         self.latReprName = 'felixhillfastsent'

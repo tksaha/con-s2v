@@ -213,10 +213,10 @@ class ReutersReader(DocumentReader):
         # tfrunner.runTheBaseline(rbase)
         # tfrunner.runEvaluationTask()
 
-        latent_space_size = 600
-        fhrunner = FastSentFHVersionRunner (self.dbstring)
-        fhrunner.prepareData(pd)
-        fhrunner.runTheBaseline(rbase, latent_space_size)
+        # latent_space_size = 600
+        # fhrunner = FastSentFHVersionRunner (self.dbstring)
+        # fhrunner.prepareData(pd)
+        # fhrunner.runTheBaseline(rbase, latent_space_size)
 
 
 
