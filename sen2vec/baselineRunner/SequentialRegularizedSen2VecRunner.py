@@ -31,6 +31,7 @@ class SequentialRegularizedSen2VecRunner(BaselineRunner):
         self.seqregunw = str(1.0)
         self.postgresConnection.connectDatabase()
         self.rootdir = os.environ['SEN2VEC_DIR']
+        self.sentenceList = list()
         self.seqregsen2vReprFile = os.path.join(self.dataDir, self.latReprName)
     
     def __insertNeighbors(self, sentenceList, nbr_file):
