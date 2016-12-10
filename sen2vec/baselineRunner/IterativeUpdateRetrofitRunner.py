@@ -134,8 +134,8 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
                     original_val.append(val)
                     computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
 
-            print (len(original_val))
-            print (len(computed_val))
+            Logger.logr.info (len(original_val))
+            Logger.logr.info (len(computed_val))
             sp = scipy.stats.spearmanr(original_val,computed_val)[0]
             pearson = scipy.stats.pearsonr(original_val,computed_val)[0]
             return sp, pearson
