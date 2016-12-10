@@ -43,7 +43,7 @@ class ClusteringEvaluation:
 		for result in self.postgresConnection.memoryEfficientSelect(["sentence.id","sentence.topic"],\
 			 ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
 			 	["summary.method_id", "=", summaryMethodID]\
-			 	 , ['sentence.istrain','=',"'NO'"]], [], []):
+			 	 ], [], []):
 				self.__writeClusteringData (result, datafileToWrite, vecDict)
 
 
