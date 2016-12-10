@@ -76,7 +76,7 @@ class ClusteringEvaluation:
 		X, Y = self.__getXY(data)
 
 		n_clusters=np.unique(Y)
-		Logger.logr.info("Data Shape of the Clustering %s"%X.Shape)
+		Logger.logr.info("Data Shape of the Clustering %s"%X.shape)
 		Logger.logr.info("Number of clusters =%i" %len(n_clusters))
 
 		estimator = KMeans(init='k-means++', n_clusters=len(np.unique(Y)), n_init=10)
