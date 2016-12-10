@@ -218,6 +218,47 @@ class ReutersReader(DocumentReader):
         # fhrunner.prepareData(pd)
         # fhrunner.runTheBaseline(rbase, latent_space_size)
 
+        from  baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
+        optPDict = {}   
+        dataset_name = "reuter"
+        latent_space_size = 600  # need to change to align with the other methods
+
+
+        os.environ['VALID_FOR'] = 'CLASS'
+        with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_hyperparameters_class.txt"), 'w') as f:  
+            os.environ['EVAL'] = 'VALID' 
+            fheval = FastSentFHVersionEvalutor (self.dbstring)
+            optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+
+
+        os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = 'CLASS'
+        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+        niter = 5
+        for i in range(0,niter):
+            f.write("###### Iteration: %s ######%s" %(i, os.linesep))
+            fheval = FastSentFHVersionEvalutor (self.dbstring)
+            fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+
+
+        optPDict = {}
+        os.environ['VALID_FOR'] = 'CLUST'
+        with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_hyperparameters_clust.txt"), 'w') as f:  
+            os.environ['EVAL'] = 'VALID' 
+            fheval = FastSentFHVersionEvalutor (self.dbstring)
+            optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+
+
+        os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = 'CLUST'
+        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+        niter = 5
+        for i in range(0,niter):
+            f.write("###### Iteration: %s ######%s" %(i, os.linesep))
+            fheval = FastSentFHVersionEvalutor (self.dbstring)
+            fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+        
+
 
 
         
