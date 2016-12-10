@@ -5,7 +5,7 @@ import os
 import sys 
 import math 
 from abc import ABCMeta, abstractmethod
-
+from log_manager.log_config import Logger
 
 class BaselineEvaluator:
 	"""
@@ -21,7 +21,7 @@ class BaselineEvaluator:
 			if "Adjusted Mutual Info Score:" in line:
 				adj_score = line.strip()[line.strip().rfind(":")+1:]
 				adj_score = float(adj_score)
-				Logger.logr.info("Returning value %.2f"%adj_score)
+				#Logger.logr.info("Returning value %.2f"%adj_score)
 				return adj_score
 
 	def _getF1(self, latreprName):

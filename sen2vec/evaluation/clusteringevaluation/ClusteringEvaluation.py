@@ -4,16 +4,17 @@
 
 import os 
 import sys 
+import math
+import subprocess
+import numpy as np
+import pandas as pd
+import sklearn.metrics as mt
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 from db_connector.PostgresPythonConnector import PostgresPythonConnector
 from nltk.tokenize import sent_tokenize
-import numpy as np
-import pandas as pd
-import sklearn.metrics as mt
 from sklearn.cluster import KMeans
-import math
-import subprocess
+
 
 class ClusteringEvaluation:
 	"""
@@ -76,7 +77,7 @@ class ClusteringEvaluation:
 		X, Y = self.__getXY(data)
 
 		n_clusters=np.unique(Y)
-		Logger.logr.info("Data Shape of the Clustering %s"%X.shape)
+		Logger.logr.info("Data Shape of the Clustering %s"%str(X.shape))
 		Logger.logr.info("Number of clusters =%i" %len(n_clusters))
 
 		estimator = KMeans(init='k-means++', n_clusters=len(np.unique(Y)), n_init=10)
