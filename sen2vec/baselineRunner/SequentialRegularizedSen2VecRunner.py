@@ -28,7 +28,7 @@ class SequentialRegularizedSen2VecRunner(BaselineRunner):
         self.sentsFile = os.environ['P2VCEXECSENTFILE']
         self.window_size = str(10)
         self.latReprName = "seq_reg_s2v"
-        self.seqregunw = str(1.0)
+        self.seqregunw_beta = str(1.0)
         self.postgresConnection.connectDatabase()
         self.rootdir = os.environ['SEN2VEC_DIR']
         self.sentenceList = list()
@@ -112,7 +112,7 @@ class SequentialRegularizedSen2VecRunner(BaselineRunner):
 
         neighborFile =  "%s_neighbor_unw.txt"%(self.seqregsen2vReprFile)
         wPDict["output"] = "%s_neighbor_unw"%(self.seqregsen2vReprFile)
-        wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(self.regBetaUNW)
+        wPDict["neighborFile"], wPDict["beta"] = neighborFile, str(self.seqregunw_beta)
 
         args = wordDoc2Vec.buildArgListforW2VWithNeighbors(wPDict, 2)
         self._runProcess (args)

@@ -9,7 +9,7 @@ from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 from baselineRunner.FastSentFHVersionRunner import FastSentFHVersionRunner
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
-
+from baselineRunner.SequentialIterativeUpdateRetrofitRunner  import SequentialIterativeUpdateRetrofitRunner
 
 class SeqItUpdateEvalutor(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
@@ -24,7 +24,13 @@ class SeqItUpdateEvalutor(BaselineEvaluator):
 		   metric_str = "AdjMIScore"
 
 		return optPDict
-		
+
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
-		pass
+		seqiterrunner = SequentialIterativeUpdateRetrofitRunner(self.dbstring)
+		seqiterrunner.prepareData(pd)
+		seqiterrunner.runTheBaseline(rbase)
+		seqiterrunner.runEvaluationTask()
+		self._writeResult("%s_unweighted"%seqiterrunner.latReprName, f)
+		
+
 		

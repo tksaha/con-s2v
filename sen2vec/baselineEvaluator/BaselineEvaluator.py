@@ -13,6 +13,7 @@ class BaselineEvaluator:
 	def __init__(self, dbstring, **kwargs):
 		self.dbstring = dbstring
 		self.window_size_list = ["8", "10", "12"]
+		self.beta_list = [0.3, 0.5, 0.8, 1.0]
 
 
 	def _getAdjustedMutulScore(self, latreprName):
