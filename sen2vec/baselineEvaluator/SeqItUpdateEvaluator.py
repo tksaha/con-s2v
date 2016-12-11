@@ -9,9 +9,9 @@ from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 from baselineRunner.FastSentFHVersionRunner import FastSentFHVersionRunner
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
-from baselineRunner.SequentialIterativeUpdateRetrofitRunner  import SequentialIterativeUpdateRetrofitRunner
+from baselineRunner.SeqItUpRetroRunner  import SeqItUpRetroRunner
 
-class SeqItUpdateEvalutor(BaselineEvaluator):
+class SeqItUpdateEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
 		"""
@@ -26,11 +26,12 @@ class SeqItUpdateEvalutor(BaselineEvaluator):
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
-		seqiterrunner = SequentialIterativeUpdateRetrofitRunner(self.dbstring)
+		seqiterrunner = SeqItUpRetroRunner(self.dbstring)
 		seqiterrunner.prepareData(pd)
 		seqiterrunner.runTheBaseline(rbase)
 		seqiterrunner.runEvaluationTask()
 		self._writeResult("%s_unweighted"%seqiterrunner.latReprName, f)
+		f.flush()
 		
 
 		

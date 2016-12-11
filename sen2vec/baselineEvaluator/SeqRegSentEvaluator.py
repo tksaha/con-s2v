@@ -30,28 +30,33 @@ class SeqRegSentEvaluator(BaselineEvaluator):
 			seqregs2v.seqregunw_beta = beta
 			seqregs2v.window_size = optPDict["window"]
 			if beta==0.3:
-			   seqregs2v.prepareData(pd)
-			seqregs2v.runTheBaseline(rbase, latent_space_size)
+			   seqregs2v.prepareData(1)
+			seqregs2v.runTheBaseline(1, latent_space_size)
 			seqregs2v.runEvaluationTask()
-			metric[beta] = self.__getF1("%s_neighbor_unw"%seqregs2v.latReprName)	
+			metric[beta] = self._getF1("%s_neighbor_unw"%seqregs2v.latReprName)	
 			Logger.logr.info("UNW_%s for %s = %s" %(metric_str, beta, metric[beta]))
 			
 		unw_opt_seq_reg = max(metric, key=metric.get)
-		Logger.logr.info("Optimal regBetaUNW=%s" %(unw_opt_reg))
+		Logger.logr.info("Optimal seqregBetaUNW=%s" %(unw_opt_seq_reg))
 			
-		optPDict['unw_opt_reg'] = unw_opt_reg
-		f.write("Optimal REG BetaUNW : %.2f%s" %(unw_opt_reg, os.linesep))
-		f.write("Seq REG BetaUNW %ss: %s%s" %(metric_str, unw_f1, os.linesep))
+		optPDict['unw_opt_seq_reg'] = unw_opt_seq_reg
+		f.write("Optimal REG BetaUNW : %.2f%s" %(unw_opt_seq_reg, os.linesep))
+		f.write("Seq REG BetaUNW %ss: %s%s" %(metric_str, metric, os.linesep))
 		f.flush()
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
 		
-		f.write("Optimal Window for seq reg s2v is: %s%s" %(optPDict["unw_opt_reg"], os.linesep))	
+		f.write("Optimal Window for seq reg s2v is: %s%s" %(optPDict["unw_opt_seq_reg"], os.linesep))	
 		seqregs2v = SequentialRegularizedSen2VecRunner(self.dbstring)
-		seqregs2v.seqregunw_beta = beta
+		seqregs2v.seqregunw_beta = optPDict['unw_opt_seq_reg']
 		seqregs2v.window_size = optPDict["window"]
-		self.writeResults(pd, rbase, latent_space_size, seqregs2v, f)
+		seqregs2v.prepareData(pd)		
+		seqregs2v.runTheBaseline(rbase,latent_space_size)
+		seqregs2v.runEvaluationTask()
+		self._writeResult("%s_neighbor_unw"%seqregs2v.latReprName, f)
+		seqregs2v.doHouseKeeping()	
+		f.flush()
 
 
 		

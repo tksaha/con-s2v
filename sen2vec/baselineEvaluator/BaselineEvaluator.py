@@ -57,10 +57,10 @@ class BaselineEvaluator:
 			adj = self._getAdjustedMutulScore(fhBaseline.latReprName)
 			return adj
 
-	def writeResults(self, pd, rbase, latent_space_size, fhBaseline, f):
-		fhBaseline.prepareData(pd)		
-		fhBaseline.runTheBaseline(rbase,latent_space_size)
-		fhBaseline.runEvaluationTask()
-		self._writeResult("%s"%fhBaseline.latReprName, f)
-		fhBaseline.doHouseKeeping()	
+	def writeResults(self, pd, rbase, latent_space_size, baseline, f):
+		baseline.prepareData(pd)		
+		baseline.runTheBaseline(rbase,latent_space_size)
+		baseline.runEvaluationTask()
+		self._writeResult("%s"%baseline.latReprName, f)
+		baseline.doHouseKeeping()	
 		f.flush()
