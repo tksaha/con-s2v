@@ -42,7 +42,7 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 
 
 		metric = {}
-		window_opt = None 
+		window_opt_avg = None 
 		fhBaseline =  FastSentFHVersionRunner(self.dbstring, autoencode=True)
 		for window in self.window_size_list:
 			Logger.logr.info("Starting Running FastsentFHVersion (AE) "+\
@@ -54,7 +54,7 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 			Logger.logr.info("%s for window %s = %s" %(metric_str, window, metric[window]))
 		window_opt_avg = max(metric, key=metric.get) 
 		f.write("Optimal window size for %s in fhbaseline is %s%s"\
-				%(metric_str, window_opt, os.linesep))
+				%(metric_str, window_opt_avg, os.linesep))
 		f.write("%ss: %s%s" %(metric_str, metric, os.linesep))
 		f.flush()
 
