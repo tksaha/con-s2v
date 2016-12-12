@@ -224,39 +224,88 @@ class ReutersReader(DocumentReader):
         latent_space_size = 600  # need to change to align with the other methods
 
 
-        os.environ['VALID_FOR'] = 'CLASS'
-        with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_hyperparameters_class.txt"), 'w') as f:  
-            os.environ['EVAL'] = 'VALID' 
-            fheval = FastSentFHVersionEvalutor (self.dbstring)
-            optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+        # os.environ['VALID_FOR'] = 'CLASS'
+        # with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_hyperparameters_class.txt"), 'w') as f:  
+        #     os.environ['EVAL'] = 'VALID' 
+        #     fheval = FastSentFHVersionEvalutor (self.dbstring)
+        #     optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
 
+
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLASS'
+        # f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+        # niter = 5
+        # for i in range(0,niter):
+        #     f.write("###### Iteration: %s ######%s" %(i, os.linesep))
+        #     fheval = FastSentFHVersionEvalutor (self.dbstring)
+        #     fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+
+
+        from  baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
+        from  baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
+        from  baselineEvaluator.SeqItUpdateEvaluator import SeqItUpdateEvaluator
+
+
+        optPDict = {}   
+        dataset_name = "reuter"
+        #latent_space_size = 600  # need to change to align with the other methods
+        latent_space_size = 300
+        optPDict["window"] =str(10)
+
+        os.environ['VALID_FOR'] = 'CLASS'
+
+        paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+        paraBaseline.prepareData(pd)
+        paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"])
+        with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_hyperparameters_class.txt"), 'w') as f:  
+            os.environ['EVAL'] = 'VALID' 
+            #fheval = FastSentFHVersionEvalutor (self.dbstring)
+            #optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+            seqregeval = SeqRegSentEvaluator (self.dbstring)
+            seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+
+            seqiteval = SeqItUpdateEvaluator(self.dbstring)
+            seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
 
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = 'CLASS'
-        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
         niter = 5
         for i in range(0,niter):
             f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-            fheval = FastSentFHVersionEvalutor (self.dbstring)
-            fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+            #fheval = FastSentFHVersionEvalutor (self.dbstring)
+            #fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
 
+            seqregeval = SeqRegSentEvaluator (self.dbstring)
+            seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+
+            seqiteval = SeqItUpdateEvaluator(self.dbstring)
+            seqiteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
 
         optPDict = {}
+        optPDict["window"] =str(10)
         os.environ['VALID_FOR'] = 'CLUST'
-        with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_hyperparameters_clust.txt"), 'w') as f:  
+        with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_hyperparameters_clust.txt"), 'w') as f:  
             os.environ['EVAL'] = 'VALID' 
-            fheval = FastSentFHVersionEvalutor (self.dbstring)
-            optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+            seqregeval = SeqRegSentEvaluator (self.dbstring)
+            seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+
+            seqiteval = SeqItUpdateEvaluator(self.dbstring)
+            seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
 
 
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = 'CLUST'
-        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_fh_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
         niter = 5
         for i in range(0,niter):
             f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-            fheval = FastSentFHVersionEvalutor (self.dbstring)
-            fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+            
+            seqregeval = SeqRegSentEvaluator (self.dbstring)
+            seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+
+            seqiteval = SeqItUpdateEvaluator(self.dbstring)
+            seqiteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
         
 
 
