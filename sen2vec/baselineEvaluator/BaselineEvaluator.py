@@ -64,6 +64,20 @@ class BaselineEvaluator:
 			for line in open(file_):
 				f.write(line)
 
+	def __getRecall(self, method_id, models, systems):
+        output_file_name = ""
+        for model in models:
+            output_file_name += str(model)+"_"
+        for system in systems:
+            output_file_name += "_"+str(system)
+        output_file_name += "_output"
+        output_file_name += "_%s.txt" %(str(100))
+        
+        with open('%s%s%s' %(os.environ["SUMMARYFOLDER"],"/",output_file_name), 'r') as f:
+            content = f.read()
+            recall = float(content.split("%s ROUGE-1 Average_R: " %method_id)[1].split(' ')[0])
+        return recall
+
 	def evaluate(self, baseline, prefix, latent_space_size):
 		if os.environ['VALID_FOR'] == 'CLASS':
 			baseline.runTheBaseline(1, latent_space_size)
@@ -81,7 +95,8 @@ class BaselineEvaluator:
                          lambda_val=1.0, diversity=False)
             baseline.doHouseKeeping()           
             self.__runSpecificEvaluation(models = [20], systems = [baseline.system_id]) 
-
+            return self.__getRecall(method_id=baseline.system_id,\
+            	 models = [20], systems = [baseline.system_id])
 
 	def writeResults(self, pd, rbase, latent_space_size, baseline, filePrefix, f):
 

@@ -226,6 +226,7 @@ class DUCReader(DocumentReader):
         # document_id = self._readDUC2007(document_id)
 
 
+    # Need to deprecate the following function
     def __runSpecificEvaluation(self, models = [20], systems = []):
         rougeInstance = Rouge()
         rPDict = rougeInstance.buildRougeParamDict()
@@ -250,10 +251,10 @@ class DUCReader(DocumentReader):
         evaluation._prepareFiles()
         evaluation._getRankingEvaluation(rPDict, rougeInstance)
 
-        rPDict['-l'] = str(10)
-        evaluation._getRankingEvaluation(rPDict, rougeInstance)
+        #rPDict['-l'] = str(10)
+        #evaluation._getRankingEvaluation(rPDict, rougeInstance)
         
-        
+    # Need to deprecate the following function   
     def __getRecall(self, method_id, models, systems):
         output_file_name = ""
         for model in models:
@@ -261,7 +262,7 @@ class DUCReader(DocumentReader):
         for system in systems:
             output_file_name += "_"+str(system)
         output_file_name += "_output"
-        output_file_name += "_%s.txt" %(str(10))
+        output_file_name += "_%s.txt" %(str(100))
         
         with open('%s%s%s' %(os.environ["SUMMARYFOLDER"],"/",output_file_name), 'r') as f:
             content = f.read()
@@ -282,7 +283,6 @@ class DUCReader(DocumentReader):
             if self.diversity == str(1):
                 diversity = True 
 
-          
             os.environ['DUC_EVAL']= 'VALID'
             os.environ['VALID_FOR'] = 'RANK'
     
@@ -318,28 +318,28 @@ class DUCReader(DocumentReader):
             # #we need the p2v vectors created with optimal window
             # paraBaseline.doHouseKeeping()
 
-            method_id = 80
-            recalls = {}
-            window_opt = None #var for the optimal window
-            window_size_list = ["8", "10", "12"]
-            for window in window_size_list:
-                Logger.logr.info("Starting Running WVAvg Baseline for Window = %s" %window)  
-                self.postgres_recorder.truncateSummaryTable()           
-                wvBaseline = WordVectorAveragingRunner (self.dbstring)
-                if  window == window_size_list[0]: 
-                    wvBaseline.prepareData(pd)      
-                wvBaseline.runTheBaseline(rbase,latent_space_size, window)
-                wvBaseline.generateSummary(gs,method_id,"",\
-                         lambda_val=self.lambda_val, diversity=diversity)
-                wvBaseline.doHouseKeeping()           
-                self.__runSpecificEvaluation(models = [20], systems = [80]) 
-                recalls[window] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
-                Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
+            # method_id = 80
+            # recalls = {}
+            # window_opt = None #var for the optimal window
+            # window_size_list = ["8", "10", "12"]
+            # for window in window_size_list:
+            #     Logger.logr.info("Starting Running WVAvg Baseline for Window = %s" %window)  
+            #     self.postgres_recorder.truncateSummaryTable()           
+            #     wvBaseline = WordVectorAveragingRunner (self.dbstring)
+            #     if  window == window_size_list[0]: 
+            #         wvBaseline.prepareData(pd)      
+            #     wvBaseline.runTheBaseline(rbase,latent_space_size, window)
+            #     wvBaseline.generateSummary(gs,method_id,"",\
+            #              lambda_val=self.lambda_val, diversity=diversity)
+            #     wvBaseline.doHouseKeeping()           
+            #     self.__runSpecificEvaluation(models = [20], systems = [80]) 
+            #     recalls[window] = self.__getRecall(method_id=method_id, models = [20], systems = [method_id])
+            #     Logger.logr.info("Recall for %s = %s" %(window, recalls[window]))
 
-            window_opt_avg = max(recalls, key=recalls.get) 
-            f.write("Optimal window size for wvavg is %s%s"%(window_opt, os.linesep))
-            f.write("wvavg window Recalls: %s%s" %(recalls, os.linesep))
-            f.flush()
+            # window_opt_avg = max(recalls, key=recalls.get) 
+            # f.write("Optimal window size for wvavg is %s%s"%(window_opt, os.linesep))
+            # f.write("wvavg window Recalls: %s%s" %(recalls, os.linesep))
+            # f.flush()
 
 
             # n2vBaseline = Node2VecRunner(self.dbstring)
@@ -529,14 +529,14 @@ class DUCReader(DocumentReader):
                 # paraBaseline.doHouseKeeping()
                 # f.flush()
 
-                method_id = 80
-                self.postgres_recorder.truncateSummaryTable()
-                wvBaseline = WordVectorAveragingRunner (self.dbstring)
-                wvBaseline.prepareData(pd)      
-                wvBaseline.runTheBaseline(rbase,latent_space_size, window_opt_avg)
-                wvBaseline.generateSummary(gs,method_id,"",\
-                         lambda_val=self.lambda_val, diversity=diversity)
-                wvBaseline.doHouseKeeping()           
+                # method_id = 80
+                # self.postgres_recorder.truncateSummaryTable()
+                # wvBaseline = WordVectorAveragingRunner (self.dbstring)
+                # wvBaseline.prepareData(pd)      
+                # wvBaseline.runTheBaseline(rbase,latent_space_size, window_opt_avg)
+                # wvBaseline.generateSummary(gs,method_id,"",\
+                #          lambda_val=self.lambda_val, diversity=diversity)
+                # wvBaseline.doHouseKeeping()           
 
                 # method_id = 14
                 # os.environ["NBR_TYPE"]=str(0)
@@ -623,17 +623,3 @@ class DUCReader(DocumentReader):
                 for line in open(file_):
                     f.write(line)
                 f.flush()
-
-                f.write ("%s%s"%("#########################Running for Test (10) ###########################################", os.linesep))
-                #file_name = "20__14_15_16_17_output_10.txt"
-                file_name = "%soutput_10.txt"%file_name_prefix
-                file_ = os.path.join(os.environ["SUMMARYFOLDER"], file_name)
-                for line in open(file_):
-                    f.write(line)
-
-                f.write("%s%s"%(os.linesep, os.linesep))
-                f.flush()
-
-
-
-
