@@ -4,9 +4,10 @@
 import os 
 import logging 
 import operator
+from bs4 import BeautifulSoup
+from rouge.Rouge import Rouge 
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
-from bs4 import BeautifulSoup
 from log_manager.log_config import Logger 
 from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
@@ -16,7 +17,6 @@ from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRu
 from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
 from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
-from rouge.Rouge import Rouge 
 from baselineRunner.WordVectorAveragingRunner import WordVectorAveragingRunner
 
 # There are some summaries [ex:fbis4-45908, FT932-15960] for which the 
@@ -26,10 +26,9 @@ class DUCReader(DocumentReader):
     DUC Document Reader
 
     """
-
     def __init__(self,*args, **kwargs):
         """
-        It reads he environment variable and initializes the 
+        It reads the environment variable and initializes the 
         base class. 
         """
         DocumentReader.__init__(self, *args, **kwargs)
@@ -235,10 +234,10 @@ class DUCReader(DocumentReader):
 
         evaluation = RankingEvaluation(topics = [self.duc_topic], models = models, systems = systems)
         evaluation._prepareFiles()
-        #evaluation._getRankingEvaluation(rPDict, rougeInstance)
-
-        rPDict['-l'] = str(10)
         evaluation._getRankingEvaluation(rPDict, rougeInstance)
+
+        #rPDict['-l'] = str(10)
+        #evaluation._getRankingEvaluation(rPDict, rougeInstance)
     
     
     def __runCombinedEvaluation(self,system_list):
@@ -283,8 +282,9 @@ class DUCReader(DocumentReader):
             if self.diversity == str(1):
                 diversity = True 
 
-            # createValidationSet() Need to implement this function
-            os.environ['DUC_EVAL']='VALID'
+          
+            os.environ['DUC_EVAL']= 'VALID'
+            os.environ['VALID_FOR'] = 'RANK'
     
             
             # recalls = {}
@@ -509,7 +509,8 @@ class DUCReader(DocumentReader):
 
             
 # ######## Test ########################################
-            os.environ["DUC_EVAL"]='TEST'
+            os.environ["DUC_EVAL"] = 'TEST'
+            os.environ['TEST_FOR'] = 'RANK'
             system_list = []
             for system_id in range(80,81):
                 system_list.append(system_id)
@@ -519,8 +520,6 @@ class DUCReader(DocumentReader):
             for i in range(0,niter):
                 f.write("###### Iteration: %s ######%s" %(i, os.linesep))
                 
-
-
                 # f.write("Optimal Window: %s%s" %(window_opt, os.linesep))          
                 # self.postgres_recorder.truncateSummaryTable()
                 # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)

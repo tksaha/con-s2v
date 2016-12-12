@@ -18,20 +18,9 @@ class SeqItUpdateEvaluator(BaselineEvaluator):
 		BaselineEvaluator.__init__(self, *args, **kwargs)
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
-		metric = {}
-		metric_str = "f1"
-		if os.environ['VALID_FOR'] == 'CLUST':
-		   metric_str = "AdjMIScore"
-
+		
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
 		seqiterrunner = SeqItUpRetroRunner(self.dbstring)
-		seqiterrunner.prepareData(pd)
-		seqiterrunner.runTheBaseline(rbase)
-		seqiterrunner.runEvaluationTask()
-		self._writeResult("%s_unweighted"%seqiterrunner.latReprName, f)
-		f.flush()
-		
-
-		
+		self.writeResults(pd, rbase, latent_space_size, seqiterrunner, "_unweighted", f)

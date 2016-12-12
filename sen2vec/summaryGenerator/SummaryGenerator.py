@@ -5,8 +5,8 @@ import os
 import sys 
 import networkx as nx 
 import operator
-import numpy as np 
 import math
+import numpy as np 
 from log_manager.log_config import Logger 
 from summaryGenerator.WordBasedGraphGenerator import WordBasedGraphGenerator
 from summaryGenerator.PageRankBasedSummarizer import PageRankBasedSummarizer

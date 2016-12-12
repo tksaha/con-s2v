@@ -30,6 +30,7 @@ class WordVectorAveragingRunner(BaselineRunner):
 		self.sentReprFile = os.environ['P2VCEXECOUTFILE']
 		self.doc2vecOut = os.environ['P2VECSENTDOC2VECOUT']
 		self.postgresConnection.connectDatabase()
+		self.window_size = str(10)
 		self.utFunction = Utility("Text Utility")
 		self.latReprName = "wordaverage"
 		self.rootdir = os.environ['SEN2VEC_DIR']
@@ -63,7 +64,9 @@ class WordVectorAveragingRunner(BaselineRunner):
 			str_ ="%s %0.3f"%(str_,val)
 		return str_
 
-	def runTheBaseline(self, rbase, latent_space_size, window):
+	# I am going to deprecate the window parameter very soon 
+	# from both the wvbaseline and sen2vec
+	def runTheBaseline(self, rbase, latent_space_size, window=str(10)):
 		"""
 		We run the para2vec Model and then store sen2vec as pickled 
 		dictionaries into the output file. 
@@ -77,7 +80,7 @@ class WordVectorAveragingRunner(BaselineRunner):
 		wPDict["cbow"], wPDict["sentence-vectors"],wPDict["min-count"] = str(0), str(0), str(0)
 		wPDict["train"], wPDict["output"] = "%s.txt"%self.sentsFile, self.doc2vecOut
 		wPDict["size"], wPDict["sentence-vectors"] = str(latent_space_size), str(1)
-		wPDict["window"] = window
+		wPDict["window"] = self.window_size
 		args = wordDoc2Vec.buildArgListforW2V(wPDict)
 		self._runProcess(args)
 		sent2vecModel = Doc2Vec.load_word2vec_format(self.doc2vecOut, binary=False)

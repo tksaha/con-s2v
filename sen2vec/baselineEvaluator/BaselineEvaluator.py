@@ -4,6 +4,7 @@
 import os 
 import sys 
 import math 
+from rouge.Rouge import Rouge 
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 
@@ -14,7 +15,16 @@ class BaselineEvaluator:
 		self.dbstring = dbstring
 		self.window_size_list = ["8", "10", "12"]
 		self.beta_list = [0.3, 0.5, 0.8, 1.0]
+		self.metric = {}
+		self.metric_str = ""
 
+	def _setmetricString (self):
+		self.metric = {}
+		self.metric_str = "F1"
+		if os.environ['VALID_FOR'] == 'CLUST':
+		   self.metric_str = "AdjMIScore"
+		elif os.environ['VALID_FOR'] == 'RANK':
+		   self.metric_str = "Recall"
 
 	def _getAdjustedMutulScore(self, latreprName):
 		file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclustereval_2.txt"%latreprName)
@@ -22,7 +32,6 @@ class BaselineEvaluator:
 			if "Adjusted Mutual Info Score:" in line:
 				adj_score = line.strip()[line.strip().rfind(":")+1:]
 				adj_score = float(adj_score)
-				#Logger.logr.info("Returning value %.2f"%adj_score)
 				return adj_score
 
 	def _getF1(self, latreprName):
@@ -35,6 +44,16 @@ class BaselineEvaluator:
 				f1 = float(line_elems[5])
 				return f1 
 
+	 def __runSpecificEvaluation(self, models = [20], systems = []):
+        rougeInstance = Rouge()
+        rPDict = rougeInstance.buildRougeParamDict()
+        rPDict['-l'] = str(100)
+        rPDict['-c'] = str(0.99)
+
+        evaluation = RankingEvaluation(topics = [self.duc_topic], models = models, systems = systems)
+        evaluation._prepareFiles()
+        evaluation._getRankingEvaluation(rPDict, rougeInstance)
+
 	def _writeResult(self, latreprName, f):
 		if os.environ['TEST_FOR'] == 'CLASS':
 			file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_raweval_2.txt"%latreprName)
@@ -45,22 +64,37 @@ class BaselineEvaluator:
 			for line in open(file_):
 				f.write(line)
 
-	def evaluate(self, fhBaseline, latent_space_size):
+	def evaluate(self, baseline, prefix, latent_space_size):
 		if os.environ['VALID_FOR'] == 'CLASS':
-			fhBaseline.runTheBaseline(1, latent_space_size)
-			fhBaseline.runEvaluationTask()
-			f1 = self._getF1(fhBaseline.latReprName)
+			baseline.runTheBaseline(1, latent_space_size)
+			baseline.runEvaluationTask()
+			f1 = self._getF1("%s%s"%(baseline.latReprName, prefix))
 			return f1
-		else:
-			fhBaseline.runTheBaseline(1, latent_space_size)
-			fhBaseline.runEvaluationTask()
-			adj = self._getAdjustedMutulScore(fhBaseline.latReprName)
+		elif os.environ['VALID_FOR'] == 'CLUST':
+			baseline.runTheBaseline(1, latent_space_size)
+			baseline.runEvaluationTask()
+			adj = self._getAdjustedMutulScore("%s%s"%(baseline.latReprName, prefix))
 			return adj
+		else:
+			baseline.runTheBaseline(1,latent_space_size, window)
+            baseline.generateSummary(1,method_id,"",\
+                         lambda_val=1.0, diversity=False)
+            baseline.doHouseKeeping()           
+            self.__runSpecificEvaluation(models = [20], systems = [baseline.system_id]) 
 
-	def writeResults(self, pd, rbase, latent_space_size, baseline, f):
-		baseline.prepareData(pd)		
-		baseline.runTheBaseline(rbase,latent_space_size)
-		baseline.runEvaluationTask()
-		self._writeResult("%s"%baseline.latReprName, f)
-		baseline.doHouseKeeping()	
-		f.flush()
+
+	def writeResults(self, pd, rbase, latent_space_size, baseline, filePrefix, f):
+
+		if os.environ['TEST_FOR'] == 'RANK':
+			baseline.prepareData(pd)      
+            baseline.runTheBaseline(rbase,latent_space_size)
+            baseline.generateSummary(gs,method_id,"",\
+                         lambda_val=1.0, diversity=False)
+            baseline.doHouseKeeping()  
+		else:
+			baseline.prepareData(pd)		
+			baseline.runTheBaseline(rbase,latent_space_size)
+			baseline.runEvaluationTask()
+			self._writeResult("%s_%s"%(baseline.latReprName, filePrefix), f)
+			baseline.doHouseKeeping()	
+			f.flush()
