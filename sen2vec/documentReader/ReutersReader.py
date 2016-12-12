@@ -259,13 +259,15 @@ class ReutersReader(DocumentReader):
         paraBaseline.runTheBaseline(rbase,latent_space_size, optPDict["window"])
         with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_hyperparameters_class.txt"), 'w') as f:  
             os.environ['EVAL'] = 'VALID' 
+            
             #fheval = FastSentFHVersionEvalutor (self.dbstring)
             #optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+
             seqregeval = SeqRegSentEvaluator (self.dbstring)
-            seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+            optPDict = seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
 
             seqiteval = SeqItUpdateEvaluator(self.dbstring)
-            seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
+            optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
 
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = 'CLASS'
@@ -277,7 +279,7 @@ class ReutersReader(DocumentReader):
             #fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
 
             seqregeval = SeqRegSentEvaluator (self.dbstring)
-            seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+            optPDict = seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
 
             seqiteval = SeqItUpdateEvaluator(self.dbstring)
             seqiteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
@@ -288,10 +290,10 @@ class ReutersReader(DocumentReader):
         with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_hyperparameters_clust.txt"), 'w') as f:  
             os.environ['EVAL'] = 'VALID' 
             seqregeval = SeqRegSentEvaluator (self.dbstring)
-            seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+            optPDict = seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
 
             seqiteval = SeqItUpdateEvaluator(self.dbstring)
-            seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
+            optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
 
 
         os.environ["EVAL"]='TEST'

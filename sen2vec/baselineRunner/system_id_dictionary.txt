@@ -2,3 +2,4 @@ Gold: 20
 WordVectorAveragingRunner:80
 SeqItUpRetroRunner: 82
 SequentialRegularizedSen2VecRunner:83
+FastSentFHVersionRunner: 84

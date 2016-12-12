@@ -224,10 +224,10 @@ class NewsGroupReader(DocumentReader):
         #     #fheval = FastSentFHVersionEvalutor (self.dbstring)
         #     #optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
         #     seqregeval = SeqRegSentEvaluator (self.dbstring)
-        #     seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+        #     optPDict = seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
 
         #     seqiteval = SeqItUpdateEvaluator(self.dbstring)
-        #     seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
+        #     optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
 
         # os.environ["EVAL"]='TEST'
         # os.environ['TEST_FOR'] = 'CLASS'
@@ -250,10 +250,10 @@ class NewsGroupReader(DocumentReader):
         with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_hyperparameters_clust.txt"), 'w') as f:  
             os.environ['EVAL'] = 'VALID' 
             seqregeval = SeqRegSentEvaluator (self.dbstring)
-            seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+            optPDict = seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
 
             seqiteval = SeqItUpdateEvaluator(self.dbstring)
-            seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
+            optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
 
 
         os.environ["EVAL"]='TEST'

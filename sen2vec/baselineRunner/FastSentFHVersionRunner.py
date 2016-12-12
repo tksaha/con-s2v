@@ -9,10 +9,12 @@ import pickle
 import gensim 
 import multiprocessing
 from gensim.models import Doc2Vec
-from baselineRunner.BaselineRunner import BaselineRunner
+from utility.Utility import Utility
 from fastsent.fastsent  import FastSent 
 from log_manager.log_config import Logger 
-from utility.Utility import Utility
+from baselineRunner.BaselineRunner import BaselineRunner
+from summaryGenerator.SummaryGenerator import SummaryGenerator
+
 
 
 class MySentences(object):
@@ -37,6 +39,7 @@ class FastSentFHVersionRunner(BaselineRunner):
         self.latReprName = 'felixhillfastsent'
         self.utFunction = Utility("Text Utility")
         self.postgresConnection.connectDatabase()
+        self.system_id = 84
 
         if self.autoencode == True:
            self.latReprName = "%s_(AE)"%self.latReprName
@@ -113,7 +116,7 @@ class FastSentFHVersionRunner(BaselineRunner):
         if gs <= 0: return 0
         outFile = os.path.join(self.dataDir,\
             "%s_repr"%self.latReprName)
-        vecFile = open("%s.p"%(self.outFile),"rb")
+        vecFile = open("%s.p"%(outFile),"rb")
         vDict = pickle.load (vecFile)
 
         summGen = SummaryGenerator (diverse_summ=diversity,\

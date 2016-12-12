@@ -14,7 +14,6 @@ from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofit
 from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
 from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
 from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRunner
-from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
 from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from baselineRunner.WordVectorAveragingRunner import WordVectorAveragingRunner
@@ -292,10 +291,6 @@ class DUCReader(DocumentReader):
 
             os.environ['DUC_EVAL']= 'VALID'
             os.environ['VALID_FOR'] = 'RANK'
-
-
-
-            
             
             #latent_space_size = 600  # need to change to align with the other methods
             latent_space_size = 300
@@ -304,15 +299,14 @@ class DUCReader(DocumentReader):
      
             fheval = FastSentFHVersionEvalutor (self.dbstring)
             optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+
             seqregeval = SeqRegSentEvaluator (self.dbstring)
-            seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+            optPDict = seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
 
             seqiteval = SeqItUpdateEvaluator(self.dbstring)
-            seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
+            optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
 
-       
-       
-            
+                
             # recalls = {}
             # window_opt = None #var for the optimal window
             # for window in ["8", "10", "12"]:
@@ -538,7 +532,7 @@ class DUCReader(DocumentReader):
             os.environ["DUC_EVAL"] = 'TEST'
             os.environ['TEST_FOR'] = 'RANK'
             system_list = []
-            for system_id in range(80,81):
+            for system_id in range(82,85):
                 system_list.append(system_id)
 
 
