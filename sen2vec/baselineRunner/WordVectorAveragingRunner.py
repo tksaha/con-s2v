@@ -34,6 +34,7 @@ class WordVectorAveragingRunner(BaselineRunner):
 		self.utFunction = Utility("Text Utility")
 		self.latReprName = "wordaverage"
 		self.rootdir = os.environ['SEN2VEC_DIR']
+		self.system_id = 80
 	
 	def prepareData(self, pd):
 		"""

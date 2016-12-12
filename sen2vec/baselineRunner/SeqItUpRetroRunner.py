@@ -36,7 +36,9 @@ class SeqItUpRetroRunner(BaselineRunner):
         self.rootdir = os.environ['SEN2VEC_DIR']
         self.numIter = 20
         self.dataDir = os.environ['TRTESTFOLDER']
+        self.system_id = 82
         self.seq_retr_vReprFile = os.path.join(self.dataDir, self.latReprName)
+
 
     def prepareData(self, pd):
         """
@@ -109,6 +111,7 @@ class SeqItUpRetroRunner(BaselineRunner):
             self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)
 
 
+    # Need to remove the following function to evaluation, a lot of code duplication
     def evaluateRankCorrelation(self,dataset):
         vecFile = open("%s%s.p"%(self.seq_retr_vReprFile, "_unweighted"),"rb")
         vDict = pickle.load (vecFile)

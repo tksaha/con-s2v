@@ -274,7 +274,14 @@ class DUCReader(DocumentReader):
         """
         """
 
-############# Validation ############################       
+
+        from  baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
+        from  baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
+        from  baselineEvaluator.SeqItUpdateEvaluator import SeqItUpdateEvaluator
+
+############# Validation ############################   
+
+        optPDict = {}       
         with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",self.duc_topic,"_hyperparameters.txt"), 'w') as f:
             
             latent_space_size = 300
@@ -285,7 +292,26 @@ class DUCReader(DocumentReader):
 
             os.environ['DUC_EVAL']= 'VALID'
             os.environ['VALID_FOR'] = 'RANK'
-    
+
+
+
+            
+            
+            #latent_space_size = 600  # need to change to align with the other methods
+            latent_space_size = 300
+            optPDict["window"] =str(10)
+
+     
+            fheval = FastSentFHVersionEvalutor (self.dbstring)
+            optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+            seqregeval = SeqRegSentEvaluator (self.dbstring)
+            seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+
+            seqiteval = SeqItUpdateEvaluator(self.dbstring)
+            seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
+
+       
+       
             
             # recalls = {}
             # window_opt = None #var for the optimal window
@@ -520,6 +546,10 @@ class DUCReader(DocumentReader):
             for i in range(0,niter):
                 f.write("###### Iteration: %s ######%s" %(i, os.linesep))
                 
+
+
+            
+    
                 # f.write("Optimal Window: %s%s" %(window_opt, os.linesep))          
                 # self.postgres_recorder.truncateSummaryTable()
                 # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
@@ -536,7 +566,16 @@ class DUCReader(DocumentReader):
                 # wvBaseline.runTheBaseline(rbase,latent_space_size, window_opt_avg)
                 # wvBaseline.generateSummary(gs,method_id,"",\
                 #          lambda_val=self.lambda_val, diversity=diversity)
-                # wvBaseline.doHouseKeeping()           
+                # wvBaseline.doHouseKeeping()       
+
+                fheval = FastSentFHVersionEvalutor (self.dbstring)
+                fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+
+                seqregeval = SeqRegSentEvaluator (self.dbstring)
+                seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+
+                seqiteval = SeqItUpdateEvaluator(self.dbstring)
+                seqiteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)    
 
                 # method_id = 14
                 # os.environ["NBR_TYPE"]=str(0)

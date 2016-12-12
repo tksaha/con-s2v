@@ -33,6 +33,7 @@ class SequentialRegularizedSen2VecRunner(BaselineRunner):
         self.rootdir = os.environ['SEN2VEC_DIR']
         self.sentenceList = list()
         self.seqregsen2vReprFile = os.path.join(self.dataDir, self.latReprName)
+        self.system_id = 83
     
     def __insertNeighbors(self, sentenceList, nbr_file):
         for pos in range(0, len(sentenceList)):
