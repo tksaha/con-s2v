@@ -17,6 +17,8 @@ from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRu
 from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
 from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
 from baselineRunner.WordVectorAveragingRunner import WordVectorAveragingRunner
+from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
+
 
 # There are some summaries [ex:fbis4-45908, FT932-15960] for which the 
 # original document is not present
@@ -269,6 +271,7 @@ class DUCReader(DocumentReader):
         return recall
     
     
+    # Need to see do we need  a different eval 
     def runBaselines(self, pd, rbase, gs):
         """
         """
@@ -289,7 +292,7 @@ class DUCReader(DocumentReader):
             if self.diversity == str(1):
                 diversity = True 
 
-            os.environ['DUC_EVAL']= 'VALID'
+            os.environ['EVAL']= 'VALID'
             os.environ['VALID_FOR'] = 'RANK'
             
             #latent_space_size = 600  # need to change to align with the other methods
@@ -529,7 +532,7 @@ class DUCReader(DocumentReader):
 
             
 # ######## Test ########################################
-            os.environ["DUC_EVAL"] = 'TEST'
+            os.environ["EVAL"] = 'TEST'
             os.environ['TEST_FOR'] = 'RANK'
             system_list = []
             for system_id in range(82,85):
@@ -545,7 +548,7 @@ class DUCReader(DocumentReader):
             
     
                 # f.write("Optimal Window: %s%s" %(window_opt, os.linesep))          
-                # self.postgres_recorder.truncateSummaryTable()
+                self.postgres_recorder.truncateSummaryTable()
                 # paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
                 # paraBaseline.runTheBaseline(rbase,latent_space_size, window_opt) 
                 # paraBaseline.generateSummary(gs,\

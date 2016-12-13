@@ -107,7 +107,7 @@ class BaselineEvaluator:
         if os.environ['TEST_FOR'] == 'RANK':
             baseline.prepareData(pd)      
             baseline.runTheBaseline(rbase,latent_space_size)
-            baseline.generateSummary(gs,method_id,"",\
+            baseline.generateSummary(1, baseline.system_id, filePrefix,\
                          lambda_val=1.0, diversity=False)
             baseline.doHouseKeeping()  
         else:

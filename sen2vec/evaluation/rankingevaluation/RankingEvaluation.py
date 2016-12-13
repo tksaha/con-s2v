@@ -37,7 +37,7 @@ class RankingEvaluation:
 		self.summary_dir = os.environ["SUMMARYFOLDER"]
 		self.models_dir = os.environ["MODELSUMMARYFOLDER"]
 		self.systems_dir = os.environ["SYSTEMSUMMARYFOLDER"]
-		self.evaluation_ON = os.environ["DUC_EVAL"] # TEST or VALID for validation
+		self.evaluation_ON = os.environ["EVAL"] # TEST or VALID for validation
 		self.dbstring = os.environ["DUC_DBSTRING"]
 		self.postgresConnection = PostgresPythonConnector(self.dbstring)
 		self.postgresConnection.connectDatabase()
@@ -227,4 +227,3 @@ class RankingEvaluation:
 			self.config_file_name.replace('config', 'output').replace('.','_')+\
 				"_%s.txt"%rPDict['-l']), 'w') as f:
 			f.write(output.decode("utf-8"))
-

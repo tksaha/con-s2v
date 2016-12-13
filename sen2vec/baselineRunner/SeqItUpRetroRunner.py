@@ -65,7 +65,8 @@ class SeqItUpRetroRunner(BaselineRunner):
         Logger.logr.info("Total number of nodes in the Graph =%i"%self.Graph.number_of_nodes())     
 
     
-    def runTheBaseline(self, rbase):
+    # Latent space size is not used for this particular method
+    def runTheBaseline(self, rbase, latent_space_size=-1):
         """
         Write down the Iterative update vector
         Hyperparameter numIter, alpha etc.
