@@ -64,14 +64,14 @@ export SUMMARYFOLDER=$SEN2VEC_DIR/Data/Summary/
 export MODELSUMMARYFOLDER=$SEN2VEC_DIR/Data/Summary/model
 export SYSTEMSUMMARYFOLDER=$SEN2VEC_DIR/Data/Summary/system
 
-export DUC_DBSTRING=duc,postgres,postgres,localhost,5432
+export DUC_DBSTRING=duc2001,postgres,postgres,localhost,5432
 export DUC_PATH=$SEN2VEC_DIR/Data/DUC_merged
 
 
 export DUC_LAMBDA=1.0
 export DUC_DIVERSITY=0
 export DUC_TOPIC=2001
-export DUC_EVAL='TEST'
+#export DUC_EVAL='TEST'
 
 export REGSEN2VECREPRFILE=$SEN2VEC_DIR/Data/reg_sent
 export REGSEN2VECEXE=$SEN2VEC_DIR/sen2vec/word2vec/reg_sen2vec_net
