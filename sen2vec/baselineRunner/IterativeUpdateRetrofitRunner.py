@@ -3,17 +3,19 @@
 
 import os 
 import sys 
+import pickle 
+import numpy as np 
+import scipy.stats
+import networkx as nx 
+from log_manager.log_config import Logger 
 from abc import ABCMeta, abstractmethod
+from baselineRunner.BaselineRunner import BaselineRunner
+from summaryGenerator.SummaryGenerator import SummaryGenerator
 from retrofitters.IterativeUpdateRetrofitter import IterativeUpdateRetrofitter
 from retrofitters.WeightedIterativeUpdateRetrofitter import WeightedIterativeUpdateRetrofitter
 from retrofitters.RandomWalkIterativeUpdateRetrofitter import RandomWalkIterativeUpdateRetrofitter
-from baselineRunner.BaselineRunner import BaselineRunner
-import networkx as nx 
-import pickle 
-import numpy as np 
-from log_manager.log_config import Logger 
-from summaryGenerator.SummaryGenerator import SummaryGenerator
-import scipy.stats
+
+
 
 class IterativeUpdateRetrofitRunner(BaselineRunner):
     def __init__(self, *args, **kwargs):
@@ -23,14 +25,14 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
         self.retrofittedsen2vReprFile = os.environ["ITERUPDATESEN2VECFILE"]
         self.graphFile = os.environ["GRAPHFILE"]
         self.p2vFile = os.environ['P2VCEXECOUTFILE']
-        #Hyperparameter Alpha
         self.myalpha = float(os.environ['ITERUPDATE_ALPHA'])
         self.Graph = nx.Graph()
         self.postgresConnection.connectDatabase()
         self.sen2Vec = {}
+        self.nIter = 20
         self.latReprName = "iterativeupdate"
         self.rootdir = os.environ['SEN2VEC_DIR']
-        self.methodID = 5 
+        self.system_id = 5 
         
     
     def prepareData(self, pd):
@@ -51,7 +53,7 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
 
         Logger.logr.info("Dictionary has %i objects" % len(self.sen2Vec))
         if os.environ['EVAL']!= 'VALID':
-            retrofitter = IterativeUpdateRetrofitter(numIter=20, nx_Graph = self.Graph) 
+            retrofitter = IterativeUpdateRetrofitter(numIter=self.nIter, nx_Graph = self.Graph) 
             retrofitted_dict, normalized_retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
             iterupdatevecFile = open("%s_unweighted.p"%(self.retrofittedsen2vReprFile),"wb")
             iterupdatevecFile_Raw = open("%s_unweighted_raw.p"%(self.retrofittedsen2vReprFile),"wb")

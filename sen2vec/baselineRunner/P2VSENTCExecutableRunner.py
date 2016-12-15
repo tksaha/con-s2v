@@ -33,6 +33,8 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		self.utFunction = Utility("Text Utility")
 		self.latReprName = "p2vsent"
 		self.rootdir = os.environ['SEN2VEC_DIR']
+		self.window_size = str(10)
+		self.system_id = 2
 	
 	def prepareData(self, pd):
 		"""
@@ -63,7 +65,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 			str_ ="%s %0.3f"%(str_,val)
 		return str_
 
-	def runTheBaseline(self, rbase, latent_space_size, window):
+	def runTheBaseline(self, rbase, latent_space_size, window="10"):
 		"""
 		We run the para2vec Model and then store sen2vec as pickled 
 		dictionaries into the output file. 

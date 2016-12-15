@@ -32,9 +32,9 @@ class SeqItUpRetroRunner(BaselineRunner):
         self.Graph = nx.Graph()
         self.postgresConnection.connectDatabase()
         self.sen2Vec = {}
+        self.numIter = 20
         self.latReprName = "seq_iterative_update"
         self.rootdir = os.environ['SEN2VEC_DIR']
-        self.numIter = 20
         self.dataDir = os.environ['TRTESTFOLDER']
         self.system_id = 82
         self.seq_retr_vReprFile = os.path.join(self.dataDir, self.latReprName)

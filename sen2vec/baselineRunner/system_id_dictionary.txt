@@ -1,5 +1,10 @@
 Gold: 20
+TFIDF:1
+First Sentence: 21
 WordVectorAveragingRunner:80
 SeqItUpRetroRunner: 82
 SequentialRegularizedSen2VecRunner:83
 FastSentFHVersionRunner: 84
+IterativeUpdateRetrofitRunner:5
+P2VSENTCExecutableRunner:2
+FastSentVariantRunner (CON-S2V-S):85

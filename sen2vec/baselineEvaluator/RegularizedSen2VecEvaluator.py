@@ -13,7 +13,7 @@ from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
 class RegularizedSen2VecEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
-		TFIDF baseline evaluator
+		Regularized Sen2Vec Runner 
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
 
@@ -27,7 +27,7 @@ class RegularizedSen2VecEvaluator(BaselineEvaluator):
 		for beta in self.beta_list:
 			Logger.logr.info("[RegS2V] Starting Running "+\
 				" Baseline for Beta = %s" %beta)
-			regs2v.regunw_beta = beta
+			regs2v.regBetaUNW = beta
 			regs2v.window_size = optPDict["window"]
 			if beta== self.beta_list[0]:
 			   regs2v.prepareData(1)
@@ -50,7 +50,7 @@ class RegularizedSen2VecEvaluator(BaselineEvaluator):
 		filePrefix = "_neighbor_unw"
 		f.write("[RegS2V] Optimal beta is: %s%s" %(optPDict["unw-opt-reg"], os.linesep))	
 		regs2v = RegularizedSen2VecRunner(self.dbstring)
-		regs2v.seqregunw_beta = optPDict['unw-opt-reg']
+		regs2v.regBetaUNW = optPDict['unw-opt-reg']
 		regs2v.window_size = optPDict["window"]
 		self.writeResults(pd, rbase, latent_space_size,\
 			 regs2v, filePrefix, f)

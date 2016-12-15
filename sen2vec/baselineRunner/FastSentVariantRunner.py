@@ -29,7 +29,7 @@ class FastSentVariantRunner(BaselineRunner):
         self.fastsentbeta= float(os.environ['FSENT_BETA'])
         self.cores = multiprocessing.cpu_count()
         self.dbow_only = int(os.environ["DBOW_ONLY"])
-        self.latReprName = "fsent_s2v"
+        self.latReprName = "con_s2v_s"
         self.full_data = int (os.environ["FULL_DATA"])
         self.window = str(10)
         self.jointbeta_label = 0.0
@@ -37,11 +37,12 @@ class FastSentVariantRunner(BaselineRunner):
         self.postgresConnection.connectDatabase()
         self.sentenceList = []
         self.lambda_val = float(os.environ['LAMBDA'])
+        self.system_id = 85
 
         if self.dbow_only == 0:
-            self.latReprName = "fastsent"
+            self.latReprName = "con_s2v_s"
         else:
-            self.latReprName = "fastsent_dbow_only"
+            self.latReprName = "con_s2v_s_dbow_only"
 
         if self.lambda_val > 0.0:
             self.latReprName = "%s_%s"%(self.latReprName,"regularized")

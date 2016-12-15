@@ -32,8 +32,8 @@ class BaselineEvaluator:
 
 
     '''
-    All the utility methods to collect results for classification, clustering and 
-    ranking is defined here. (In future add for sts tasks)
+    All the utility methods to collect results for the classification, clustering and 
+    the ranking tasks are defined here. (In future add for sts tasks)
     '''
     def _setmetricString (self):
         self.metric = {}

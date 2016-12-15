@@ -14,7 +14,7 @@ from baselineRunner.SequentialRegularizedSen2VecRunner import SequentialRegulari
 class JointLearningSen2VecEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
-		TFIDF baseline evaluator
+		Joint Learning Sen2Vec evaluator
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
 

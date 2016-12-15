@@ -23,6 +23,8 @@ class TFIDFBaselineEvaluator(BaselineEvaluator):
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
+		Logger.logr.info("Running TF-IDF Baseline")
+		
 		filePrefix = ""
 		tfrunner = TFIDFBaselineRunner(self.dbstring)
 		self.writeResults(pd, rbase, latent_space_size,\

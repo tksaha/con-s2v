@@ -14,14 +14,48 @@ from baselineRunner.SequentialRegularizedSen2VecRunner import SequentialRegulari
 class P2VSENTCEXecutableEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
-		TFIDF baseline evaluator
+		DM+DBOW baseline runner
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
-		
+
+		filePrefix = ""
+		for window in self.window_size_list:
+			Logger.logr.info("[S2V Baseline] Starting Running for Window = %s" %window)				
+			paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+			paraBaseline.window_size = window
+			if 	window == self.window_size_list[0]:  
+				self.postgres_recorder.truncateSummaryTable()
+				paraBaseline.prepareData(1)		
+				paraBaseline.runTheBaseline(rbase,latent_space_size)
+			if window == self.window_size_list[0]:
+				paraBaseline.generateSummary(1)
+			self.metric[window] = self.evaluate(paraBaseline, filePrefix, latent_space_size)
+			Logger.logr.info("[S2V Baseline] %s for window %s = %s"\
+			 	%(self.metric_str, window, self.metric[beta]))
+			
+		window_opt = max(self.metric, key=self.metric.get)
+		Logger.logr.info("[S2V Baseline] Optimal window=%s" %(window_opt))	
+		optPDict['window'] = window_opt
+		f.write("[S2V Baseline] Optimal Window : %.2f%s" %(optPDict['window'], os.linesep))
+		f.write("[S2V Baseline] %ss: %s%s" %(self.metric_str, self.metric, os.linesep))
+		f.flush()
+
+		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		paraBaseline.window_size = window_opt
+		paraBaseline.prepareData(1)		
+		paraBaseline.runTheBaseline(rbase,latent_space_size)
+		paraBaseline.generateSummary(gs)
+
+
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
-		pass 
+		
+		filePrefix = ""
+		f.write("[S2V Baseline] Optimal Window  is: %s%s" %(optPDict["window"], os.linesep))	
+		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		paraBaseline.window_size = optPDict["window"]
+		self.writeResults(pd, rbase, latent_space_size, paraBaseline, filePrefix, f)

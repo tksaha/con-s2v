@@ -3,13 +3,13 @@
 
 import os 
 import sys 
-from abc import ABCMeta, abstractmethod
-from log_manager.log_config import Logger 
 
+import gensim
 import nltk
 from nltk.tokenize import sent_tokenize
 from utility.Utility import Utility
-import gensim
+from abc import ABCMeta, abstractmethod
+from log_manager.log_config import Logger 
 from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
 from baselineRunner.Node2VecRunner import Node2VecRunner
 from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner

@@ -7,14 +7,10 @@ import math
 import pickle
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
-from baselineRunner.FastSentFHVersionRunner import FastSentFHVersionRunner
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
 from baselineRunner.SeqItUpRetroRunner  import SeqItUpRetroRunner
 
-"""
-Try using number of iteration as a
-parameter
-"""
+
 class SeqItUpdateEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
@@ -26,7 +22,10 @@ class SeqItUpdateEvaluator(BaselineEvaluator):
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
+		Logger.logr.info ("Started Running Sequential Iterative Updated Iterator")
+
 		filePrefix = "_unweighted"
 		seqiterrunner = SeqItUpRetroRunner(self.dbstring)
+		seqiterrunner.numIter = 20
 		self.writeResults(pd, rbase, latent_space_size,\
 			 seqiterrunner, filePrefix, f)
