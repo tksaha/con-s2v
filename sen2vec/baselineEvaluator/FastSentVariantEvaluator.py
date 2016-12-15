@@ -31,7 +31,7 @@ class FastSentVariantEvaluator(BaselineEvaluator):
 				fsent.prepareData(1)
 			self.metric[lambda_] = self.evaluate(fsent, filePrefix, latent_space_size)
 			Logger.logr.info("[CON-S2V-S Baseline] %s for lambda %.2f = %s"\
-			 	%(self.metric_str, lambda_, self.metric[beta]))
+			 	%(self.metric_str, lambda_, self.metric[lambda_]))
 			
 		fsent_lambda = max(self.metric, key=self.metric.get)
 		optPDict['con-s2v-s-lambda'] = fsent_lambda
