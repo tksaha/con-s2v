@@ -12,6 +12,7 @@ from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
 
 class BaselineEvaluator:
     """
+    BaselineEvaluator
     """
     def __init__(self, dbstring, **kwargs):
         self.dbstring = dbstring
@@ -21,6 +22,19 @@ class BaselineEvaluator:
         self.metric_str = ""
         self.postgres_recorder = PostgresDataRecorder(self.dbstring)
 
+    @abstractmethod
+    def getOptimumParameters(self, f, optPDict, latent_space_size):
+        pass 
+
+    @abstractmethod
+    def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
+        pass 
+
+
+    '''
+    All the utility methods to collect results for classification, clustering and 
+    ranking is defined here. (In future add for sts tasks)
+    '''
     def _setmetricString (self):
         self.metric = {}
         self.metric_str = "F1"
@@ -29,7 +43,7 @@ class BaselineEvaluator:
         elif os.environ['VALID_FOR'] == 'RANK':
            self.metric_str = "Recall"
 
-    def _getAdjustedMutulScore(self, latreprName):
+    def __getAdjustedMutulScore(self, latreprName):
         file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclustereval_2.txt"%latreprName)
         for line in open(file_):
             if "Adjusted Mutual Info Score:" in line:
@@ -37,7 +51,7 @@ class BaselineEvaluator:
                 adj_score = float(adj_score)
                 return adj_score
 
-    def _getF1(self, latreprName):
+    def __getF1(self, latreprName):
         """
         """
         file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_raweval_2.txt"%latreprName)
@@ -46,27 +60,6 @@ class BaselineEvaluator:
                 line_elems = line.strip().split()
                 f1 = float(line_elems[5])
                 return f1 
-
-    def __runSpecificEvaluation(self, models = [20], systems = []):
-        rougeInstance = Rouge()
-        rPDict = rougeInstance.buildRougeParamDict()
-        rPDict['-l'] = str(100)
-        rPDict['-c'] = str(0.99)
-
-        duc_topic = os.environ['DUC_TOPIC']
-        evaluation = RankingEvaluation(topics = [duc_topic], models = models, systems = systems)
-        evaluation._prepareFiles()
-        evaluation._getRankingEvaluation(rPDict, rougeInstance)
-
-    def _writeResult(self, latreprName, f):
-        if os.environ['TEST_FOR'] == 'CLASS':
-            file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_raweval_2.txt"%latreprName)
-            for line in open(file_):
-                f.write(line)
-        else:
-            file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclustereval_2.txt"%latreprName)
-            for line in open(file_):
-                f.write(line)
 
     def __getRecall(self, method_id, models, systems):
         output_file_name = ""
@@ -82,16 +75,39 @@ class BaselineEvaluator:
             recall = float(content.split("%s ROUGE-1 Average_R: " %method_id)[1].split(' ')[0])
         return recall
 
+    def __runSpecificEvaluation(self, models = [20], systems = []):
+        rougeInstance = Rouge()
+        rPDict = rougeInstance.buildRougeParamDict()
+        rPDict['-l'] = str(100)
+        rPDict['-c'] = str(0.99)
+
+        duc_topic = os.environ['DUC_TOPIC']
+        evaluation = RankingEvaluation(topics = [duc_topic], models = models, systems = systems)
+        evaluation._prepareFiles()
+        evaluation._getRankingEvaluation(rPDict, rougeInstance)
+
+    def __writeResult(self, latreprName, f):
+        if os.environ['TEST_FOR'] == 'CLASS':
+            file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_raweval_2.txt"%latreprName)
+            for line in open(file_):
+                f.write(line)
+        else:
+            file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclustereval_2.txt"%latreprName)
+            for line in open(file_):
+                f.write(line)
+
+    
+
     def evaluate(self, baseline, prefix, latent_space_size):
         if os.environ['VALID_FOR'] == 'CLASS':
             baseline.runTheBaseline(1, latent_space_size)
             baseline.runEvaluationTask()
-            f1 = self._getF1("%s%s"%(baseline.latReprName, prefix))
+            f1 = self.__getF1("%s%s"%(baseline.latReprName, prefix))
             return f1
         elif os.environ['VALID_FOR'] == 'CLUST':
             baseline.runTheBaseline(1, latent_space_size)
             baseline.runEvaluationTask()
-            adj = self._getAdjustedMutulScore("%s%s"%(baseline.latReprName, prefix))
+            adj = self.__getAdjustedMutulScore("%s%s"%(baseline.latReprName, prefix))
             return adj
         else:
             self.postgres_recorder.truncateSummaryTable()
@@ -114,6 +130,6 @@ class BaselineEvaluator:
             baseline.prepareData(pd)        
             baseline.runTheBaseline(rbase,latent_space_size)
             baseline.runEvaluationTask()
-            self._writeResult("%s_%s"%(baseline.latReprName, filePrefix), f)
+            self.__writeResult("%s_%s"%(baseline.latReprName, filePrefix), f)
             baseline.doHouseKeeping()   
             f.flush()

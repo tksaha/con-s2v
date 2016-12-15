@@ -3,28 +3,20 @@
 
 import os
 import sys
-
 import random
 import importlib
 from io import open
+from six import text_type as unicode
+from log_manager.log_config import Logger 
+from documentReader.RTReader import RTReader
+from documentReader.SICKReader import SICKReader
+from documentReader.IMDBReader import IMDBReader
+from documentReader.ReutersReader import ReutersReader
+from documentReader.NewsGroupReader import NewsGroupReader 
 from utility.ArgumentParserUtility  import ArgumentParserUtility
 
 
-from documentReader.NewsGroupReader import NewsGroupReader 
-from documentReader.ReutersReader import ReutersReader
-from documentReader.IMDBReader import IMDBReader
-from documentReader.RTReader import RTReader
-from documentReader.SICKReader import SICKReader
 
-
-from six import text_type as unicode
-
-# from six import iteritems
-# from six.moves import range
-# import psutil
-
-
-from log_manager.log_config import Logger 
 
 
 module_dict ={"reuter": "documentReader.ReutersReader", "news": "documentReader.NewsGroupReader",
@@ -53,6 +45,7 @@ def main():
 
 	
 	dataset = argparser.get_value_of_argument("dataset")
+	os.environ['DATASET'] = dataset
 	ld = argparser.get_value_of_argument("ld")
 	pd = argparser.get_value_of_argument("pd")
 	rbase = argparser.get_value_of_argument("rbase")

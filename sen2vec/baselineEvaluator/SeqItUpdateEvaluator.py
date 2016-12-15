@@ -11,6 +11,10 @@ from baselineRunner.FastSentFHVersionRunner import FastSentFHVersionRunner
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
 from baselineRunner.SeqItUpRetroRunner  import SeqItUpRetroRunner
 
+"""
+Try using number of iteration as a
+parameter
+"""
 class SeqItUpdateEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
@@ -22,5 +26,7 @@ class SeqItUpdateEvaluator(BaselineEvaluator):
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
+		filePrefix = "_unweighted"
 		seqiterrunner = SeqItUpRetroRunner(self.dbstring)
-		self.writeResults(pd, rbase, latent_space_size, seqiterrunner, "_unweighted", f)
+		self.writeResults(pd, rbase, latent_space_size,\
+			 seqiterrunner, filePrefix, f)

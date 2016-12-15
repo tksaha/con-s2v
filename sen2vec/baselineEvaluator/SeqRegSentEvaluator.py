@@ -14,6 +14,8 @@ from baselineRunner.SequentialRegularizedSen2VecRunner import SequentialRegulari
 class SeqRegSentEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
+		Sequential Regularized Sentence 2 Vector 
+		Evaluator
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
 
@@ -45,10 +47,8 @@ class SeqRegSentEvaluator(BaselineEvaluator):
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
 		
 		filePrefix = "_neighbor_unw"
-		f.write("Optimal Window for seq reg s2v is: %s%s" %(optPDict["unw_opt_seq_reg"], os.linesep))	
+		f.write("[SeqRegS2V] Optimal beta is: %s%s" %(optPDict["unw_opt_seq_reg"], os.linesep))	
 		seqregs2v = SequentialRegularizedSen2VecRunner(self.dbstring)
 		seqregs2v.seqregunw_beta = optPDict['unw_opt_seq_reg']
 		seqregs2v.window_size = optPDict["window"]
 		self.writeResults(pd, rbase, latent_space_size, seqregs2v, filePrefix, f)
-
-		

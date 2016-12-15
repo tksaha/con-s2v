@@ -4,31 +4,32 @@
 import os 
 import sys 
 import pickle 
+import gensim
 import scipy.stats
 from utility.Utility import Utility
 from baselineRunner.BaselineRunner import BaselineRunner
-import gensim
+
+
 
 class TFIDFBaselineRunner(BaselineRunner):
     def __init__(self, *args, **kwargs):
         """
         """
         BaselineRunner.__init__(self, *args, **kwargs)
+        self.system_id  = 1
         self.latReprName = "TFIDF"
         self.rootdir = os.environ['SEN2VEC_DIR']
         self.postgresConnection.connectDatabase()
-        self.methodID = 1
         self.utFunction = Utility("Text Utility")
 
     def prepareData(self, pd):
-        """
-        """
         pass 
 
     def runTheBaseline(self, rbase):
         pass 
 
 
+    # This function will go inside evaluation
     def evaluateRankCorrelation(self, dataset):
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.metrics.pairwise  import cosine_similarity
@@ -86,8 +87,8 @@ class TFIDFBaselineRunner(BaselineRunner):
 
                 computed_val.append(cosine_similarity(vecs[0:1], vecs)[0][1])
 
-        print (len(original_val))
-        print (len(computed_val))
+        Logger.logr.info (len(original_val))
+        Logger.logr.info (len(computed_val))
 
         sp = scipy.stats.spearmanr(original_val,computed_val)[0]
         pearson = scipy.stats.pearsonr(original_val,computed_val)[0]

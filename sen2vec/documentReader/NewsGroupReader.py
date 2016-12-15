@@ -2,23 +2,24 @@
 # -*- coding: utf-8 -*-
 
 import os 
-import logging 
 import re
-import numpy as np 
 import gensim 
+import logging 
+import numpy as np 
+from log_manager.log_config import Logger
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
-from log_manager.log_config import Logger
-from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
-from baselineRunner.Node2VecRunner import Node2VecRunner
-from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
-from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
-from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
-from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
-from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
-from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
-from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
-from baselineRunner.SkipThoughtRunner import SkipThoughtRunner
+
+#from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
+#from baselineRunner.Node2VecRunner import Node2VecRunner
+#from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
+#from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
+#from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
+#from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
+#from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
+#from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
+#from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
+#from baselineRunner.SkipThoughtRunner import SkipThoughtRunner
 
 class NewsGroupReader(DocumentReader):
     """ 
