@@ -184,5 +184,7 @@ class ReutersReader(DocumentReader):
 
     def runBaselines(self, pd, rbase, gs):
         """
+        CLASS, CLUST, RANK, RANKCORR
         """
         self.performValidation('CLASS')
+        self.performTesting('CLASS')

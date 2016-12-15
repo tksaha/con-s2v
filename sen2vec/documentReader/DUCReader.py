@@ -9,15 +9,7 @@ from rouge.Rouge import Rouge
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from log_manager.log_config import Logger 
-from baselineRunner.Node2VecRunner import Node2VecRunner
-from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
-from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
-from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
-from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRunner
-from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
-from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
-from baselineRunner.WordVectorAveragingRunner import WordVectorAveragingRunner
-from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
+
 
 
 # There are some summaries [ex:fbis4-45908, FT932-15960] for which the 
@@ -233,12 +225,9 @@ class DUCReader(DocumentReader):
         evaluation._getRankingEvaluation(rPDict, rougeInstance)
 
      
-
-    
     def runBaselines(self, pd, rbase, gs):
         """
         """
-
         self.__runCombinedEvaluation(system_list)
         
         f.write ("%s%s"%("#########################Running for Test (100) ###########################################", os.linesep))

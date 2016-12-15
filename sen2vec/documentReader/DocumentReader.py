@@ -115,12 +115,13 @@ class DocumentReader:
             optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
 
 
-    def performTesting(self, test_for):
+    def performTesting(self, test_for, nIter):
     	os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = test_for
         f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,\
         		"testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
-        niter = 5
+        
+        niter = nIter
         for i in range(0,niter):
             f.write("###### Iteration: %s ######%s" %(i, os.linesep))
             
