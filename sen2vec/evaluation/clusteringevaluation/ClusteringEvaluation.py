@@ -97,7 +97,6 @@ class ClusteringEvaluation:
 	def runClusteringTaskTFIDF(self, summaryMethodID, latReprName): 
 		from sklearn.feature_extraction.text import TfidfVectorizer
 		
-		
 		test_corpus = []
 		test_ids = []
 		Y = []
@@ -111,7 +110,6 @@ class ClusteringEvaluation:
 					Y.append(result[nrows][2])
 		
 		
-
 		vectorizer = TfidfVectorizer(stop_words='english')
 		test_X = vectorizer.fit_transform(test_corpus)
 		Logger.logr.info (test_X.shape)

@@ -92,7 +92,7 @@ class BaselineEvaluator:
             file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_raweval_2.txt"%latreprName)
             for line in open(file_):
                 f.write(line)
-        else:
+        elif os.environ['TEST_FOR'] == 'CLUST':
             file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclustereval_2.txt"%latreprName)
             for line in open(file_):
                 f.write(line)

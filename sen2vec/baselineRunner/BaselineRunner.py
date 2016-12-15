@@ -62,6 +62,15 @@ class BaselineRunner:
 		clusterEval = ClusteringEvaluation(postgres_connection=self.postgresConnection)
 		clusterEval.runClusteringTaskTFIDF(summaryMethodID, reprName)
 
+	def _runSTSValidation(self, vDict, reprName):
+		stseval = STSTaskEvaluation(postgres_connection=self.postgresConnection) 
+		stseval.runValidation(vDict, reprName)
+
+
+	def _runSTS(self, vDict, reprName):
+		stseval = STSTaskEvaluation(postgres_connection=self.postgresConnection) 
+		stseval.runSTSTEST(vDict, reprName)
+
 
 	@abstractmethod
 	def prepareData(self):
@@ -93,5 +102,3 @@ class BaselineRunner:
 		other resouces it has used. 
 		"""
 		pass
-
-	

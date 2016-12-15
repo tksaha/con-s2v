@@ -141,9 +141,6 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 			 lambda_val = lambda_val)
 
 		summGen.populateSummary(2, s2vDict)
-		#summGen.populateSummary(21, {})
-		#summGen.populateSummary(1, {})
-
 
 	def runEvaluationTask(self):
 		"""
@@ -155,59 +152,28 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		For example. validation set or unsup set
 		"""
 		summaryMethodID = 2
-		# sent2vecFile = open("%s.p"%(self.sentReprFile),"rb")
-		# s2vDict = pickle.load (sent2vecFile)
-		# self._runClassification(summaryMethodID, self.latReprName, s2vDict)
+
 		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
 		s2vDict_raw = pickle.load(sent2vecFile_raw)
 
-		if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
+		if os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'CLASS':
 			self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
+		elif os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'CLUST':
 			self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':	
+		elif os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'RANK_CORR':
+			vecFile = open("%s.p"%(self.sentReprFile),"rb")
+			vDict = pickle.load(vecFile)
+			self._runSTSValidation (vDict)
+		elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLASS':	
 			self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		else:
+		elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLUST' :
 			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		
-	def evaluateRankCorrelation(self, dataset):
-		vecFile = open("%s.p"%(self.sentReprFile),"rb")
-		vDict = pickle.load(vecFile)
+		elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'RANK_CORR':
+			vecFile = open("%s.p"%(self.sentReprFile),"rb")
+			vDict = pickle.load(vecFile)
+			self._runSTS(vDict)
 
-		if os.environ['EVAL']=='VALID':
-			validation_pair_file = open(os.path.join(self.rootdir,"Data/validation_pair_%s.p"%(dataset)), "rb")
-			val_dict = pickle.load(validation_pair_file)
-
-			original_val = []
-			computed_val = []
-			for k, val in val_dict.items():
-				original_val.append(val)
-				computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-			return scipy.stats.pearsonr(original_val,computed_val)[0]
-		else:
-			test_pair_file = open(os.path.join(self.rootdir,"Data/test_pair_%s.p"%(dataset)), "rb")
-			test_dict = pickle.load(test_pair_file)
-
-			original_val = []
-			computed_val = []
-			for k, val in test_dict.items():
-				original_val.append(val)
-				computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-			if os.environ['TEST_AND_TRAIN'] =="YES":
-				train_pair_file = open(os.path.join(self.rootdir,"Data/train_pair_%s.p"%(dataset)), "rb")
-				train_dict = pickle.load(train_pair_file)
-				for k, val in train_dict.items():
-					original_val.append(val)
-					computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-			Logger.logr.info (len(original_val))
-			Logger.logr.info (len(computed_val))
-
-			sp = scipy.stats.spearmanr(original_val,computed_val)[0]
-			pearson = scipy.stats.pearsonr(original_val,computed_val)[0]
-			return sp, pearson
-
+	
 	def doHouseKeeping(self):
 		"""
 		Here, we destroy the database connection.
