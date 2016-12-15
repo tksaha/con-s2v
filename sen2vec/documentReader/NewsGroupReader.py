@@ -10,16 +10,7 @@ from log_manager.log_config import Logger
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 
-#from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
-#from baselineRunner.Node2VecRunner import Node2VecRunner
-#from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
-#from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
-#from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
-#from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
-#from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
-#from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation
-#from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
-#from baselineRunner.SkipThoughtRunner import SkipThoughtRunner
+
 
 class NewsGroupReader(DocumentReader):
     """ 
@@ -173,99 +164,4 @@ class NewsGroupReader(DocumentReader):
     def runBaselines(self, pd, rbase, gs):
         """
         """
-        #optDict = self._runClassificationOnValidation(pd, rbase, gs,"news")
-        #self.doTesting(optDict, "news", rbase, pd, gs, True)
-
-        #optDict = self._runClusteringOnValidation(pd, rbase, gs, "news")
-        #self.doTesting(optDict, "news", rbase, pd, gs, False)
-
-        #optDict = self._SuprunClassificationOnValidation(pd, rbase, gs,"news")
-        #optDict ={}
-        #self.doTesting_Sup(optDict, "news", rbase, pd, gs, True)
-
-        #optDict = self._runFastSentClassificationValidation(pd, rbase, gs, "news")
-        #self.doTesting_FastSent(optDict, "news", rbase, pd, gs, True)
-
-        #optDict = self._runFastSentClusteringValidation(pd, rbase, gs, "news")
-        #self.doTesting_FastSent(optDict, "news", rbase, pd, gs, False)
-
-        # os.environ['TEST_FOR']='CLASS'
-        # os.environ['EVAL'] ='TEST'
-        # tfrunner = TFIDFBaselineRunner(self.dbstring)
-        # tfrunner.prepareData(pd)
-        # tfrunner.runTheBaseline(rbase)
-        # tfrunner.runEvaluationTask()
-
-        # os.environ['TEST_FOR']='CLUST'
-        # os.environ['EVAL'] ='TEST'
-        # tfrunner = TFIDFBaselineRunner(self.dbstring)
-        # tfrunner.prepareData(pd)
-        # tfrunner.runTheBaseline(rbase)
-        # tfrunner.runEvaluationTask()
-
-        # latent_space_size = 300
-        # sthought = SkipThoughtRunner(self.dbstring)
-        # sthought.prepareData(pd)
-        # sthought.runTheBaseline(rbase, latent_space_size)
-
-        from  baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
-        from  baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
-        from  baselineEvaluator.SeqItUpdateEvaluator import SeqItUpdateEvaluator
-
-
-        optPDict = {}   
-        dataset_name = "news"
-        #latent_space_size = 600  # need to change to align with the other methods
-        latent_space_size = 300
-        optPDict["window"] =str(10)
-
-        # os.environ['VALID_FOR'] = 'CLASS'
-        # with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_hyperparameters_class.txt"), 'w') as f:  
-        #     os.environ['EVAL'] = 'VALID' 
-        #     #fheval = FastSentFHVersionEvalutor (self.dbstring)
-        #     #optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
-        #     seqregeval = SeqRegSentEvaluator (self.dbstring)
-        #     optPDict = seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
-
-        #     seqiteval = SeqItUpdateEvaluator(self.dbstring)
-        #     optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
-
-        # os.environ["EVAL"]='TEST'
-        # os.environ['TEST_FOR'] = 'CLASS'
-        # f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
-        # niter = 5
-        # for i in range(0,niter):
-        #     f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-        #     #fheval = FastSentFHVersionEvalutor (self.dbstring)
-        #     #fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
-
-        #     seqregeval = SeqRegSentEvaluator (self.dbstring)
-        #     seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
-
-        #     seqiteval = SeqItUpdateEvaluator(self.dbstring)
-        #     seqiteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
-
-        optPDict = {}
-        optPDict["window"] =str(10)
-        os.environ['VALID_FOR'] = 'CLUST'
-        with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_hyperparameters_clust.txt"), 'w') as f:  
-            os.environ['EVAL'] = 'VALID' 
-            seqregeval = SeqRegSentEvaluator (self.dbstring)
-            optPDict = seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
-
-            seqiteval = SeqItUpdateEvaluator(self.dbstring)
-            optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
-
-
-        os.environ["EVAL"]='TEST'
-        os.environ['TEST_FOR'] = 'CLUST'
-        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,"_seq_testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
-        niter = 5
-        for i in range(0,niter):
-            f.write("###### Iteration: %s ######%s" %(i, os.linesep))
-            
-            seqregeval = SeqRegSentEvaluator (self.dbstring)
-            seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
-
-            seqiteval = SeqItUpdateEvaluator(self.dbstring)
-            seqiteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+        

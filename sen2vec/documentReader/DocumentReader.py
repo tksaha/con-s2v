@@ -10,7 +10,9 @@ from nltk.tokenize import sent_tokenize
 from utility.Utility import Utility
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger 
-
+from baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
+from baselineEvaluator.SeqItUpdateEvaluator import SeqItUpdateEvaluator
+from baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
 
 
 
@@ -97,3 +99,33 @@ class DocumentReader:
 		self.postgres_recorder.insertIntoTopTable(topic_names, categories)				
 		Logger.logr.info("[%i] Topic reading complete." %(len(topic_names)))
 		return topic_names
+
+	def performValidation(self, valid_for):
+		optPDict = {}   
+		dataset_name = optPDict['DATASET']
+		latent_space_size = 300
+		os.environ['VALID_FOR'] = valid_for 
+		os.environ['EVAL'] = 'VALID' 
+		with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,\
+		 		"hyperparameters_class.txt"), 'w') as f:  
+			seqregeval = SeqRegSentEvaluator (self.dbstring)
+            optPDict = seqregeval.getOptimumParameters(f,optPDict, latent_space_size)
+
+            seqiteval = SeqItUpdateEvaluator(self.dbstring)
+            optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
+
+
+    def performTesting(self, test_for):
+    	os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = test_for
+        f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,\
+        		"testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+        niter = 5
+        for i in range(0,niter):
+            f.write("###### Iteration: %s ######%s" %(i, os.linesep))
+            
+            seqregeval = SeqRegSentEvaluator (self.dbstring)
+            optPDict = seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+
+            seqiteval = SeqItUpdateEvaluator(self.dbstring)
+            seqiteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
