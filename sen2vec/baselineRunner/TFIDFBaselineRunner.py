@@ -41,10 +41,7 @@ class TFIDFBaselineRunner(BaselineRunner):
         vDict = {}
         summaryMethodID = 2
         
-        if os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':
-            self._runClassificationTF(summaryMethodID, "TFIDF", vDict)
-        else:
-            self._runClusteringTF(summaryMethodID, "TFIDF", vDict)
+        self.performEvaluation(summaryMethodID, self.latReprName, vDict)
 
 
     def doHouseKeeping(self):

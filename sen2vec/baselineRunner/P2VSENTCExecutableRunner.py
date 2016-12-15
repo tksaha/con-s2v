@@ -12,10 +12,9 @@ import multiprocessing
 from collections import namedtuple
 from utility.Utility import Utility
 from word2vec.WordDoc2Vec import WordDoc2Vec
-from evaluation.classificationevaluaiton.ClassificationEvaluation import ClassificationEvaluation 
 from summaryGenerator.SummaryGenerator import SummaryGenerator
 from baselineRunner.BaselineRunner import BaselineRunner
-import scipy.stats
+
 
 
 label_sent = lambda id_: 'SENT_%s' %(id_)
@@ -152,26 +151,14 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		For example. validation set or unsup set
 		"""
 		summaryMethodID = 2
-
-		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
-		s2vDict_raw = pickle.load(sent2vecFile_raw)
-
-		if os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'CLASS':
-			self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'CLUST':
-			self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'RANK_CORR':
+		if  os.environ['VALID_FOR'] == 'RANK_CORR' or os.environ['TEST_FOR'] == 'RANK_CORR':
 			vecFile = open("%s.p"%(self.sentReprFile),"rb")
 			vDict = pickle.load(vecFile)
-			self._runSTSValidation (vDict)
-		elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLASS':	
-			self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLUST' :
-			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'RANK_CORR':
-			vecFile = open("%s.p"%(self.sentReprFile),"rb")
-			vDict = pickle.load(vecFile)
-			self._runSTS(vDict)
+		else:
+			sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
+			vDict = pickle.load(sent2vecFile_raw)
+
+		self.performEvaluation(summaryMethodID, self.latReprName, vDict)
 
 	
 	def doHouseKeeping(self):
