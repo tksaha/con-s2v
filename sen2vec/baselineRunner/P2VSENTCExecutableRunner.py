@@ -25,15 +25,17 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		"""
 		"""
 		BaselineRunner.__init__(self, *args, **kwargs)
-		self.sentsFile = os.environ['P2VCEXECSENTFILE']
-		self.sentReprFile = os.environ['P2VCEXECOUTFILE']
-		self.doc2vecOut = os.environ['P2VECSENTDOC2VECOUT']
 		self.postgresConnection.connectDatabase()
-		self.utFunction = Utility("Text Utility")
 		self.latReprName = "p2vsent"
+		self.dataDir = os.environ['TRTESTFOLDER']
 		self.rootdir = os.environ['SEN2VEC_DIR']
+		self.utFunction = Utility("Text Utility")
 		self.window_size = str(10)
 		self.system_id = 2
+
+		self.sentsFile = os.path.join(self.dataDir, "%s_sentsCEXE.txt"%self.latReprName)
+		self.sentReprFile = os.path.join(self.dataDir, "%s_sentsCEXE_repr"%self.latReprName)
+		self.doc2vecOut = os.path.join(self.dataDir,"%s_sentsCEXE_docrepr"%self.latReprName)
 	
 	def prepareData(self, pd):
 		"""
@@ -64,7 +66,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 			str_ ="%s %0.3f"%(str_,val)
 		return str_
 
-	def runTheBaseline(self, rbase, latent_space_size, window="10"):
+	def runTheBaseline(self, rbase, latent_space_size):
 		"""
 		We run the para2vec Model and then store sen2vec as pickled 
 		dictionaries into the output file. 
@@ -78,7 +80,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		wPDict["cbow"], wPDict["sentence-vectors"],wPDict["min-count"] = str(0), str(0), str(0)
 		wPDict["train"], wPDict["output"] = "%s.txt"%self.sentsFile, self.doc2vecOut
 		wPDict["size"], wPDict["sentence-vectors"] = str(latent_space_size), str(1)
-		wPDict["window"] = window
+		wPDict["window"] = self.window_size
 		args = wordDoc2Vec.buildArgListforW2V(wPDict)
 		self._runProcess(args)
 		sent2vecModel = Doc2Vec.load_word2vec_format(self.doc2vecOut, binary=False)
@@ -146,18 +148,23 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		Generate Summary sentences for each document. 
 		Write sentence id and corresponding metadata 
 		into a file. 
-		We should put isTrain=Maybe for the instances which 
-		we do not want to incorporate in training and testing. 
-		For example. validation set or unsup set
 		"""
 		summaryMethodID = 2
-		if  os.environ['VALID_FOR'] == 'RANK_CORR' or os.environ['TEST_FOR'] == 'RANK_CORR':
+
+		what_for =""
+		try: 
+			what_for = os.environ['VALID_FOR'].lower()
+		except:
+			what_for = os.environ['TEST_FOR'].lower()
+
+		if  "rank" in what_for:
 			vecFile = open("%s.p"%(self.sentReprFile),"rb")
 			vDict = pickle.load(vecFile)
 		else:
 			sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
 			vDict = pickle.load(sent2vecFile_raw)
 
+		Logger.logr.info ("Performing evaluation for %s"%what_for)
 		self.performEvaluation(summaryMethodID, self.latReprName, vDict)
 
 	

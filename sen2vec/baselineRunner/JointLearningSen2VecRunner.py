@@ -24,6 +24,7 @@ label_sent = lambda id_: 'SENT_%s' %(id_)
 class JointLearningSen2VecRunner(BaselineRunner): 
 
     def __init__(self, *args, **kwargs):
+
         BaselineRunner.__init__(self, *args, **kwargs)
         self.jointReprFile = os.environ["JOINTS2VRPRFILE"]
         self.dataDir = os.environ['TRTESTFOLDER']
@@ -39,6 +40,7 @@ class JointLearningSen2VecRunner(BaselineRunner):
         self.jointbeta_label = 0.0; 
         self.cores = multiprocessing.cpu_count()
         self.rootdir = os.environ['SEN2VEC_DIR']
+
         if self.dbow_only == 0:
             self.latReprName = "joint_s2v"
         else:
@@ -60,6 +62,7 @@ class JointLearningSen2VecRunner(BaselineRunner):
             self.latReprName = "%s_%s"%(self.latReprName,"rnd")
 
         self.postgresConnection.connectDatabase()
+        self.system_id = 86
     
     def __getMaxNeighbors(self):
         """

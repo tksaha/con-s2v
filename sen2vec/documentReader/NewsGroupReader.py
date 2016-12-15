@@ -148,9 +148,8 @@ class NewsGroupReader(DocumentReader):
         """
         Stripping is by default inactive. For future reference it has been 
         imported from scikit-learn newsgroup reader package. 
-
-        
         """
+
         if ld <= 0: return 0            
         self.postgres_recorder.trucateTables()
         self.postgres_recorder.alterSequences()

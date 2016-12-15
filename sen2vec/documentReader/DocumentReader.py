@@ -30,7 +30,6 @@ class DocumentReader:
     def readDocument(self):
         pass
 
-
     """
     Protected Methods
     """
@@ -101,23 +100,6 @@ class DocumentReader:
         return topic_names
 
 
-    def performevaluation(self, summaryMethodID, vDict):
-
-        if os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'CLASS':
-            self._runClassificationValidation(summaryMethodID,"%s_raw"%latReprName, vDict)
-        elif os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'CLUST':
-            self._runClusteringValidation(summaryMethodID,"%s_raw"%latReprName, vDict)
-        elif os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'RANK_CORR':
-            self._runSTSValidation (vDict)
-        elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLASS':    
-            self._runClassification(summaryMethodID,"%s_raw"%latReprName, vDict)
-        elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLUST' :
-            self._runClustering(summaryMethodID,"%s_raw"%latReprName, vDict)
-        elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'RANK_CORR':
-            vecFile = open("%s.p"%(self.sentReprFile),"rb")
-            vDict = pickle.load(vecFile)
-            self._runSTS(vDict)
-            
 
     def performValidation(self, valid_for):
         optPDict = {}   
@@ -128,17 +110,26 @@ class DocumentReader:
         with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,\
                 "hyperparameters_class.txt"), 'w') as f:
 
-            paraeval = P2VSENTCExecutableEvaluator(self.dbstring)
-            optPDict = paraeval.getOptimumParameters(f, optPDict, latent_space_size)
+            paraeval   = P2VSENTCExecutableEvaluator (self.dbstring)
+            optPDict   = paraeval.getOptimumParameters (f, optPDict, latent_space_size)
 
-            fheval = FastSentFHVersionEvalutor(self.dbstring)
-            optPDict = fheval.getOptimumParameters(f, optPDict, latent_space_size)
+            fheval     = FastSentFHVersionEvalutor (self.dbstring)
+            optPDict   = fheval.getOptimumParameters (f, optPDict, latent_space_size)
+
+            wvgeval    = WordVectorAveragingEvaluator (self.dbstring)
+            optPDict   = wvgeval.getOptimumParameters (f, optPDict, latent_space_size)
+
+            regeval    = RegularizedSen2VecEvaluator(self.dbstring)
+            optPDict   = regeval.getOptimumParameters (f, optPDict, latent_space_size)
 
             seqregeval = SeqRegSentEvaluator (self.dbstring)
-            optPDict = seqregeval.getOptimumParameters(f, optPDict, latent_space_size)
+            optPDict   = seqregeval.getOptimumParameters(f, optPDict, latent_space_size)
 
-            seqiteval = SeqItUpdateEvaluator(self.dbstring)
-            optPDict = seqiteval.getOptimumParameters(f, optPDict, latent_space_size)
+            jnteval    = JointLearningSen2VecEvaluator (self.dbstring)
+            optPDict   = jnteval.getOptimumParameters(f, optPDict, latent_space_size)
+
+            fstvar     = FastSentVariantRunner (self.dbstring)
+            optPDict   = fstvar.getOptimumParameters(f, optPDict, latent_space_size)
 
 
     def performTesting(self, test_for, nIter):
@@ -153,18 +144,32 @@ class DocumentReader:
         for i in range(0,niter):
             f.write("###### Iteration: %s ######%s" %(i, os.linesep))
 
+            paraeval  = P2VSENTCExecutableEvaluator (self.dbstring)
+            paraeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
 
-            paraeval = P2VSENTCExecutableEvaluator(self.dbstring)
-            paraeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
-
-            fheval = FastSentFHVersionEvalutor(self.dbstring)
-            fheval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+            fheval    = FastSentFHVersionEvalutor (self.dbstring)
+            fheval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
 
             tfidfeval =  TFIDFBaselineEvaluator (self.dbstring)
+            tfidfeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
 
+            wvgeval   = WordVectorAveragingEvaluator (self.dbstring)
+            wvgeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+
+            itrunner  = IterativeUpdatedRetrofitEvaluator(self.dbstring)
+            itrunner.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+
+            seqiteval = SeqItUpdateEvaluator (self.dbstring)
+            seqiteval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+
+            regeval   = RegularizedSen2VecEvaluator(self.dbstring)
+            regeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
 
             seqregeval = SeqRegSentEvaluator (self.dbstring)
-            seqregeval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+            seqregeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
 
-            seqiteval = SeqItUpdateEvaluator(self.dbstring)
-            seqiteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+            jnteval    = JointLearningSen2VecEvaluator(self.dbstring)
+            jnteval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+
+            fstvar     = FastSentVariantRunner (self.dbstring)
+            fstvar.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)

@@ -7,9 +7,10 @@ import math
 import pickle
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
-
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
 from baselineRunner.P2VSENTCExecutableRunner  import P2VSENTCExecutableRunner
+
+
 
 class P2VSENTCExecutableEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
@@ -39,11 +40,12 @@ class P2VSENTCExecutableEvaluator(BaselineEvaluator):
 		window_opt = max(self.metric, key=self.metric.get)
 		Logger.logr.info("[S2V Baseline] Optimal window=%s" %(window_opt))	
 		optPDict['window'] = window_opt
-		f.write("[S2V Baseline] Optimal Window : %.2f%s" %(optPDict['window'], os.linesep))
+		f.write("[S2V Baseline] Optimal Window : %s%s" %(optPDict['window'], os.linesep))
 		f.write("[S2V Baseline] %ss: %s%s" %(self.metric_str, self.metric, os.linesep))
 		f.flush()
 
 		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
+		self.postgres_recorder.truncateSummaryTable()
 		paraBaseline.window_size = optPDict['window']
 		paraBaseline.prepareData(1)		
 		paraBaseline.runTheBaseline(1,latent_space_size)

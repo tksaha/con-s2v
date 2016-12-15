@@ -26,22 +26,24 @@ class WordVectorAveragingRunner(BaselineRunner):
 		"""
 		"""
 		BaselineRunner.__init__(self, *args, **kwargs)
-		self.sentsFile = os.environ['P2VCEXECSENTFILE']
-		self.sentReprFile = os.environ['P2VCEXECOUTFILE']
-		self.doc2vecOut = os.environ['P2VECSENTDOC2VECOUT']
 		self.postgresConnection.connectDatabase()
 		self.window_size = str(10)
 		self.utFunction = Utility("Text Utility")
 		self.latReprName = "wordaverage"
 		self.rootdir = os.environ['SEN2VEC_DIR']
+		self.dataDir = os.environ['TRTESTFOLDER']
+
+		self.sentsFile = os.path.join(self.dataDir, "%s_sentsCEXE.txt"%self.latReprName)
+		self.sentReprFile = os.path.join(self.dataDir, "%s_sentsCEXE_repr"%self.latReprName)
+		self.doc2vecOut = os.path.join(self.dataDir,"%s_sentsCEXE_docrepr"%self.latReprName)
+
 		self.system_id = 80
 	
 	def prepareData(self, pd):
 		"""
 		Query Sentence Data. We dump sentences with their sentence 
 		ids. Pre-pad sentences with null word symbol if the number 
-		of words in a sentence 
-		is less than 9.
+		of words in a sentence is less than 9.
 		"""
 		if pd <= 0: return 0
 		sentfiletoWrite = open("%s.txt"%(self.sentsFile),"w")
@@ -65,9 +67,8 @@ class WordVectorAveragingRunner(BaselineRunner):
 			str_ ="%s %0.3f"%(str_,val)
 		return str_
 
-	# I am going to deprecate the window parameter very soon 
-	# from both the wvbaseline and sen2vec
-	def runTheBaseline(self, rbase, latent_space_size, window=str(10)):
+	
+	def runTheBaseline(self, rbase, latent_space_size:
 		"""
 		We run the para2vec Model and then store sen2vec as pickled 
 		dictionaries into the output file. 
@@ -165,61 +166,26 @@ class WordVectorAveragingRunner(BaselineRunner):
 		Generate Summary sentences for each document. 
 		Write sentence id and corresponding metadata 
 		into a file. 
-		We should put isTrain=Maybe for the instances which 
-		we do not want to incorporate in training and testing. 
-		For example. validation set or unsup set
 		"""
 		summaryMethodID = 2
-		sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
-		s2vDict_raw = pickle.load(sent2vecFile_raw)
 
-		if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
-			self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
-			self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
-		elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':	
-			self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
+		what_for =""
+		try: 
+			what_for = os.environ['VALID_FOR'].lower()
+		except:
+			what_for = os.environ['TEST_FOR'].lower()
+
+		if  "rank" in what_for:
+			vecFile = open("%s.p"%(self.sentReprFile),"rb")
+			vDict = pickle.load(vecFile)
 		else:
-			self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, s2vDict_raw)
+			sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
+			vDict = pickle.load(sent2vecFile_raw)
+
+		Logger.logr.info ("Performing evaluation for %s"%what_for)
+		self.performEvaluation(summaryMethodID, self.latReprName, vDict)
 		
-	def evaluateRankCorrelation(self, dataset):
-		vecFile = open("%s.p"%(self.sentReprFile),"rb")
-		vDict = pickle.load(vecFile)
-
-		if os.environ['EVAL']=='VALID':
-			validation_pair_file = open(os.path.join(self.rootdir,"Data/validation_pair_%s.p"%(dataset)), "rb")
-			val_dict = pickle.load(validation_pair_file)
-
-			original_val = []
-			computed_val = []
-			for k, val in val_dict.items():
-				original_val.append(val)
-				computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-			return scipy.stats.pearsonr(original_val,computed_val)[0]
-		else:
-			test_pair_file = open(os.path.join(self.rootdir,"Data/test_pair_%s.p"%(dataset)), "rb")
-			test_dict = pickle.load(test_pair_file)
-
-			original_val = []
-			computed_val = []
-			for k, val in test_dict.items():
-				original_val.append(val)
-				computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-			if os.environ['TEST_AND_TRAIN'] =="YES":
-				train_pair_file = open(os.path.join(self.rootdir,"Data/train_pair_%s.p"%(dataset)), "rb")
-				train_dict = pickle.load(train_pair_file)
-				for k, val in train_dict.items():
-					original_val.append(val)
-					computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-			Logger.logr.info (len(original_val))
-			Logger.logr.info (len(computed_val))
-
-			sp = scipy.stats.spearmanr(original_val,computed_val)[0]
-			pearson = scipy.stats.pearsonr(original_val,computed_val)[0]
-			return sp, pearson
-
+	
 	def doHouseKeeping(self):
 		"""
 		Here, we destroy the database connection.

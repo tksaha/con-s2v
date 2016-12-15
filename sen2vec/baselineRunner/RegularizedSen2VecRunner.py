@@ -35,6 +35,7 @@ class RegularizedSen2VecRunner(BaselineRunner):
         self.latReprName = "reg_s2v"
         self.postgresConnection.connectDatabase()
         self.rootdir = os.environ['SEN2VEC_DIR']
+        self.system_id = 6
     
     def __getMaxNeighbors(self):
         """
