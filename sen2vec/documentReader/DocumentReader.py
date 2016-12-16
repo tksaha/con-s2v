@@ -3,17 +3,28 @@
 
 import os 
 import sys 
-
-import gensim
 import nltk
+import gensim
+
 from nltk.tokenize import sent_tokenize
 from utility.Utility import Utility
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger 
-from baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
-from baselineEvaluator.SeqItUpdateEvaluator import SeqItUpdateEvaluator
-from baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
+
 from baselineEvaluator.P2VSENTCExecutableEvaluator import P2VSENTCExecutableEvaluator
+from baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
+
+from baselineEvaluator.TFIDFBaselineEvaluator import TFIDFBaselineEvaluator
+from baselineEvaluator.WordVectorAveragingEvaluator import WordVectorAveragingEvaluator
+
+from baselineEvaluator.IterativeUpdatedRetrofitEvaluator import IterativeUpdatedRetrofitEvaluator
+from baselineEvaluator.SeqItUpdateEvaluator import SeqItUpdateEvaluator
+
+from baselineEvaluator.RegularizedSen2VecEvaluator import RegularizedSen2VecEvaluator
+from baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
+
+
+
 
 
 class DocumentReader:

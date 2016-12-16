@@ -25,7 +25,7 @@ class WordVectorAveragingEvaluator(BaselineEvaluator):
 			Logger.logr.info("[WVAvg Baseline] Starting Running  for Window = %s" %window)				
 			wvBaseline = WordVectorAveragingRunner (self.dbstring)
 			if 	window == self.window_size_list[0]: 
-				wvBaseline.prepareData(pd)		
+				wvBaseline.prepareData(1)		
 			wvBaseline.window_size = window
 			self.metric[beta] = self.evaluate(wvBaseline, filePrefix,\
 					 latent_space_size)	

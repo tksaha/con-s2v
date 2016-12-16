@@ -10,6 +10,8 @@ from log_manager.log_config import Logger
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
 from baselineRunner.SequentialRegularizedSen2VecRunner import SequentialRegularizedSen2VecRunner
 
+
+
 class SeqRegSentEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""

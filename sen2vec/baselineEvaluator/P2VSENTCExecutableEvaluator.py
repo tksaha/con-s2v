@@ -11,7 +11,6 @@ from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
 from baselineRunner.P2VSENTCExecutableRunner  import P2VSENTCExecutableRunner
 
 
-
 class P2VSENTCExecutableEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""

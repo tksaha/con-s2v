@@ -68,12 +68,12 @@ class WordVectorAveragingRunner(BaselineRunner):
 		return str_
 
 	
-	def runTheBaseline(self, rbase, latent_space_size:
+	def runTheBaseline(self, rbase, latent_space_size):
 		"""
 		We run the para2vec Model and then store sen2vec as pickled 
 		dictionaries into the output file. 
 		"""
-		if rbase <= 0: return 0
+		if rbase <=0: return 0
 
 		wordDoc2Vec = WordDoc2Vec()
 		wPDict = wordDoc2Vec.buildWordDoc2VecParamDict()
