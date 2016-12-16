@@ -8,7 +8,7 @@ import pickle
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
-
+from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
 
 class RegularizedSen2VecEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):

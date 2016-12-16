@@ -17,6 +17,7 @@ class WordVectorAveragingEvaluator(BaselineEvaluator):
 		Word Vector Averaging Evaluator
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
+		self.filePrefix = ""
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -27,10 +28,10 @@ class WordVectorAveragingEvaluator(BaselineEvaluator):
 			if 	window == self.window_size_list[0]: 
 				wvBaseline.prepareData(1)		
 			wvBaseline.window_size = window
-			self.metric[beta] = self.evaluate(wvBaseline, filePrefix,\
+			self.metric[window] = self.evaluate(wvBaseline, self.filePrefix,\
 					 latent_space_size)	
 			Logger.logr.info("[WVAvg Baseline] %s for window %s = %s"\
-			 %(self.metric_str, window, self.metric[beta]))
+			 %(self.metric_str, window, self.metric[window]))
 			
 		window_opt_avg = max(self.metric, key=self.metric.get)
 		Logger.logr.info("[WVAvg Baseline] Optimal window=%s" %(window_opt_avg))	
@@ -41,8 +42,7 @@ class WordVectorAveragingEvaluator(BaselineEvaluator):
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
-		filePrefix = ""
 		f.write("[WVAvg Baseline] Optimal Window  is: %s%s" %(optPDict["window-opt-avg"], os.linesep))	
 		wvBaseline = WordVectorAveragingRunner(self.dbstring)
 		wvBaseline.window_size = optPDict["window-opt-avg"]
-		self.writeResults(pd, rbase, latent_space_size, wvBaseline, filePrefix, f)
+		self.writeResults(pd, rbase, latent_space_size, wvBaseline, self.filePrefix, f)

@@ -11,6 +11,7 @@ import numpy as np
 import scipy.stats
 import networkx as nx 
 from gensim.models import Word2Vec
+from utility.Utility import Utility
 from log_manager.log_config import Logger 
 from baselineRunner.BaselineRunner import BaselineRunner
 from word2vec.WordDoc2Vec import WordDoc2Vec
@@ -25,15 +26,16 @@ class SequentialRegularizedSen2VecRunner(BaselineRunner):
     def __init__(self, *args, **kwargs):
         BaselineRunner.__init__(self, *args, **kwargs)
         self.dataDir = os.environ['TRTESTFOLDER']
-        self.sentsFile = os.environ['P2VCEXECSENTFILE']
         self.window_size = str(10)
         self.latReprName = "seq_reg_s2v"
+        self.sentsFile = os.path.join(self.dataDir, "%s_sents"%self.latReprName)
         self.seqregunw_beta = str(1.0)
         self.postgresConnection.connectDatabase()
         self.rootdir = os.environ['SEN2VEC_DIR']
         self.sentenceList = list()
         self.seqregsen2vReprFile = os.path.join(self.dataDir, self.latReprName)
         self.system_id = 83
+        self.utFunction = Utility("Text Utility")
     
     def __insertNeighbors(self, sentenceList, nbr_file):
         for pos in range(0, len(sentenceList)):
@@ -73,9 +75,22 @@ class SequentialRegularizedSen2VecRunner(BaselineRunner):
         file_to_write.flush()
         file_to_write.close()
 
+    def prepareSentsFile(self):
+        sentfiletoWrite = open("%s.txt"%(self.sentsFile),"w")
+        for result in self.postgresConnection.memoryEfficientSelect(["id","content"],\
+             ["sentence"], [], [], ["id"]):
+            for row_id in range(0,len(result)):
+                id_ = result[row_id][0]
+                content = gensim.utils.to_unicode(result[row_id][1].strip())
+                content = self.utFunction.normalizeText(content, remove_stopwords=0)
+                sentfiletoWrite.write("%s %s%s"%(label_sent(id_),' '.join(content), os.linesep))
+            sentfiletoWrite.flush()
+        sentfiletoWrite.close()
+
     def prepareData(self, pd):
     
         if pd <= 0: return 0 
+        self.prepareSentsFile()
         max_neighbor = 2
         neighbor_file_unw = open("%s_neighbor_unw.txt"%\
                 self.seqregsen2vReprFile, "w")

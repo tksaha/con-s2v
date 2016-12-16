@@ -12,6 +12,8 @@ import operator
 import multiprocessing 
 import subprocess 
 import numpy as np 
+import gensim 
+from utility.Utility import Utility
 from word2vec.WordDoc2Vec import WordDoc2Vec
 from summaryGenerator.SummaryGenerator import SummaryGenerator
 import scipy.stats
@@ -23,18 +25,21 @@ class RegularizedSen2VecRunner(BaselineRunner):
 
     def __init__(self, *args, **kwargs):
         BaselineRunner.__init__(self, *args, **kwargs)
-        self.regsen2vReprFile = os.environ["REGSEN2VECREPRFILE"]
         self.dataDir = os.environ['TRTESTFOLDER']
-        self.sentsFile = os.environ['P2VCEXECSENTFILE']
-        self.regBetaUNW = float(os.environ['REG_BETA_UNW'])
-        self.regBetaW = float(os.environ['REG_BETA_W'])
+        self.latReprName = "reg_s2v"
+        self.regsen2vReprFile = os.path.join(self.dataDir, "%s_repr"%self.latReprName)
+        self.sentsFile = os.path.join(self.dataDir, "%s_sents"%self.latReprName)
+        self.regBetaUNW = 0.3
+        self.regBetaW = 0.3
         self.Graph = nx.Graph()
         self.window_size = str(10)
         self.cores = multiprocessing.cpu_count()
-        self.graphFile = os.environ["GRAPHFILE"]
-        self.latReprName = "reg_s2v"
+        self.graphFile = os.path.join(self.dataDir, \
+                "%s_graph_%s_%s"%(os.environ['DATASET'], os.environ['GINTERTHR'],\
+                    os.environ['GINTRATHR']))
         self.postgresConnection.connectDatabase()
         self.rootdir = os.environ['SEN2VEC_DIR']
+        self.utFunction = Utility("Text Utility")
         self.system_id = 6
     
     def __getMaxNeighbors(self):
@@ -72,6 +77,18 @@ class RegularizedSen2VecRunner(BaselineRunner):
         file_to_write.flush()
         file_to_write.close()
 
+    def prepareSentsFile(self):
+        sentfiletoWrite = open("%s.txt"%(self.sentsFile),"w")
+        for result in self.postgresConnection.memoryEfficientSelect(["id","content"],\
+             ["sentence"], [], [], ["id"]):
+            for row_id in range(0,len(result)):
+                id_ = result[row_id][0]
+                content = gensim.utils.to_unicode(result[row_id][1].strip())
+                content = self.utFunction.normalizeText(content, remove_stopwords=0)
+                sentfiletoWrite.write("%s %s%s"%(label_sent(id_),' '.join(content), os.linesep))
+            sentfiletoWrite.flush()
+        sentfiletoWrite.close()
+
     def prepareData(self, pd):
         """
         It prepares neighbor data for regularized sen2vec. 
@@ -83,6 +100,8 @@ class RegularizedSen2VecRunner(BaselineRunner):
         be 1.0. 
         """
         if pd <= 0: return 0 
+        self.prepareSentsFile()
+
         self.Graph = nx.read_gpickle(self.graphFile)
         max_neighbor = self.__getMaxNeighbors()
 

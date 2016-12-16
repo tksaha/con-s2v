@@ -26,23 +26,22 @@ class Node2VecRunner(BaselineRunner):
 
 	def __init__(self, *args, **kwargs):
 		BaselineRunner.__init__(self, *args, **kwargs)
-		self.n2vReprFile = os.environ["N2VOUTFILE"]
-		self.p2vReprFile = os.environ["P2VCEXECOUTFILE"]
+		self.latReprName = "n2vecsent"
+		self.dataDir = os.environ['TRTESTFOLDER']
+		self.n2vReprFile = os.path.join(self.dataDir, "%s_repr"%self.latReprName)
+		self.p2vReprFile =  os.path.join(self.dataDir, "%s_sentsCEXE_repr"%"p2vsent")
 		self.interThr = float(os.environ["GINTERTHR"])
 		self.intraThr = float(os.environ["GINTRATHR"])
-
-		self.num_walks = int(os.environ["NUM_WALKS"])
-		self.walk_length = int(os.environ["WALK_LENGTH"])
-
-		self.dataDir = os.environ['TRTESTFOLDER']
 		self.kneighbors = int(os.environ['KNEIGHBOR'])
-		
-		# Hyperparameter Beta
-		self.mybeta = float(os.environ['N2VBETA'])
+		self.num_walks = int(10)
+		self.walk_length = int(5)
+		self.mybeta = 0.3
 		self.Graph = nx.Graph()
 		self.cores = multiprocessing.cpu_count()
-		self.graphFile = os.environ["GRAPHFILE"]
-		self.latReprName = "n2vecsent"
+		self.graphFile = os.path.join(self.dataDir, \
+                "%s_graph_%s_%s"%(os.environ['DATASET'], os.environ['GINTERTHR'],\
+                    os.environ['GINTRATHR']))
+		
 		self.postgresConnection.connectDatabase()
 		self.s2vDict = {}
 		self.sentenceDict = {}

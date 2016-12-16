@@ -4,6 +4,7 @@
 import os 
 import sys 
 import nltk
+import pickle
 import gensim
 
 from nltk.tokenize import sent_tokenize
@@ -14,6 +15,7 @@ from log_manager.log_config import Logger
 from baselineEvaluator.P2VSENTCExecutableEvaluator import P2VSENTCExecutableEvaluator
 from baselineEvaluator.FastSentFHVersionEvaluator import FastSentFHVersionEvalutor
 
+from baselineEvaluator.Node2VecEvaluator import Node2VecEvaluator
 from baselineEvaluator.TFIDFBaselineEvaluator import TFIDFBaselineEvaluator
 from baselineEvaluator.WordVectorAveragingEvaluator import WordVectorAveragingEvaluator
 
@@ -35,7 +37,7 @@ class DocumentReader:
 
     def __init__(self):
         self.utFunction = Utility("Text Utility")
-
+        self.dataDir = os.environ['TRTESTFOLDER']
 
     @abstractmethod
     def readDocument(self):
@@ -113,39 +115,62 @@ class DocumentReader:
 
 
     def performValidation(self, valid_for):
-        optPDict = {}   
+        # Load the optPDict if it is there
+        optPDict = {}  
+        dict_file = os.path.join(self.dataDir,"%s_optPDict.p"%(os.environ['DATASET']))
+
+        try:
+            optPDict = pickle.load (dict_file)
+            Logger.logr.info("Loaded OptPDict")
+        except:
+            Logger.logr.info("Creating new OptPDict file")
+            dict_file = open(dict_file,"wb")
+
+         
         dataset_name = os.environ['DATASET']
         latent_space_size = 300
+
         os.environ['VALID_FOR'] = valid_for 
         os.environ['EVAL'] = 'VALID' 
+
+        print (optPDict)
+
         with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,\
                 "hyperparameters_class.txt"), 'w') as f:
 
             paraeval   = P2VSENTCExecutableEvaluator (self.dbstring)
             optPDict   = paraeval.getOptimumParameters (f, optPDict, latent_space_size)
 
-            fheval     = FastSentFHVersionEvalutor (self.dbstring)
-            optPDict   = fheval.getOptimumParameters (f, optPDict, latent_space_size)
+            # fheval     = FastSentFHVersionEvalutor (self.dbstring)
+            # optPDict   = fheval.getOptimumParameters (f, optPDict, latent_space_size)
 
-            wvgeval    = WordVectorAveragingEvaluator (self.dbstring)
-            optPDict   = wvgeval.getOptimumParameters (f, optPDict, latent_space_size)
+            # wvgeval    = WordVectorAveragingEvaluator (self.dbstring)
+            # optPDict   = wvgeval.getOptimumParameters (f, optPDict, latent_space_size)
+
+            n2veval    =  Node2VecEvaluator (self.dbstring)
+            optPDict   =  n2veval.getOptimumParameters (f, optPDict, latent_space_size)
 
             regeval    = RegularizedSen2VecEvaluator(self.dbstring)
             optPDict   = regeval.getOptimumParameters (f, optPDict, latent_space_size)
 
-            seqregeval = SeqRegSentEvaluator (self.dbstring)
-            optPDict   = seqregeval.getOptimumParameters(f, optPDict, latent_space_size)
+            # seqregeval = SeqRegSentEvaluator (self.dbstring)
+            # optPDict   = seqregeval.getOptimumParameters(f, optPDict, latent_space_size)
 
-            jnteval    = JointLearningSen2VecEvaluator (self.dbstring)
-            optPDict   = jnteval.getOptimumParameters(f, optPDict, latent_space_size)
+            # jnteval    = JointLearningSen2VecEvaluator (self.dbstring)
+            # optPDict   = jnteval.getOptimumParameters(f, optPDict, latent_space_size)
 
-            fstvar     = FastSentVariantRunner (self.dbstring)
-            optPDict   = fstvar.getOptimumParameters(f, optPDict, latent_space_size)
+            # fstvar     = FastSentVariantRunner (self.dbstring)
+            # optPDict   = fstvar.getOptimumParameters(f, optPDict, latent_space_size)
+
+        # save optDict 
+        print (optPDict)
+        pickle.dump (optPDict, dict_file)
 
 
     def performTesting(self, test_for, nIter):
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = test_for
+        dataset_name = os.environ['DATASET']
 
 
         f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,\

@@ -32,8 +32,7 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		self.utFunction = Utility("Text Utility")
 		self.window_size = str(10)
 		self.system_id = 2
-
-		self.sentsFile = os.path.join(self.dataDir, "%s_sentsCEXE.txt"%self.latReprName)
+		self.sentsFile = os.path.join(self.dataDir, "%s_sents"%self.latReprName)
 		self.sentReprFile = os.path.join(self.dataDir, "%s_sentsCEXE_repr"%self.latReprName)
 		self.doc2vecOut = os.path.join(self.dataDir,"%s_sentsCEXE_docrepr"%self.latReprName)
 	

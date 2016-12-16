@@ -8,7 +8,7 @@ import pickle
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
-
+from baselineRunner.Node2VecRunner import Node2VecRunner
 
 class Node2VecEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
@@ -21,8 +21,8 @@ class Node2VecEvaluator(BaselineEvaluator):
 		self._setmetricString ()
 		
 		n2vBaseline = Node2VecRunner(self.dbstring)
-		n2vBaseline.prepareData(pd)
-		n2vBaseline.runTheBaseline(rbase, latent_space_size, True)
+		n2vBaseline.prepareData(1)
+		#n2vBaseline.runTheBaseline(rbase, latent_space_size, True)
 		
 		return optPDict
 
