@@ -20,6 +20,7 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
 		window_opt_fh = None 
+		latent_space_size = latent_space_size * 2
 		fhBaseline =  FastSentFHVersionRunner(self.dbstring, autoencode=True)
 		for window in self.window_size_list:
 			Logger.logr.info("[FASTSENT (+AE)] Starting Running "+\
@@ -41,6 +42,7 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
 		f.write("[FASTSENT (+AE)] Optimal Window for fh (+AE) is: %s%s" %(optPDict["fh-ae-window"], os.linesep))	
+		latent_space_size = latent_space_size * 2
 		fhBaseline =  FastSentFHVersionRunner(self.dbstring, autoencode=True)
 		fhBaseline.window = optPDict["fh-ae-window"]
 		self.writeResults(pd, rbase, latent_space_size, fhBaseline, "", f)

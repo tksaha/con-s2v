@@ -10,6 +10,8 @@ import subprocess
 import numpy as np 
 import scipy.stats
 import networkx as nx 
+import gensim 
+from utility.Utility import Utility
 from gensim.models import Word2Vec
 from utility.Utility import Utility
 from log_manager.log_config import Logger 
@@ -33,7 +35,7 @@ class SequentialRegularizedSen2VecRunner(BaselineRunner):
         self.postgresConnection.connectDatabase()
         self.rootdir = os.environ['SEN2VEC_DIR']
         self.sentenceList = list()
-        self.seqregsen2vReprFile = os.path.join(self.dataDir, self.latReprName)
+        self.seqregsen2vReprFile = os.path.join(self.dataDir, "%s_repr"%self.latReprName)
         self.system_id = 83
         self.utFunction = Utility("Text Utility")
     
@@ -152,60 +154,28 @@ class SequentialRegularizedSen2VecRunner(BaselineRunner):
         
 
     def __runEval(self, summaryMethodID, vecFileName, reprName):
-        vecFile = open("%s_raw.p"%vecFileName, "rb")
-        vDict = pickle.load (vecFile)
+       
+        what_for =""
+        try: 
+            what_for = os.environ['VALID_FOR'].lower()
+        except:
+            what_for = os.environ['TEST_FOR'].lower()
+
+        vDict  = {}
+        if  "rank" in what_for:
+            vecFile = open("%s.p"%(vecFileName),"rb")
+            vDict = pickle.load(vecFile)
+        else:
+            vecFile_raw = open("%s_raw.p"%(vecFileName),"rb")
+            vDict = pickle.load(vecFile_raw)
+
+        Logger.logr.info ("Performing evaluation for %s"%what_for)
         Logger.logr.info("Regularized Dictionary has %i objects"%len(vDict))
 
-        if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
-            self._runClassificationValidation(summaryMethodID, "%s_raw"%reprName, vDict)
-        elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
-            self._runClusteringValidation(summaryMethodID, "%s_raw"%reprName, vDict)
-        elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':
-            self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
-        else:
-            self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)
+        self.performEvaluation(summaryMethodID, reprName, vDict)
 
 
-    def evaluateRankCorrelation(self,dataset):
-        vecFile =  open("%s%s.p"%(self.seqregsen2vReprFile,\
-             "_neighbor_unw"),"rb")
-        vDict = pickle.load (vecFile)
 
-
-        if os.environ['EVAL']=='VALID':
-            validation_pair_file = open(os.path.join(self.rootdir,"Data/validation_pair_%s.p"%(dataset)), "rb")
-            val_dict = pickle.load(validation_pair_file)
-
-            original_val = []
-            computed_val = []
-            for k, val in val_dict.items():
-                original_val.append(val)
-                computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-            return scipy.stats.spearmanr(original_val,computed_val)[0]
-        else:
-            test_pair_file = open(os.path.join(self.rootdir,"Data/test_pair_%s.p"%(dataset)), "rb")
-            test_dict = pickle.load(test_pair_file)
-
-            original_val = []
-            computed_val = []
-            for k, val in test_dict.items():
-                original_val.append(val)
-                computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-            if os.environ['TEST_AND_TRAIN'] =="YES":
-                train_pair_file = open(os.path.join(self.rootdir,"Data/train_pair_%s.p"%(dataset)), "rb")
-                train_dict = pickle.load(train_pair_file)
-                for k, val in train_dict.items():
-                    original_val.append(val)
-                    computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-            Logger.logr.info (len(original_val))
-            Logger.logr.info (len(computed_val))
-            sp = scipy.stats.spearmanr(original_val,computed_val)[0]
-            pearson = scipy.stats.pearsonr(original_val,computed_val)[0]
-            return sp, pearson
-
-            
     def runEvaluationTask(self):
         summaryMethodID = 2 
         Logger.logr.info("Starting Sequential Regularized Sentence 2 Vector Evaluation")

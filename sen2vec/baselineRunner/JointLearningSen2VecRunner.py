@@ -14,6 +14,8 @@ import multiprocessing
 import subprocess 
 import numpy as np 
 import scipy.stats
+import gensim 
+from utility.Utility import Utility
 from word2vec.WordDoc2Vec import WordDoc2Vec
 from summaryGenerator.SummaryGenerator import SummaryGenerator
 
@@ -26,20 +28,13 @@ class JointLearningSen2VecRunner(BaselineRunner):
     def __init__(self, *args, **kwargs):
 
         BaselineRunner.__init__(self, *args, **kwargs)
-        self.jointReprFile = os.environ["JOINTS2VRPRFILE"]
-        self.dataDir = os.environ['TRTESTFOLDER']
-        self.sentsFile = os.environ['P2VCEXECSENTFILE']
-        self.num_walks = int(os.environ["NUM_WALKS"])
-        self.walk_length = int(os.environ["WALK_LENGTH"])
-        self.graphFile = os.environ["GRAPHFILE"]
-        self.dbow_only = int(os.environ["DBOW_ONLY"])
-        self.nbrtype = int (os.environ["NBR_TYPE"]) # 1 variable, 0 fixed 
-        self.full_data = int (os.environ["FULL_DATA"]) # FULL DATA 1 full nbr, 0 random nbrs
-        self.window = str(10)
-        self.lambda_val = float(os.environ['LAMBDA'])
-        self.jointbeta_label = 0.0; 
-        self.cores = multiprocessing.cpu_count()
         self.rootdir = os.environ['SEN2VEC_DIR']
+        self.dataDir = os.environ['TRTESTFOLDER']
+
+        self.dbow_only = 1
+        self.nbrtype = int (os.environ["NBR_TYPE"]) # 1 n2v, 0 adjacent
+        self.full_data = int (os.environ["FULL_DATA"]) # FULL DATA 1 full nbr, 0 random nbrs
+        self.lambda_val = float(os.environ['LAMBDA'])
 
         if self.dbow_only == 0:
             self.latReprName = "joint_s2v"
@@ -47,22 +42,46 @@ class JointLearningSen2VecRunner(BaselineRunner):
             self.latReprName = "joint_s2v_dbow_only"
 
         if self.nbrtype == 0:
-            self.latReprName = "%s_%s"%(self.latReprName,"fixed_nbr")
-        else:
-            self.latReprName = "%s_%s"%(self.latReprName,"n2v_nbr")
+            self.latReprName = "%s_%s"%(self.latReprName,"adj_nbr")
+        # Not supported currently
+        #else:
+        #    self.latReprName = "%s_%s"%(self.latReprName,"n2v_nbr")
 
         if self.lambda_val > 0.0:
-            self.latReprName = "%s_%s"%(self.latReprName,"regularized")
+            self.latReprName = "%s_%s"%(self.latReprName,"reg")
         else:
-            self.latReprName = "%s_%s"%(self.latReprName,"general")
+            self.latReprName = "%s_%s"%(self.latReprName,"wth_reg")
 
         if self.full_data == 1:
             self.latReprName = "%s_%s"%(self.latReprName,"full")
         else:
             self.latReprName = "%s_%s"%(self.latReprName,"rnd")
 
+
+        self.jointReprFile = os.path.join(self.dataDir, "%s_repr"%self.latReprName)
+        self.sentsFile = os.path.join(self.dataDir, "%s_sents"%self.latReprName)
+        self.num_walks = 10
+        self.walk_length = 5
+        self.graphFile = os.path.join(self.dataDir, \
+                "%s_graph_%s_%s"%(os.environ['DATASET'], os.environ['GINTERTHR'],\
+                    os.environ['GINTRATHR']))
+        self.window = str(10)
         self.postgresConnection.connectDatabase()
+        self.utFunction = Utility("Text Utility")
         self.system_id = 86
+
+
+    def prepareSentsFile(self):
+        sentfiletoWrite = open("%s.txt"%(self.sentsFile),"w")
+        for result in self.postgresConnection.memoryEfficientSelect(["id","content"],\
+             ["sentence"], [], [], ["id"]):
+            for row_id in range(0,len(result)):
+                id_ = result[row_id][0]
+                content = gensim.utils.to_unicode(result[row_id][1].strip())
+                content = self.utFunction.normalizeText(content, remove_stopwords=0)
+                sentfiletoWrite.write("%s %s%s"%(label_sent(id_),' '.join(content), os.linesep))
+            sentfiletoWrite.flush()
+        sentfiletoWrite.close()
     
     def __getMaxNeighbors(self):
         """
@@ -114,30 +133,32 @@ class JointLearningSen2VecRunner(BaselineRunner):
         """
         if pd <= 0: return 0 
         
+        self.prepareSentsFile()
         joint_nbr_file  = open(os.path.join(self.dataDir,"%s_nbr"%(self.latReprName)), "w")
 
         if self.nbrtype ==1:
-            walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt"))
-            line_count = 0 
-            for line in walkinputFile: 
-                line_count = line_count + 1 
+            pass 
+            # walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt"))
+            # line_count = 0 
+            # for line in walkinputFile: 
+            #     line_count = line_count + 1 
 
-            joint_nbr_file.write("%s %s %s"%(str(line_count),str(self.num_walks),str(self.walk_length)))
-            joint_nbr_file.write(os.linesep)
+            # joint_nbr_file.write("%s %s %s"%(str(line_count),str(self.num_walks),str(self.walk_length)))
+            # joint_nbr_file.write(os.linesep)
 
-            walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt")) # reset position 
-            for line in walkinputFile:
-                line_elems = line.strip().split(" ")
+            # walkinputFile = open(os.path.join(self.dataDir, "node2vecwalk.txt")) # reset position 
+            # for line in walkinputFile:
+            #     line_elems = line.strip().split(" ")
 
-                for pos in range(0, self.walk_length+1):
-                    if pos >= len(line_elems):
-                        joint_nbr_file.write("-1 ")
-                    else:
-                        joint_nbr_file.write("%s "%label_sent(line_elems[pos]))
+            #     for pos in range(0, self.walk_length+1):
+            #         if pos >= len(line_elems):
+            #             joint_nbr_file.write("-1 ")
+            #         else:
+            #             joint_nbr_file.write("%s "%label_sent(line_elems[pos]))
 
-                joint_nbr_file.write(os.linesep)
-                joint_nbr_file.flush()
-            joint_nbr_file.close()
+            #     joint_nbr_file.write(os.linesep)
+            #     joint_nbr_file.flush()
+            # joint_nbr_file.close()
         else:
             self.Graph = nx.read_gpickle(self.graphFile)
             max_neighbor = self.__getMaxNeighbors()
@@ -202,12 +223,11 @@ class JointLearningSen2VecRunner(BaselineRunner):
                 vec1 = jointvecModel[label_sent(id_)]
                 if self.dbow_only ==0:
                     vec2 = jointvecModelDM[label_sent(id_)]
-                    vec = np.hstack((vec1,vec2))
-                    jointvec_raw_dict[id_] = vec        
+                    vec = np.hstack((vec1,vec2))         
                 else:
                     vec = vec1
-                    jointvec_raw_dict[id_] = vec
-
+        
+                jointvec_raw_dict[id_] = vec   
                 jointvec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
                 
         Logger.logr.info("Total Number of Sentences written=%i", len(jointvec_raw_dict))            
@@ -229,60 +249,27 @@ class JointLearningSen2VecRunner(BaselineRunner):
 
         summGen.populateSummary(methodId, j2vDict)
 
-        # Need a method id for the joint 
+        
     
     def runEvaluationTask(self):
         summaryMethodID = 2 
-        jointvecFile_raw = open("%s_raw.p"%(self.jointReprFile),"rb")
-        js2vDict_raw = pickle.load(jointvecFile_raw)
+        what_for =""
+        try: 
+            what_for = os.environ['VALID_FOR'].lower()
+        except:
+            what_for = os.environ['TEST_FOR'].lower()
 
-        if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
-            self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
-        elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
-            self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
-        elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':    
-            self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+        vDict  = {}
+        if  "rank" in what_for:
+            vecFile = open("%s.p"%(self.jointReprFile),"rb")
+            vDict = pickle.load(vecFile)
         else:
-            self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, js2vDict_raw)
+            vecFile_raw = open("%s_raw.p"%(self.jointReprFile),"rb")
+            vDict = pickle.load(vecFile_raw)
 
-    def evaluateRankCorrelation(self,dataset):
-        vecFile = open("%s.p"%(self.jointReprFile),"rb")
-        vDict = pickle.load (vecFile)
+        Logger.logr.info ("Performing evaluation for %s"%what_for)
+        self.performEvaluation(summaryMethodID, self.latReprName, vDict)
 
-
-        if os.environ['EVAL']=='VALID':
-            validation_pair_file = open(os.path.join(self.rootdir,"Data/validation_pair_%s.p"%(dataset)), "rb")
-            val_dict = pickle.load(validation_pair_file)
-
-            original_val = []
-            computed_val = []
-            for k, val in val_dict.items():
-                original_val.append(val)
-                computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-            return scipy.stats.spearmanr(original_val,computed_val)[0]
-        else:
-            test_pair_file = open(os.path.join(self.rootdir,"Data/test_pair_%s.p"%(dataset)), "rb")
-            test_dict = pickle.load(test_pair_file)
-
-            original_val = []
-            computed_val = []
-            for k, val in test_dict.items():
-                original_val.append(val)
-                computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-            if os.environ['TEST_AND_TRAIN'] =="YES":
-                train_pair_file = open(os.path.join(self.rootdir,"Data/train_pair_%s.p"%(dataset)), "rb")
-                train_dict = pickle.load(train_pair_file)
-                for k, val in train_dict.items():
-                    original_val.append(val)
-                    computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-            print (len(original_val))
-            print (len(computed_val))
-            sp = scipy.stats.spearmanr(original_val,computed_val)[0]
-            pearson = scipy.stats.pearsonr(original_val,computed_val)[0]
-            return sp, pearson
-        
     def doHouseKeeping(self):
         """
         Here, we destroy the database connection.

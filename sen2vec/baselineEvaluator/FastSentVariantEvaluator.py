@@ -8,6 +8,7 @@ import pickle
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
+from baselineRunner.FastSentVariantRunner import  FastSentVariantRunner
 
 
 class FastSentVariantEvaluator(BaselineEvaluator):
@@ -16,6 +17,7 @@ class FastSentVariantEvaluator(BaselineEvaluator):
 		Fast Sent Variant Runner
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
+		self.filePrefix = ""
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -27,9 +29,9 @@ class FastSentVariantEvaluator(BaselineEvaluator):
 			os.environ["LAMBDA"]=str(lambda_)
 			fsent =  FastSentVariantRunner(self.dbstring)	
 			fsent.window = optPDict["window"]
-			if  lambda_ == lambda_list[0]:
+			if  lambda_ == self.lambda_list[0]:
 				fsent.prepareData(1)
-			self.metric[lambda_] = self.evaluate(fsent, filePrefix, latent_space_size)
+			self.metric[lambda_] = self.evaluate(fsent, self.filePrefix, latent_space_size)
 			Logger.logr.info("[CON-S2V-S Baseline] %s for lambda %.2f = %s"\
 			 	%(self.metric_str, lambda_, self.metric[lambda_]))
 			
@@ -44,7 +46,7 @@ class FastSentVariantEvaluator(BaselineEvaluator):
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
 
 		os.environ["FULL_DATA"] = str(0)
-		os.environ["LAMBDA"] = optPDict['con-s2v-s-lambda']	
+		os.environ["LAMBDA"] = str(optPDict['con-s2v-s-lambda'])
 		fsent =  FastSentVariantRunner(self.dbstring)	
 		fsent.window = optPDict["window"]
-		self.writeResults(pd, rbase, latent_space_size, fsent, filePrefix, f)
+		self.writeResults(pd, rbase, latent_space_size, fsent, self.filePrefix, f)

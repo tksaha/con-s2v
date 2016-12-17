@@ -33,9 +33,9 @@ class WordVectorAveragingRunner(BaselineRunner):
 		self.rootdir = os.environ['SEN2VEC_DIR']
 		self.dataDir = os.environ['TRTESTFOLDER']
 
-		self.sentsFile = os.path.join(self.dataDir, "%s_sentsCEXE.txt"%self.latReprName)
-		self.sentReprFile = os.path.join(self.dataDir, "%s_sentsCEXE_repr"%self.latReprName)
-		self.doc2vecOut = os.path.join(self.dataDir,"%s_sentsCEXE_docrepr"%self.latReprName)
+		self.sentsFile = os.path.join(self.dataDir, "%s_sents.txt"%self.latReprName)
+		self.sentReprFile = os.path.join(self.dataDir, "%s_sents_repr"%self.latReprName)
+		self.doc2vecOut = os.path.join(self.dataDir,"%s_sents_docrepr"%self.latReprName)
 
 		self.system_id = 80
 	
@@ -175,12 +175,13 @@ class WordVectorAveragingRunner(BaselineRunner):
 		except:
 			what_for = os.environ['TEST_FOR'].lower()
 
+		vDict  = {}
 		if  "rank" in what_for:
 			vecFile = open("%s.p"%(self.sentReprFile),"rb")
 			vDict = pickle.load(vecFile)
 		else:
-			sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
-			vDict = pickle.load(sent2vecFile_raw)
+			vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
+			vDict = pickle.load(vecFile_raw)
 
 		Logger.logr.info ("Performing evaluation for %s"%what_for)
 		self.performEvaluation(summaryMethodID, self.latReprName, vDict)

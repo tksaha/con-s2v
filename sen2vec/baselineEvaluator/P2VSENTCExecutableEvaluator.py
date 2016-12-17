@@ -47,7 +47,7 @@ class P2VSENTCExecutableEvaluator(BaselineEvaluator):
 		self.postgres_recorder.truncateSummaryTable()
 		paraBaseline.window_size = optPDict['window']
 		paraBaseline.prepareData(1)		
-		paraBaseline.runTheBaseline(1,latent_space_size)
+		paraBaseline.runTheBaseline(1, latent_space_size)
 		paraBaseline.generateSummary(1)
 
 		return optPDict
@@ -57,4 +57,8 @@ class P2VSENTCExecutableEvaluator(BaselineEvaluator):
 		f.write("[S2V Baseline] Optimal Window  is: %s%s" %(optPDict["window"], os.linesep))	
 		paraBaseline = P2VSENTCExecutableRunner(self.dbstring)
 		paraBaseline.window_size = optPDict["window"]
+		self.postgres_recorder.truncateSummaryTable()
+		paraBaseline.runTheBaseline(1, latent_space_size)
+		paraBaseline.generateSummary(1)
+
 		self.writeResults(pd, rbase, latent_space_size, paraBaseline, self.filePrefix, f)

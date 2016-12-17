@@ -8,7 +8,7 @@ import pickle
 from abc import ABCMeta, abstractmethod
 from log_manager.log_config import Logger
 from baselineEvaluator.BaselineEvaluator import BaselineEvaluator
-
+from baselineRunner.JointLearningSen2VecRunner import  JointLearningSen2VecRunner
 
 class JointLearningSen2VecEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
@@ -16,6 +16,7 @@ class JointLearningSen2VecEvaluator(BaselineEvaluator):
 		Joint Learning Sen2Vec evaluator
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
+		self.filePrefix = ""
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -28,13 +29,13 @@ class JointLearningSen2VecEvaluator(BaselineEvaluator):
 			jointL = JointLearningSen2VecRunner(self.dbstring)
 			jointL.window = optPDict["window"]
 			if lambda_== self.lambda_list[0]:
-			   	jointL.prepareData(pd)
-			self.metric[lambda_] = self.evaluate(jointL, filePrefix, latent_space_size)
+			   	jointL.prepareData(1)
+			self.metric[lambda_] = self.evaluate(jointL, self.filePrefix, latent_space_size)
 			Logger.logr.info("[CON-S2V-C Baseline] %s for lambda %.2f = %s"\
 			 	%(self.metric_str, lambda_, self.metric[lambda_]))
 
 		joint_lambda_opt = max(self.metric, key=self.metric.get) 
-		optPDict['con-s2v-C-lambda'] = joint_lambda_opt
+		optPDict['con-s2v-c-lambda'] = joint_lambda_opt
 		f.write("[CON-S2V-C Baseline] Optimal lambda : %.2f%s" %(joint_lambda_opt, os.linesep))
 		f.write("[CON-S2V-C Baseline] %ss: %s%s" %(self.metric_str, self.metric, os.linesep))
 		f.flush()
@@ -47,4 +48,4 @@ class JointLearningSen2VecEvaluator(BaselineEvaluator):
 		os.environ["LAMBDA"] =  str(optPDict['con-s2v-c-lambda'])
 		jointL = JointLearningSen2VecRunner(self.dbstring)	
 		jointL.window = optPDict["window"]
-		self.writeResults(pd, rbase, latent_space_size, jointL, filePrefix, f)
+		self.writeResults(pd, rbase, latent_space_size, jointL, self.filePrefix, f)

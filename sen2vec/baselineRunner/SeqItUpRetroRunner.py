@@ -21,6 +21,8 @@ from retrofitters.RandomWalkIterativeUpdateRetrofitter import RandomWalkIterativ
 This models assumes that you have a 
 pretrained model. In our case, we use
 s2v model as the pre-trained model.
+So, you should run p2v model and SeqItUpRetroRunner 
+Simultaneously
 """
 
 class SeqItUpRetroRunner(BaselineRunner):
@@ -28,16 +30,16 @@ class SeqItUpRetroRunner(BaselineRunner):
         """
         """
         BaselineRunner.__init__(self, *args, **kwargs)
-        self.p2vFile = os.environ['P2VCEXECOUTFILE']
+        self.rootdir = os.environ['SEN2VEC_DIR']
+        self.dataDir = os.environ['TRTESTFOLDER']
+        self.p2vFile = os.path.join(self.dataDir, "%s_sentsCEXE_repr"%"p2vsent")
         self.Graph = nx.Graph()
         self.postgresConnection.connectDatabase()
         self.sen2Vec = {}
         self.numIter = 20
         self.latReprName = "seq_iterative_update"
-        self.rootdir = os.environ['SEN2VEC_DIR']
-        self.dataDir = os.environ['TRTESTFOLDER']
         self.system_id = 82
-        self.seq_retr_vReprFile = os.path.join(self.dataDir, self.latReprName)
+        self.seq_retr_vReprFile = os.path.join(self.dataDir, "%s_repr"%self.latReprName)
 
 
     def prepareData(self, pd):
@@ -66,20 +68,18 @@ class SeqItUpRetroRunner(BaselineRunner):
 
     
     # Latent space size is not used for this particular method
-    def runTheBaseline(self, rbase, latent_space_size=-1):
+    def runTheBaseline(self, rbase, latent_space_size):
         """
         Write down the Iterative update vector
         Hyperparameter numIter, alpha etc.
 
         It assumes that, It has a vector file generated from sen2vec
         """
-        
         p2vfileToRead = open ("%s.p" %self.p2vFile, "rb")
         self.sen2Vec = pickle.load(p2vfileToRead)
 
-
         Logger.logr.info("Dictionary has %i objects" % len(self.sen2Vec))
-        if os.environ['EVAL']!= 'VALID':
+        if  os.environ['EVAL']!= 'VALID':
             retrofitter = IterativeUpdateRetrofitter(numIter=self.numIter, nx_Graph = self.Graph) 
             retrofitted_dict, normalized_retrofitted_dict = retrofitter.retrofitWithIterUpdate(self.sen2Vec)
             iterupdatevecFile = open("%s_unweighted.p"%(self.seq_retr_vReprFile),"wb")
@@ -100,57 +100,25 @@ class SeqItUpRetroRunner(BaselineRunner):
     
     def __runEval(self, summaryMethodID, vecFileName, reprName):
 
-        vecFile = open("%s_raw.p"%vecFileName, "rb")
-        vDict = pickle.load (vecFile)
-        if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
-            self._runClassificationValidation(summaryMethodID, "%s_raw"%reprName, vDict)
-        elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
-            self._runClusteringValidation(summaryMethodID, "%s_raw"%reprName, vDict)
-        elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':
-            self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
+        what_for =""
+        try: 
+            what_for = os.environ['VALID_FOR'].lower()
+        except:
+            what_for = os.environ['TEST_FOR'].lower()
+
+        vDict  = {}
+        if  "rank" in what_for:
+            vecFile = open("%s.p"%(vecFileName),"rb")
+            vDict = pickle.load(vecFile)
         else:
-            self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)
+            vecFile_raw = open("%s_raw.p"%(vecFileName),"rb")
+            vDict = pickle.load(vecFile_raw)
+
+        Logger.logr.info ("Performing evaluation for %s"%what_for)
+        self.performEvaluation(summaryMethodID, reprName, vDict)
 
 
-    # Need to remove the following function to evaluation, a lot of code duplication
-    def evaluateRankCorrelation(self,dataset):
-        vecFile = open("%s%s.p"%(self.seq_retr_vReprFile, "_unweighted"),"rb")
-        vDict = pickle.load (vecFile)
-
-
-        if os.environ['EVAL']=='VALID':
-            validation_pair_file = open(os.path.join(self.rootdir,"Data/validation_pair_%s.p"%(dataset)), "rb")
-            val_dict = pickle.load(validation_pair_file)
-
-            original_val = []
-            computed_val = []
-            for k, val in val_dict.items():
-                original_val.append(val)
-                computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-            return scipy.stats.spearmanr(original_val,computed_val)[0]
-        else:
-            test_pair_file = open(os.path.join(self.rootdir,"Data/test_pair_%s.p"%(dataset)), "rb")
-            test_dict = pickle.load(test_pair_file)
-
-            original_val = []
-            computed_val = []
-            for k, val in test_dict.items():
-                original_val.append(val)
-                computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-            if os.environ['TEST_AND_TRAIN'] =="YES":
-                train_pair_file = open(os.path.join(self.rootdir,"Data/train_pair_%s.p"%(dataset)), "rb")
-                train_dict = pickle.load(train_pair_file)
-                for k, val in train_dict.items():
-                    original_val.append(val)
-                    computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-            Logger.logr.info (len(original_val))
-            Logger.logr.info (len(computed_val))
-            sp = scipy.stats.spearmanr(original_val,computed_val)[0]
-            pearson = scipy.stats.pearsonr(original_val,computed_val)[0]
-            return sp, pearson
-
+   
     def runEvaluationTask(self):
         summaryMethodID = 2 
         if  os.environ['EVAL']!= 'VALID':

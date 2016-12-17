@@ -7,6 +7,8 @@ import nltk
 import pickle
 import gensim
 
+import datetime
+
 from nltk.tokenize import sent_tokenize
 from utility.Utility import Utility
 from abc import ABCMeta, abstractmethod
@@ -25,8 +27,8 @@ from baselineEvaluator.SeqItUpdateEvaluator import SeqItUpdateEvaluator
 from baselineEvaluator.RegularizedSen2VecEvaluator import RegularizedSen2VecEvaluator
 from baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
 
-
-
+from baselineEvaluator.JointLearningSen2VecEvaluator import JointLearningSen2VecEvaluator
+from baselineEvaluator.FastSentVariantEvaluator import FastSentVariantEvaluator
 
 
 class DocumentReader:
@@ -117,35 +119,36 @@ class DocumentReader:
     def performValidation(self, valid_for):
         # Load the optPDict if it is there
         optPDict = {}  
-        dict_file = os.path.join(self.dataDir,"%s_optPDict.p"%(os.environ['DATASET']))
-
-        try:
-            optPDict = pickle.load (dict_file)
-            Logger.logr.info("Loaded OptPDict")
-        except:
-            Logger.logr.info("Creating new OptPDict file")
-            dict_file = open(dict_file,"wb")
-
-         
+        os.environ['VALID_FOR'] = valid_for 
+        os.environ['EVAL'] = 'VALID' 
         dataset_name = os.environ['DATASET']
         latent_space_size = 300
 
-        os.environ['VALID_FOR'] = valid_for 
-        os.environ['EVAL'] = 'VALID' 
 
-        print (optPDict)
+        dict_file = os.path.join(self.dataDir,"%s_optPDict_%s.p"%(os.environ['DATASET'], valid_for))
+        dict_file_read, dict_file_write = '', ''
 
+        try:
+            dict_file_read = open(dict_file, "rb")
+            optPDict = pickle.load (dict_file_read)
+            Logger.logr.info("Loaded OptPDict")
+        except Exception as e:
+            Logger.logr.info (e)
+            Logger.logr.info("Creating new OptPDict file")
+            
+        Logger.logr.info (optPDict)
+    
         with open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,\
-                "hyperparameters_class.txt"), 'w') as f:
+                "_param_%s_AT_%s.txt"%(valid_for, datetime.datetime.now().isoformat())), 'w') as f:
 
             paraeval   = P2VSENTCExecutableEvaluator (self.dbstring)
             optPDict   = paraeval.getOptimumParameters (f, optPDict, latent_space_size)
 
-            # fheval     = FastSentFHVersionEvalutor (self.dbstring)
-            # optPDict   = fheval.getOptimumParameters (f, optPDict, latent_space_size)
+            fheval     = FastSentFHVersionEvalutor (self.dbstring)
+            optPDict   = fheval.getOptimumParameters (f, optPDict, latent_space_size)
 
-            # wvgeval    = WordVectorAveragingEvaluator (self.dbstring)
-            # optPDict   = wvgeval.getOptimumParameters (f, optPDict, latent_space_size)
+            wvgeval    = WordVectorAveragingEvaluator (self.dbstring)
+            optPDict   = wvgeval.getOptimumParameters (f, optPDict, latent_space_size)
 
             n2veval    =  Node2VecEvaluator (self.dbstring)
             optPDict   =  n2veval.getOptimumParameters (f, optPDict, latent_space_size)
@@ -153,38 +156,46 @@ class DocumentReader:
             regeval    = RegularizedSen2VecEvaluator(self.dbstring)
             optPDict   = regeval.getOptimumParameters (f, optPDict, latent_space_size)
 
-            # seqregeval = SeqRegSentEvaluator (self.dbstring)
-            # optPDict   = seqregeval.getOptimumParameters(f, optPDict, latent_space_size)
+            seqregeval = SeqRegSentEvaluator (self.dbstring)
+            optPDict   = seqregeval.getOptimumParameters(f, optPDict, latent_space_size)
 
-            # jnteval    = JointLearningSen2VecEvaluator (self.dbstring)
-            # optPDict   = jnteval.getOptimumParameters(f, optPDict, latent_space_size)
+            jnteval    = JointLearningSen2VecEvaluator (self.dbstring)
+            optPDict   = jnteval.getOptimumParameters(f, optPDict, latent_space_size)
 
-            # fstvar     = FastSentVariantRunner (self.dbstring)
-            # optPDict   = fstvar.getOptimumParameters(f, optPDict, latent_space_size)
+            fstvar     = FastSentVariantEvaluator (self.dbstring)
+            optPDict   = fstvar.getOptimumParameters(f, optPDict, latent_space_size)
 
         # save optDict 
-        print (optPDict)
-        pickle.dump (optPDict, dict_file)
+        Logger.logr.info (optPDict)
+        dict_file_write = open(dict_file, "wb")
+        pickle.dump (optPDict, dict_file_write)
 
 
     def performTesting(self, test_for, nIter):
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = test_for
         dataset_name = os.environ['DATASET']
+        pd, rbase, latent_space_size = 1, 1, 300
 
+        dict_file = os.path.join(self.dataDir,"%s_optPDict_%s.p"%(os.environ['DATASET'], test_for))
+        dict_file_read = open(dict_file, "rb")
+        optPDict = pickle.load (dict_file_read)
+        Logger.logr.info ("Running with following Opt Dictionary settings:-")
+        Logger.logr.info (optPDict)
 
         f = open('%s%s%s%s' %(os.environ["TRTESTFOLDER"],"/",dataset_name,\
-                "testresults_%s.txt"%os.environ['TEST_FOR']), 'w') 
+                "testresults_%s_AT_%s.txt"%(os.environ['TEST_FOR'],\
+                     datetime.datetime.now().isoformat())), 'w') 
         
         niter = nIter
         for i in range(0,niter):
             f.write("###### Iteration: %s ######%s" %(i, os.linesep))
 
-            paraeval  = P2VSENTCExecutableEvaluator (self.dbstring)
-            paraeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            # paraeval  = P2VSENTCExecutableEvaluator (self.dbstring)
+            # paraeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
 
-            fheval    = FastSentFHVersionEvalutor (self.dbstring)
-            fheval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            # fheval    = FastSentFHVersionEvalutor (self.dbstring)
+            # fheval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
 
             tfidfeval =  TFIDFBaselineEvaluator (self.dbstring)
             tfidfeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
@@ -207,5 +218,5 @@ class DocumentReader:
             jnteval    = JointLearningSen2VecEvaluator(self.dbstring)
             jnteval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
 
-            fstvar     = FastSentVariantRunner (self.dbstring)
+            fstvar     = FastSentVariantEvaluator (self.dbstring)
             fstvar.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)

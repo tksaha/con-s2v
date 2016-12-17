@@ -25,7 +25,7 @@ class TFIDFBaselineRunner(BaselineRunner):
     def prepareData(self, pd):
         pass 
 
-    def runTheBaseline(self, rbase):
+    def runTheBaseline(self, rbase, latent_space_size):
         pass 
 
     def generateSummary(self, gs,  lambda_val=1.0, diversity=False):

@@ -127,18 +127,24 @@ class FastSentFHVersionRunner(BaselineRunner):
 
     def runEvaluationTask(self):
         summaryMethodID = 2
-        outFile = os.path.join(self.dataDir,"%s_repr"%self.latReprName)
-        vecFile_raw = open("%s_raw.p"%(outFile),"rb")
-        vDict_raw = pickle.load(vecFile_raw)
+        what_for =""
+        try: 
+            what_for = os.environ['VALID_FOR'].lower()
+        except:
+            what_for = os.environ['TEST_FOR'].lower()
 
-        if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
-            self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
-        elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
-            self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
-        elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':    
-            self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
+        vDict = {}
+
+        if  "rank" in what_for:
+            vecFile = open("%s.p"%(os.path.join(self.dataDir,"%s_repr"%self.latReprName)),"rb")
+            vDict = pickle.load(vecFile)
         else:
-            self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, vDict_raw)
+            vecFile_raw = open("%s_raw.p"%(os.path.join(self.dataDir,"%s_repr"%self.latReprName)),"rb")
+            vDict = pickle.load(vecFile_raw)
+
+        Logger.logr.info ("Performing evaluation for %s"%what_for)
+        self.performEvaluation(summaryMethodID, self.latReprName, vDict)
+
 
     def doHouseKeeping(self):
         self.postgresConnection.disconnectDatabase()

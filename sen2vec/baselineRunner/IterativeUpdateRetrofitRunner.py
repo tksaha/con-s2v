@@ -22,18 +22,20 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
         """
         """
         BaselineRunner.__init__(self, *args, **kwargs)
-        self.retrofittedsen2vReprFile = os.environ["ITERUPDATESEN2VECFILE"]
-        self.graphFile = os.environ["GRAPHFILE"]
-        self.p2vFile = os.environ['P2VCEXECOUTFILE']
-        self.myalpha = float(os.environ['ITERUPDATE_ALPHA'])
-        self.Graph = nx.Graph()
+        self.rootdir = os.environ['SEN2VEC_DIR']
+        self.dataDir = os.environ['TRTESTFOLDER']
+        self.latReprName = "iterative_update"
         self.postgresConnection.connectDatabase()
         self.sen2Vec = {}
         self.nIter = 20
-        self.latReprName = "iterativeupdate"
-        self.rootdir = os.environ['SEN2VEC_DIR']
+        self.retrofittedsen2vReprFile = os.path.join(self.dataDir,"%s_repr"%self.latReprName)
+        self.graphFile = os.path.join(self.dataDir, \
+                "%s_graph_%s_%s"%(os.environ['DATASET'], os.environ['GINTERTHR'],\
+                    os.environ['GINTRATHR']))
+        self.p2vFile = os.path.join(self.dataDir, "%s_sentsCEXE_repr"%"p2vsent")
+        self.Graph = nx.Graph()
         self.system_id = 5 
-        
+        # self.myalpha = float(os.environ['ITERUPDATE_ALPHA'])
     
     def prepareData(self, pd):
         """
@@ -41,7 +43,7 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
         pass 
 
     
-    def runTheBaseline(self, rbase):
+    def runTheBaseline(self, rbase, latent_space_size):
         """
         Write down the Iterative update vector
         Hyperparameter numIter, alpha etc.
@@ -92,64 +94,29 @@ class IterativeUpdateRetrofitRunner(BaselineRunner):
         # vDict = pickle.load (vecFile)
         # self._runClassification(summaryMethodID, reprName, vDict)
 
-        vecFile = open("%s_raw.p"%vecFileName, "rb")
-        vDict = pickle.load (vecFile)
-        if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
-            self._runClassificationValidation(summaryMethodID, "%s_raw"%reprName, vDict)
-        elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
-            self._runClusteringValidation(summaryMethodID, "%s_raw"%reprName, vDict)
-        elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':
-            self._runClassification(summaryMethodID, "%s_raw"%reprName, vDict)
+        what_for =""
+        try: 
+            what_for = os.environ['VALID_FOR'].lower()
+        except:
+            what_for = os.environ['TEST_FOR'].lower()
+
+        vDict  = {}
+        if  "rank" in what_for:
+            vecFile = open("%s.p"%(vecFileName),"rb")
+            vDict = pickle.load(vecFile)
         else:
-            self._runClustering(summaryMethodID, "%s_raw"%reprName, vDict)
+            vecFile_raw = open("%s_raw.p"%(vecFileName),"rb")
+            vDict = pickle.load(vecFile_raw)
 
+        Logger.logr.info ("Performing evaluation for %s"%what_for)
+        self.performEvaluation(summaryMethodID, reprName, vDict)
 
-    def evaluateRankCorrelation(self,dataset):
-        vecFile = open("%s%s.p"%(self.retrofittedsen2vReprFile, "_unweighted"),"rb")
-        vDict = pickle.load (vecFile)
-
-
-        if os.environ['EVAL']=='VALID':
-            validation_pair_file = open(os.path.join(self.rootdir,"Data/validation_pair_%s.p"%(dataset)), "rb")
-            val_dict = pickle.load(validation_pair_file)
-
-            original_val = []
-            computed_val = []
-            for k, val in val_dict.items():
-                original_val.append(val)
-                computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-            return scipy.stats.spearmanr(original_val,computed_val)[0]
-        else:
-            test_pair_file = open(os.path.join(self.rootdir,"Data/test_pair_%s.p"%(dataset)), "rb")
-            test_dict = pickle.load(test_pair_file)
-
-            original_val = []
-            computed_val = []
-            for k, val in test_dict.items():
-                original_val.append(val)
-                computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-            if os.environ['TEST_AND_TRAIN'] =="YES":
-                train_pair_file = open(os.path.join(self.rootdir,"Data/train_pair_%s.p"%(dataset)), "rb")
-                train_dict = pickle.load(train_pair_file)
-                for k, val in train_dict.items():
-                    original_val.append(val)
-                    computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
-
-            Logger.logr.info (len(original_val))
-            Logger.logr.info (len(computed_val))
-            sp = scipy.stats.spearmanr(original_val,computed_val)[0]
-            pearson = scipy.stats.pearsonr(original_val,computed_val)[0]
-            return sp, pearson
 
     def runEvaluationTask(self):
         """
         Generate Summary sentences for each document. 
         Write sentence id and corresponding metadata 
         into a file. 
-        We should put isTrain=Maybe for the instances which 
-        we do not want to incorporate in training and testing. 
-        For example. validation set or unsup set
         """
 
         summaryMethodID = 2 

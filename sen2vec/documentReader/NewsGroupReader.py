@@ -166,6 +166,9 @@ class NewsGroupReader(DocumentReader):
     def runBaselines(self, pd, rbase, gs):
         """
         """
-        nIter = 1
-        self.performValidation('CLASS')
-        #self.performTesting('CLASS', nIter)
+        nIter = 5
+       # self.performValidation('CLASS')
+        self.performTesting('CLASS', nIter)
+
+        #self.performValidation('CLUST')
+        #self.performTesting('CLUST', nIter)

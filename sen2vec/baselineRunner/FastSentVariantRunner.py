@@ -9,6 +9,8 @@ import operator
 import multiprocessing 
 import subprocess 
 import numpy as np 
+import gensim
+from utility.Utility import Utility
 from gensim.models import Word2Vec
 from log_manager.log_config import Logger 
 from gensim.models import Doc2Vec
@@ -23,20 +25,17 @@ class FastSentVariantRunner(BaselineRunner):
 
     def __init__(self, *args, **kwargs):
         BaselineRunner.__init__(self, *args, **kwargs)
-        self.fastsentReprFile = os.environ["FASTS2VRPRFILE"]
+
         self.dataDir = os.environ['TRTESTFOLDER']
-        self.sentsFile = os.environ['P2VCEXECSENTFILE']
-        self.fastsentbeta= float(os.environ['FSENT_BETA'])
-        self.cores = multiprocessing.cpu_count()
-        self.dbow_only = int(os.environ["DBOW_ONLY"])
         self.latReprName = "con_s2v_s"
         self.full_data = int (os.environ["FULL_DATA"])
+        self.lambda_val = float(os.environ['LAMBDA'])
+        self.dbow_only = int(1)
         self.window = str(10)
-        self.jointbeta_label = 0.0
-        self.cores = multiprocessing.cpu_count()
         self.postgresConnection.connectDatabase()
         self.sentenceList = []
-        self.lambda_val = float(os.environ['LAMBDA'])
+        self.utFunction = Utility("Text Utility")
+
         self.system_id = 85
 
         if self.dbow_only == 0:
@@ -54,6 +53,12 @@ class FastSentVariantRunner(BaselineRunner):
         else:
             self.latReprName = "%s_%s"%(self.latReprName,"full")
 
+
+        self.fastsentReprFile = os.path.join(self.dataDir, "%s_sents_repr"%self.latReprName)
+        self.sentsFile = os.path.join(self.dataDir, "%s_sents"%self.latReprName)
+       
+      
+        
     def insertNeighbors(self, sentenceList, nbr_file):
         for pos in range(0, len(sentenceList)):
             nbr_file.write("%s "%label_sent(sentenceList[pos]))
@@ -69,12 +74,27 @@ class FastSentVariantRunner(BaselineRunner):
             nbr_file.write(os.linesep)
     
 
+    def prepareSentsFile(self):
+        sentfiletoWrite = open("%s.txt"%(self.sentsFile),"w")
+        for result in self.postgresConnection.memoryEfficientSelect(["id","content"],\
+             ["sentence"], [], [], ["id"]):
+            for row_id in range(0,len(result)):
+                id_ = result[row_id][0]
+                content = gensim.utils.to_unicode(result[row_id][1].strip())
+                content = self.utFunction.normalizeText(content, remove_stopwords=0)
+                sentfiletoWrite.write("%s %s%s"%(label_sent(id_),' '.join(content), os.linesep))
+            sentfiletoWrite.flush()
+        sentfiletoWrite.close()
+
     def prepareData(self, pd):
         """
         This function will generate the context based on the 
         google's fast sent idea or idea from Felix Hill's 
         sentence representation paper. 
-        """     
+        """    
+        if pd <=0 : return 0 
+
+        self.prepareSentsFile() 
         nbr_file = open(os.path.join(self.dataDir, "%s%s"%(self.latReprName,"_nbr")), "w")
 
         nSent = 0
@@ -120,7 +140,7 @@ class FastSentVariantRunner(BaselineRunner):
         wPDict["min-count"] = str(0)
         wPDict["window"] = str(self.window)
         wPDict["train"] = "%s.txt"%self.sentsFile
-        wPDict["beta"] = str(self.fastsentbeta)
+    
         wPDict["full_data"] = str(self.full_data)
         wPDict["lambda"] = str(self.lambda_val)
 
@@ -190,17 +210,23 @@ class FastSentVariantRunner(BaselineRunner):
     
     def runEvaluationTask(self):
         summaryMethodID = 2 
-        fastsentvecFile_raw = open("%s_raw.p"%(self.fastsentReprFile),"rb")
-        fastsentvDict_raw = pickle.load(fastsentvecFile_raw)
+        what_for =""
 
-        if os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLASS':
-            self._runClassificationValidation(summaryMethodID,"%s_raw"%self.latReprName, fastsentvDict_raw)
-        elif os.environ['EVAL']=='VALID' and os.environ['VALID_FOR']=='CLUST':
-            self._runClusteringValidation(summaryMethodID,"%s_raw"%self.latReprName, fastsentvDict_raw)
-        elif os.environ['EVAL']=='TEST' and os.environ['TEST_FOR']=='CLASS':    
-            self._runClassification(summaryMethodID,"%s_raw"%self.latReprName, fastsentvDict_raw)
+        try: 
+            what_for = os.environ['VALID_FOR'].lower()
+        except:
+            what_for = os.environ['TEST_FOR'].lower()
+
+        vDict  = {}
+        if  "rank" in what_for:
+            vecFile = open("%s.p"%(self.fastsentReprFile),"rb")
+            vDict = pickle.load(vecFile)
         else:
-            self._runClustering(summaryMethodID,"%s_raw"%self.latReprName, fastsentvDict_raw)
+            vecFile_raw = open("%s_raw.p"%(self.fastsentReprFile),"rb")
+            vDict = pickle.load(vecFile_raw)
+
+        Logger.logr.info ("Performing evaluation for %s"%what_for)
+        self.performEvaluation(summaryMethodID, self.latReprName, vDict)
         
     def doHouseKeeping(self):
         """

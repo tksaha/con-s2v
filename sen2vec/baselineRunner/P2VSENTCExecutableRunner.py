@@ -156,12 +156,13 @@ class P2VSENTCExecutableRunner(BaselineRunner):
 		except:
 			what_for = os.environ['TEST_FOR'].lower()
 
+		vDict = {}
 		if  "rank" in what_for:
 			vecFile = open("%s.p"%(self.sentReprFile),"rb")
 			vDict = pickle.load(vecFile)
 		else:
-			sent2vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
-			vDict = pickle.load(sent2vecFile_raw)
+			vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
+			vDict = pickle.load(vecFile_raw)
 
 		Logger.logr.info ("Performing evaluation for %s"%what_for)
 		self.performEvaluation(summaryMethodID, self.latReprName, vDict)

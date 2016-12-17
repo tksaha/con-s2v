@@ -43,6 +43,8 @@ class STSTaskEvaluation:
 				"Data/validation_pair_%s.p"%(os.environ['DATASET'])), "rb")
 		val_dict = pickle.load(validation_pair_file)
 
+		Logger.logr.info("Running Test for %i dictionary Iterms"%len(val_dict))
+
 		for k, val in val_dict.items():
 			self.original_val.append(val)
 			self.computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
@@ -55,7 +57,7 @@ class STSTaskEvaluation:
 				"Data/test_pair_%s.p"%(os.environ['DATASET'])), "rb")
 		test_dict = pickle.load(test_pair_file)
 
-		
+		Logger.logr.info("Running Test for %i dictionary Iterms"%len(test_dict))
 		for k, val in test_dict.items():
 			self.original_val.append(val)
 			self.computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
@@ -69,3 +71,40 @@ class STSTaskEvaluation:
 				self.computed_val.append(np.inner(vDict[(k[0])],vDict[(k[1])]))
 
 		self.computeAndWriteResults(latReprName)
+
+	def runSTSTest_TFIDF(self, vDict, latReprName):
+
+        test_pair_file = open(os.path.join(self.rootdir,"Data/test_pair_%s.p"%(dataset)), "rb")
+        test_dict = pickle.load(test_pair_file)
+
+        if os.environ['TEST_AND_TRAIN'] == 'YES':
+			train_pair_file = open(os.path.join(self.rootdir,\
+				"Data/train_pair_%s.p"%(os.environ['DATASET'])), "rb")
+			train_dict = pickle.load(train_pair_file)
+			test_dict.update(train_dict)
+      
+     	Logger.logr.info("Running Test for %i dictionary Iterms"%len(test_dict))
+        for k, val in test_dict.items():
+            corpus = []
+            for sentence_result in self.postgresConnection.memoryEfficientSelect(\
+                    ['id','content'],['sentence'],[["id","=",k[0]]],[],[]):
+                content = sentence_result[0][1]
+                content = gensim.utils.to_unicode(content)
+                content = self.utFunction.normalizeText(content, remove_stopwords=0)
+                corpus.append(' '.join(content))
+
+
+            for sentence_result in self.postgresConnection.memoryEfficientSelect(\
+                    ['id','content'],['sentence'],[["id","=",k[1]]],[],[]):
+                content = sentence_result[0][1]
+                content = gensim.utils.to_unicode(content)
+                content = self.utFunction.normalizeText(content, remove_stopwords=0)
+                corpus.append(' '.join(content))
+
+            vectorizer = TfidfVectorizer(stop_words='english')
+            vecs  = vectorizer.fit_transform(corpus)
+
+            self.original_val.append(val)
+            self.computed_val.append(cosine_similarity(vecs[0:1],vecs)[0][1])
+
+        self.computeAndWriteResults(latReprName)

@@ -43,14 +43,24 @@ class BaselineRunner:
             self._runClusteringValidation(summaryMethodID,"%s_raw"%latReprName, vDict)
         elif os.environ['EVAL'] == 'VALID' and os.environ['VALID_FOR'] == 'RANK_CORR':
             self._runSTSValidation (vDict)
-        elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLASS':    
-            self._runClassification(summaryMethodID,"%s_raw"%latReprName, vDict)
+        elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLASS':   
+            if latReprName == 'TFIDF':
+                self._runClassificationTF(summaryMethodID,"%s_raw"%latReprName, vDict) 
+            else:    
+                self._runClassification(summaryMethodID,"%s_raw"%latReprName, vDict)
         elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'CLUST' :
-            self._runClustering(summaryMethodID,"%s_raw"%latReprName, vDict)
+            if latReprName == 'TFIDF':
+                self._runClusteringTF(summaryMethodID,"%s_raw"%latReprName, vDict)
+            else:
+                self._runClustering(summaryMethodID,"%s_raw"%latReprName, vDict)
+
         elif os.environ['EVAL'] == 'TEST' and os.environ['TEST_FOR'] == 'RANK_CORR':
-            vecFile = open("%s.p"%(self.sentReprFile),"rb")
-            vDict = pickle.load(vecFile)
-            self._runSTS(vDict)
+            if latReprName == 'TFIDF':
+                self._runSTSTF(vDict, reprName)
+            else:
+                vecFile = open("%s.p"%(self.sentReprFile),"rb")
+                vDict = pickle.load(vecFile)
+                self._runSTS(vDict, reprName)
 
     def _runClassificationValidation(self, summaryMethodID,  reprName, vDict):
         classeval = ClassificationEvaluation(postgres_connection=self.postgresConnection)
@@ -90,6 +100,9 @@ class BaselineRunner:
         stseval = STSTaskEvaluation(postgres_connection=self.postgresConnection) 
         stseval.runSTSTEST(vDict, reprName)
 
+    def _runSTSTF(self, vDict, reprName):
+        stseval = STSTaskEvaluation(postgres_connection=self.postgresConnection) 
+        stseval.runSTSTEST_TFIDF (vDict, reprName)
 
     @abstractmethod
     def prepareData(self):

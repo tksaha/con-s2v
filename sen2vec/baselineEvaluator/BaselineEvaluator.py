@@ -16,9 +16,9 @@ class BaselineEvaluator:
     """
     def __init__(self, dbstring, **kwargs):
         self.dbstring = dbstring
-        self.window_size_list = ["8"]
-        self.beta_list = [0.3]
-        self.lambda_list = [0.3]
+        self.window_size_list = ["8", "10", "12", "15"]
+        self.beta_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+        self.lambda_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
         self.metric = {}
         self.metric_str = ""
         self.postgres_recorder = PostgresDataRecorder(self.dbstring)
@@ -43,6 +43,8 @@ class BaselineEvaluator:
            self.metric_str = "AdjMIScore"
         elif os.environ['VALID_FOR'] == 'RANK':
            self.metric_str = "Recall"
+        elif os.environ['VALID_FOR'] == 'RANK_CORR':
+           self.metric_str = "Spearman Corr"
 
     def __getAdjustedMutulScore(self, latreprName):
         file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclustereval_2.txt"%latreprName)
@@ -120,7 +122,7 @@ class BaselineEvaluator:
                  models = [20], systems = [baseline.system_id])
 
     def writeResults(self, pd, rbase, latent_space_size, baseline, filePrefix, f):
-
+        # Prepare Data can be omitted
         if os.environ['TEST_FOR'] == 'RANK':
             baseline.prepareData(pd)      
             baseline.runTheBaseline(rbase,latent_space_size)
@@ -131,6 +133,6 @@ class BaselineEvaluator:
             baseline.prepareData(pd)        
             baseline.runTheBaseline(rbase,latent_space_size)
             baseline.runEvaluationTask()
-            self.__writeResult("%s_%s"%(baseline.latReprName, filePrefix), f)
+            self.__writeResult("%s%s"%(baseline.latReprName, filePrefix), f)
             baseline.doHouseKeeping()   
             f.flush()
