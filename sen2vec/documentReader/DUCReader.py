@@ -214,7 +214,7 @@ class DUCReader(DocumentReader):
             self.__readDUC2002()
 
 
-    def __runCombinedEvaluation(self,system_list):
+    def runCombinedEvaluation(self,system_list):
         rougeInstance = Rouge()
         rPDict = rougeInstance.buildRougeParamDict()
         rPDict['-l'] = str(100)

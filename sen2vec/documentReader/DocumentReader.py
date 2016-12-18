@@ -246,7 +246,7 @@ class DocumentReader:
 
 
             if test_for == 'RANK':
-               self.__runCombinedEvaluation(system_list)
+               self.runCombinedEvaluation(system_list)
                f.write ("%s%s"%("##Running for Test (100) ######", os.linesep))
                file_name_prefix = "20_"
     
