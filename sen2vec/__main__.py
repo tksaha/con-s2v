@@ -46,6 +46,10 @@ def main():
 	
 	dataset = argparser.get_value_of_argument("dataset")
 	os.environ['DATASET'] = dataset
+	if os.environ['DATASET'] == 'duc':
+		os.environ['DATASET'] = "%s_%s"%(dataset, os.environ['DUC_TOPIC'])
+	
+
 	ld = argparser.get_value_of_argument("ld")
 	pd = argparser.get_value_of_argument("pd")
 	rbase = argparser.get_value_of_argument("rbase")

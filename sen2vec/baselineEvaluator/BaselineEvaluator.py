@@ -16,9 +16,9 @@ class BaselineEvaluator:
     """
     def __init__(self, dbstring, **kwargs):
         self.dbstring = dbstring
-        self.window_size_list = ["8", "10", "12", "15"]
-        self.beta_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
-        self.lambda_list = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+        self.window_size_list = ["8", "10", "12"]
+        self.beta_list = [0.3, 0.5, 0.8, 1.0]
+        self.lambda_list = [0.3, 0.5, 0.8, 1.0]
         self.metric = {}
         self.metric_str = ""
         self.postgres_recorder = PostgresDataRecorder(self.dbstring)
@@ -112,11 +112,10 @@ class BaselineEvaluator:
             baseline.runEvaluationTask()
             adj = self.__getAdjustedMutulScore("%s%s"%(baseline.latReprName, prefix))
             return adj
-        else:
+        elif os.environ['VALID_FOR'] == 'RANK':
             self.postgres_recorder.truncateSummaryTable()
             baseline.runTheBaseline(1, latent_space_size)
-            baseline.generateSummary(1, baseline.system_id, prefix,\
-                         lambda_val=1.0, diversity=False)
+            baseline.generateSummary(1, baseline.system_id, prefix)
             self.__runSpecificEvaluation(models = [20], systems = [baseline.system_id]) 
             return self.__getRecall(method_id=baseline.system_id,\
                  models = [20], systems = [baseline.system_id])
@@ -126,8 +125,7 @@ class BaselineEvaluator:
         if os.environ['TEST_FOR'] == 'RANK':
             baseline.prepareData(pd)      
             baseline.runTheBaseline(rbase,latent_space_size)
-            baseline.generateSummary(1, baseline.system_id, filePrefix,\
-                         lambda_val=1.0, diversity=False)
+            baseline.generateSummary(1, baseline.system_id, filePrefix)
             baseline.doHouseKeeping()  
         else:
             baseline.prepareData(pd)        

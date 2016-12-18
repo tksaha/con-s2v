@@ -228,17 +228,6 @@ class DUCReader(DocumentReader):
     def runBaselines(self, pd, rbase, gs):
         """
         """
-        self.__runCombinedEvaluation(system_list)
-        
-        f.write ("%s%s"%("#########################Running for Test (100) ###########################################", os.linesep))
-        file_name_prefix = "20__"
-    
-        for system_id in system_list:
-            file_name_prefix = "%s%s_"%(file_name_prefix, str(system_id))
-
-        file_name = "%soutput_100.txt"%file_name_prefix
-
-        file_ = os.path.join(os.environ["SUMMARYFOLDER"],file_name)
-        for line in open(file_):
-            f.write(line)
-        f.flush()
+        nIter = 5
+        #self.performValidation('RANK')
+        self.performTesting('RANK', nIter)
