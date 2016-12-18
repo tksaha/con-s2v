@@ -9,7 +9,7 @@ from rouge.Rouge import Rouge
 from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from log_manager.log_config import Logger 
-
+from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
 
 
 # There are some summaries [ex:fbis4-45908, FT932-15960] for which the 
@@ -214,7 +214,7 @@ class DUCReader(DocumentReader):
             self.__readDUC2002()
 
 
-    def runCombinedEvaluation(self,system_list):
+    def runCombinedEvaluation(self, system_list):
         rougeInstance = Rouge()
         rPDict = rougeInstance.buildRougeParamDict()
         rPDict['-l'] = str(100)
