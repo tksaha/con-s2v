@@ -19,6 +19,7 @@ class SeqRegSentEvaluator(BaselineEvaluator):
 		Evaluator
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
+		self.system_id_list = []
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -52,4 +53,5 @@ class SeqRegSentEvaluator(BaselineEvaluator):
 		seqregs2v = SequentialRegularizedSen2VecRunner(self.dbstring)
 		seqregs2v.seqregunw_beta = optPDict['unw_opt_seq_reg']
 		seqregs2v.window_size = optPDict["window"]
+		self.system_id_list.append(seqregs2v.system_id)
 		self.writeResults(pd, rbase, latent_space_size, seqregs2v, filePrefix, f)

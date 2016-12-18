@@ -16,6 +16,7 @@ class RegularizedSen2VecEvaluator(BaselineEvaluator):
 		Regularized Sen2Vec Runner 
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
+		self.system_id_list = []
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -52,6 +53,7 @@ class RegularizedSen2VecEvaluator(BaselineEvaluator):
 		regs2v = RegularizedSen2VecRunner(self.dbstring)
 		regs2v.regBetaUNW = optPDict['unw-opt-reg']
 		regs2v.window_size = optPDict["window"]
+		self.system_id_list.append(regs2v.system_id)
 		self.writeResults(pd, rbase, latent_space_size,\
 			 regs2v, filePrefix, f)
 		
