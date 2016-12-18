@@ -13,8 +13,8 @@ export JOINTSUPEXE=$SEN2VEC_DIR/sen2vec/word2vec/joint_learner
 
 
 export TRTESTFOLDER=$SEN2VEC_DIR/Data
-export GINTERTHR=0.4
-export GINTRATHR=0.4
+export GINTERTHR=0.8
+export GINTRATHR=0.5
 
 export GTHRSUMTFIDF=0.1
 export GTHRSUMLAT=0.1
