@@ -24,6 +24,7 @@ class SkipThoughtRunner(BaselineRunner):
         self.sentIDList = list()
         self.sentenceList = list()
         self.dataDir = os.environ['TRTESTFOLDER']
+        self.system_id = 87
 
 
     def prepareData(self, pd):
@@ -69,27 +70,30 @@ class SkipThoughtRunner(BaselineRunner):
 
         train.trainer(self.sentenceList, 
             dim_word=latent_space_size, # word vector dimensionality
-            dim=2400, # the number of GRU units
+            dim=latent_space_size*2, # the number of GRU units
             encoder='gru',
             decoder='gru',
-            max_epochs=20,
+            max_epochs=5,
             dispFreq=1,
             decay_c=0.,
             grad_clip=5.,
-            n_words=20000,
+            n_words=20000, # This is the most important parameter
             maxlen_w=1000,
             optimizer='adam',
             batch_size = 64,
             saveto= os.path.join(self.dataDir, "model.npz"),
             dictionary= os.path.join(self.dataDir, "dictionary.p"),
-            saveFreq=1000,
-            reload_=False)
+            saveFreq=100,
+            reload_= True)
         
         #model = tools.load_model(embed_map)
 
     def runEvaluationTask(self):
-        #vectors = tools.encode(model, X)
-        pass 
+        
+        from skipThought.training import tools 
+        embed_map = {}
+        model = tools.load_model("../Data/model_news.npz", "../Data/dictionary.p", embed_map); 
+        model.encode(X)
 
     def doHouseKeeping(self):
         pass 

@@ -13,3 +13,4 @@ SequentialRegularizedSen2VecRunner:83
 FastSentFHVersionRunner: 84
 FastSentVariantRunner (CON-S2V-S):85
 JointLearningSen2VecRunner:86
+SkipThoughtRunner:87

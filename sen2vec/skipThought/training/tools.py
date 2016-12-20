@@ -11,6 +11,8 @@ from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 import pickle as pkl
 import numpy
 import nltk
+import gensim 
+
 
 from collections import OrderedDict, defaultdict
 from nltk.tokenize import word_tokenize
@@ -20,16 +22,20 @@ from sklearn.linear_model import LinearRegression
 
 from .utils import load_params, init_tparams
 from .model import init_params, build_encoder, build_encoder_w2v
+from utility.Utility import Utility
 
+
+
+utFunction = Utility("Text Utility")
 #-----------------------------------------------------------------------------#
 # Specify model and dictionary locations here
 #-----------------------------------------------------------------------------#
-path_to_model = '/u/rkiros/research/semhash/models/toy.npz'
-path_to_dictionary = '/ais/gobi3/u/rkiros/bookgen/book_dictionary_large.pkl'
-path_to_word2vec = '/ais/gobi3/u/rkiros/word2vec/GoogleNews-vectors-negative300.bin'
+#path_to_model = '/u/rkiros/research/semhash/models/toy.npz'
+#path_to_dictionary = '/ais/gobi3/u/rkiros/bookgen/book_dictionary_large.pkl'
+#path_to_word2vec = '/ais/gobi3/u/rkiros/word2vec/GoogleNews-vectors-negative300.bin'
 #-----------------------------------------------------------------------------#
 
-def load_model(embed_map=None):
+def load_model(path_to_model, path_to_dictionary, path_to_word2vec, embed_map=None):
     """
     Load all model components + apply vocab expansion
     """
@@ -41,7 +47,7 @@ def load_model(embed_map=None):
     # Create inverted dictionary
     print('Creating inverted dictionary...')
     word_idict = dict()
-    for kk, vv in worddict.iteritems():
+    for kk, vv in worddict.items():
         word_idict[vv] = kk
     word_idict[0] = '<eos>'
     word_idict[1] = 'UNK'
@@ -67,13 +73,15 @@ def load_model(embed_map=None):
     f_w2v = theano.function([embedding, x_mask], ctxw2v, name='f_w2v')
 
     # Load word2vec, if applicable
-    if embed_map == None:
-        print('Loading word2vec embeddings...')
-        embed_map = load_googlenews_vectors(path_to_word2vec)
+    # if embed_map == None:
+    #     print('Loading word2vec embeddings...')
+    #     embed_map = load_googlenews_vectors(path_to_word2vec)
 
     # Lookup table using vocab expansion trick
-    print('Creating word lookup tables...')
-    table = lookup_table(options, embed_map, worddict, word_idict, f_emb)
+    #print('Creating word lookup tables...')
+    #table = lookup_table(options, embed_map, worddict, word_idict, f_emb)
+
+    table = OrderedDict()
 
     # Store everything we need in a dictionary
     print('Packing up...')
@@ -84,7 +92,7 @@ def load_model(embed_map=None):
 
     return model
 
-def encode(model, X, use_norm=True, verbose=True, batch_size=128, use_eos=False):
+def encode(model, X, use_norm=False, verbose=True, batch_size=128, use_eos=False):
     """
     Encode sentences in the list X. Each entry will return a vector
     """
@@ -104,42 +112,52 @@ def encode(model, X, use_norm=True, verbose=True, batch_size=128, use_eos=False)
         ds[len(s)].append(i)
 
     # Get features. This encodes by length, in order to avoid wasting computation
+    print (len(ds))
     for k in ds.keys():
         if verbose:
             print(k)
-        numbatches = len(ds[k]) / batch_size + 1
+        numbatches = int (len(ds[k]) / batch_size) + 1
+        print (numbatches)
         for minibatch in range(numbatches):
             caps = ds[k][minibatch::numbatches]
-
+            print (caps)
             if use_eos:
                 embedding = numpy.zeros((k+1, len(caps), model['options']['dim_word']), dtype='float32')
             else:
                 embedding = numpy.zeros((k, len(caps), model['options']['dim_word']), dtype='float32')
+
+            print (embedding.shape)
+
             for ind, c in enumerate(caps):
                 caption = captions[c]
                 for j in range(len(caption)):
-                    if d[caption[j]] > 0:
-                        embedding[j,ind] = model['table'][caption[j]]
-                    else:
-                        embedding[j,ind] = model['table']['UNK']
+                    try:
+                        if  d[caption[j]] > 0:
+                            embedding[j,ind] = model['table'][caption[j]]
+                        else:
+                            embedding[j,ind] = model['table']['UNK']
+                    except:
+                        pass 
                 if use_eos:
                     embedding[-1,ind] = model['table']['<eos>']
+            
             if use_eos:
                 ff = model['f_w2v'](embedding, numpy.ones((len(caption)+1,len(caps)), dtype='float32'))
             else:
                 ff = model['f_w2v'](embedding, numpy.ones((len(caption),len(caps)), dtype='float32'))
+
+            print (ff.shape)
             if use_norm:
                 for j in range(len(ff)):
                     ff[j] /= norm(ff[j])
             for ind, c in enumerate(caps):
                 features[c] = ff[ind]
-    
+            
     return features
 
 def preprocess(text):
     """
     Preprocess text for encoder
-    """
     X = []
     sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
     for t in text:
@@ -151,7 +169,19 @@ def preprocess(text):
         X.append(result)
     return X
 
-def load_googlenews_vectors():
+    """
+    X = []
+    sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
+    for t in text:
+        result = ''
+        content = gensim.utils.to_unicode(t) 
+        tokens = utFunction.normalizeText(content, remove_stopwords=0)
+        result += ' ' + ' '.join(tokens)
+        X.append(result)
+
+    return X
+
+def load_googlenews_vectors(path_to_word2vec):
     """
     load the word2vec GoogleNews vectors
     """
