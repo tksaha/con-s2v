@@ -77,7 +77,7 @@ class SkipThoughtRunner(BaselineRunner):
             max_epochs = 5,
             dispFreq = 1,
             decay_c = 0.,
-            grad_clip = 5.,
+            grad_clip = 10.,
             n_words = 30000, 
             maxlen_w = 1000,
             optimizer = 'adam',
