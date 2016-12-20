@@ -40,12 +40,12 @@ def load_model(path_to_model, path_to_dictionary, path_to_word2vec, embed_map=No
     Load all model components + apply vocab expansion
     """
     # Load the worddict
-    print('Loading dictionary...')
+    Logger.logr.info('Loading dictionary...')
     with open(path_to_dictionary, 'rb') as f:
         worddict = pkl.load(f)
 
     # Create inverted dictionary
-    print('Creating inverted dictionary...')
+    Logger.logr.info('Creating inverted dictionary...')
     word_idict = dict()
     for kk, vv in worddict.items():
         word_idict[vv] = kk
@@ -53,18 +53,18 @@ def load_model(path_to_model, path_to_dictionary, path_to_word2vec, embed_map=No
     word_idict[1] = 'UNK'
 
     # Load model options
-    print('Loading model options...')
+    Logger.logr.info('Loading model options...')
     with open('%s.pkl'%path_to_model, 'rb') as f:
         options = pkl.load(f)
 
     # Load parameters
-    print('Loading model parameters...')
+    Logger.logr.info('Loading model parameters...')
     params = init_params(options)
     params = load_params(path_to_model, params)
     tparams = init_tparams(params)
 
     # Extractor functions
-    print('Compiling encoder...')
+    Logger.logr.info('Compiling encoder...')
     trng = RandomStreams(1234)
     trng, x, x_mask, ctx, emb = build_encoder(tparams, options)
     f_enc = theano.function([x, x_mask], ctx, name='f_enc')
@@ -74,17 +74,17 @@ def load_model(path_to_model, path_to_dictionary, path_to_word2vec, embed_map=No
 
     # Load word2vec, if applicable
     # if embed_map == None:
-    #     print('Loading word2vec embeddings...')
+    #     Logger.logr.info('Loading word2vec embeddings...')
     #     embed_map = load_googlenews_vectors(path_to_word2vec)
 
     # Lookup table using vocab expansion trick
-    #print('Creating word lookup tables...')
+    #Logger.logr.info('Creating word lookup tables...')
     #table = lookup_table(options, embed_map, worddict, word_idict, f_emb)
 
     table = OrderedDict()
 
     # Store everything we need in a dictionary
-    print('Packing up...')
+    Logger.logr.info('Packing up...')
     model = {}
     model['options'] = options
     model['table'] = table
@@ -112,21 +112,21 @@ def encode(model, X, use_norm=False, verbose=True, batch_size=128, use_eos=False
         ds[len(s)].append(i)
 
     # Get features. This encodes by length, in order to avoid wasting computation
-    print (len(ds))
+    #Logger.logr.info (len(ds))
     for k in ds.keys():
         if verbose:
-            print(k)
+            Logger.logr.info(k)
         numbatches = int (len(ds[k]) / batch_size) + 1
-        print (numbatches)
+        #Logger.logr.info (numbatches)
         for minibatch in range(numbatches):
             caps = ds[k][minibatch::numbatches]
-            print (caps)
+            #Logger.logr.info (caps)
             if use_eos:
                 embedding = numpy.zeros((k+1, len(caps), model['options']['dim_word']), dtype='float32')
             else:
                 embedding = numpy.zeros((k, len(caps), model['options']['dim_word']), dtype='float32')
 
-            print (embedding.shape)
+            #Logger.logr.info (embedding.shape)
 
             for ind, c in enumerate(caps):
                 caption = captions[c]
@@ -146,7 +146,7 @@ def encode(model, X, use_norm=False, verbose=True, batch_size=128, use_eos=False
             else:
                 ff = model['f_w2v'](embedding, numpy.ones((len(caption),len(caps)), dtype='float32'))
 
-            print (ff.shape)
+            #Logger.logr.info (ff.shape)
             if use_norm:
                 for j in range(len(ff)):
                     ff[j] /= norm(ff[j])

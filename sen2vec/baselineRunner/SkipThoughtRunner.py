@@ -25,7 +25,8 @@ class SkipThoughtRunner(BaselineRunner):
         self.sentenceList = list()
         self.dataDir = os.environ['TRTESTFOLDER']
         self.system_id = 87
-
+        self.dictionary = os.path.join(self.dataDir, "%s_dictionary.p"%os.environ['DATASET'])
+        self.model =  os.path.join(self.dataDir, "model_%s.npz"%os.environ['DATASET'])
 
     def prepareData(self, pd):
         """
@@ -55,9 +56,8 @@ class SkipThoughtRunner(BaselineRunner):
                         self.sentenceList.append(' '.join(content))
                         self.sentIDList.append(sentence_id)
            
-
         if  pd >0:    
-            loc = os.path.join(self.dataDir, "dictionary.p" )
+            loc = self.dictionary
             worddict, wordcount = vocab.build_dictionary (self.sentenceList)
             vocab.save_dictionary (worddict, wordcount, loc)
 
@@ -65,35 +65,35 @@ class SkipThoughtRunner(BaselineRunner):
 
         if rbase <=0: return 0 
 
-        Logger.logr.info ("Running The Baseline ")
-        print (len(self.sentenceList))
+        Logger.logr.info (" Running The Baseline ")
+        Logger.logr.info (" Total number of sentences = %i" %len(self.sentenceList))
 
+        # n_words: This is the most important parameter, It saves import word embeddings
         train.trainer(self.sentenceList, 
-            dim_word=latent_space_size, # word vector dimensionality
-            dim=latent_space_size*2, # the number of GRU units
-            encoder='gru',
-            decoder='gru',
-            max_epochs=5,
-            dispFreq=1,
-            decay_c=0.,
-            grad_clip=5.,
-            n_words=20000, # This is the most important parameter
-            maxlen_w=1000,
-            optimizer='adam',
+            dim_word = latent_space_size, # word vector dimensionality
+            dim = latent_space_size*2, # the number of GRU units
+            encoder = 'gru',
+            decoder = 'gru',
+            max_epochs = 5,
+            dispFreq = 1,
+            decay_c = 0.,
+            grad_clip = 5.,
+            n_words = 30000, 
+            maxlen_w = 1000,
+            optimizer = 'adam',
             batch_size = 64,
-            saveto= os.path.join(self.dataDir, "model.npz"),
-            dictionary= os.path.join(self.dataDir, "dictionary.p"),
-            saveFreq=100,
+            saveto = self.model,
+            dictionary = self.dictionary,
+            saveFreq = 100,
             reload_= True)
         
-        #model = tools.load_model(embed_map)
 
     def runEvaluationTask(self):
         
         from skipThought.training import tools 
         embed_map = {}
-        model = tools.load_model("../Data/model_news.npz", "../Data/dictionary.p", embed_map); 
-        model.encode(X)
+        model = tools.load_model(self.model, self.dictionary, embed_map); 
+        #model.encode(X)
 
     def doHouseKeeping(self):
         pass 

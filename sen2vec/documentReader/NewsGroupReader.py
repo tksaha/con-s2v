@@ -165,8 +165,15 @@ class NewsGroupReader(DocumentReader):
         """
         """
         nIter = 5
-        self.performValidation('CLASS')
-        self.performTesting('CLASS', nIter)
+        #self.performValidation('CLASS')
+        #self.performTesting('CLASS', nIter)
 
-        self.performValidation('CLUST')
-        self.performTesting('CLUST', nIter)
+        #self.performValidation('CLUST')
+        #self.performTesting('CLUST', nIter)
+
+        from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
+
+        skthought = SkipThoughtRunner(self.dbstring)
+        skthought.prepareData(1) 
+        skthought.runTheBaseline(1, 300)
+        
