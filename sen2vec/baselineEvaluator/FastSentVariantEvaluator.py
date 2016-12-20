@@ -18,6 +18,7 @@ class FastSentVariantEvaluator(BaselineEvaluator):
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
 		self.filePrefix = ""
+		self.system_id_list = list()
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -49,4 +50,5 @@ class FastSentVariantEvaluator(BaselineEvaluator):
 		os.environ["LAMBDA"] = str(optPDict['con-s2v-s-lambda'])
 		fsent =  FastSentVariantRunner(self.dbstring)	
 		fsent.window = optPDict["window"]
+		self.system_id_list.append(fsent.system_id)
 		self.writeResults(pd, rbase, latent_space_size, fsent, self.filePrefix, f)

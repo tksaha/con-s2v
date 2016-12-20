@@ -16,6 +16,7 @@ class TFIDFBaselineEvaluator(BaselineEvaluator):
 		TFIDF baseline evaluator
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
+		self.system_id_list = []
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -27,6 +28,7 @@ class TFIDFBaselineEvaluator(BaselineEvaluator):
 		
 		filePrefix = ""
 		tfrunner = TFIDFBaselineRunner(self.dbstring)
+		self.system_id_list.append(tfrunner.system_id)
 		self.writeResults(pd, rbase, latent_space_size,\
 			 tfrunner, filePrefix, f)
        

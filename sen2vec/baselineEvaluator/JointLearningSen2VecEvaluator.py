@@ -17,6 +17,7 @@ class JointLearningSen2VecEvaluator(BaselineEvaluator):
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
 		self.filePrefix = ""
+		self.system_id_list = []
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -48,4 +49,5 @@ class JointLearningSen2VecEvaluator(BaselineEvaluator):
 		os.environ["LAMBDA"] =  str(optPDict['con-s2v-c-lambda'])
 		jointL = JointLearningSen2VecRunner(self.dbstring)	
 		jointL.window = optPDict["window"]
+		self.system_id_list.append(jointL.system_id)
 		self.writeResults(pd, rbase, latent_space_size, jointL, self.filePrefix, f)

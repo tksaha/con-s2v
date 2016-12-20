@@ -188,35 +188,74 @@ class DocumentReader:
                      datetime.datetime.now().isoformat())), 'w') 
         
         niter = nIter
+        
+
         for i in range(0,niter):
+            system_list = []
             f.write("###### Iteration: %s ######%s" %(i, os.linesep))
 
-            # paraeval  = P2VSENTCExecutableEvaluator (self.dbstring)
-            # paraeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            if test_for == 'RANK':
+               self.postgres_recorder.truncateSummaryTable()
 
-            # fheval    = FastSentFHVersionEvalutor (self.dbstring)
-            # fheval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            paraeval  = P2VSENTCExecutableEvaluator (self.dbstring)
+            paraeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(paraeval.system_id_list)
+
+            fheval    = FastSentFHVersionEvalutor (self.dbstring)
+            fheval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(fheval.system_id_list)
+
 
             tfidfeval =  TFIDFBaselineEvaluator (self.dbstring)
             tfidfeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(tfidfeval.system_id_list)
+
 
             wvgeval   = WordVectorAveragingEvaluator (self.dbstring)
             wvgeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(wvgeval.system_id_list)
+
 
             itrunner  = IterativeUpdatedRetrofitEvaluator(self.dbstring)
             itrunner.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(itrunner.system_id_list)
+
 
             seqiteval = SeqItUpdateEvaluator (self.dbstring)
             seqiteval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(seqiteval.system_id_list)
 
             regeval   = RegularizedSen2VecEvaluator(self.dbstring)
             regeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(regeval.system_id_list)
+
 
             seqregeval = SeqRegSentEvaluator (self.dbstring)
             seqregeval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(seqregeval.system_id_list)
+
 
             jnteval    = JointLearningSen2VecEvaluator(self.dbstring)
             jnteval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(jnteval.system_id_list)
+
 
             fstvar     = FastSentVariantEvaluator (self.dbstring)
             fstvar.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(fstvar.system_id_list)
+
+
+            if test_for == 'RANK':
+               self.runCombinedEvaluation(system_list)
+               f.write ("%s%s"%("##Running for Test (100) ######", os.linesep))
+               file_name_prefix = "20__"
+    
+               for system_id in system_list:
+                   file_name_prefix = "%s%s_"%(file_name_prefix, str(system_id))
+
+               file_name = "%soutput_100.txt"%file_name_prefix
+
+               file_ = os.path.join(os.environ["SUMMARYFOLDER"], file_name)
+               for line in open(file_):
+                   f.write(line)
+               f.flush()

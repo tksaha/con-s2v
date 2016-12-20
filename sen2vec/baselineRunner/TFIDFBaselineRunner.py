@@ -8,7 +8,7 @@ import gensim
 import scipy.stats
 from utility.Utility import Utility
 from baselineRunner.BaselineRunner import BaselineRunner
-
+from summaryGenerator.SummaryGenerator import SummaryGenerator
 
 
 class TFIDFBaselineRunner(BaselineRunner):

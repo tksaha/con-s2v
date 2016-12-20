@@ -16,6 +16,7 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 		"""
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
+		self.system_id_list = []
 
 	def getOptimumParameters(self, f, optPDict, latent_space_size):
 		self._setmetricString ()
@@ -45,6 +46,7 @@ class FastSentFHVersionEvalutor(BaselineEvaluator):
 		latent_space_size = latent_space_size * 2
 		fhBaseline =  FastSentFHVersionRunner(self.dbstring, autoencode=True)
 		fhBaseline.window = optPDict["fh-ae-window"]
+		self.system_id_list.append(fhBaseline.system_id)
 		self.writeResults(pd, rbase, latent_space_size, fhBaseline, "", f)
 
 
