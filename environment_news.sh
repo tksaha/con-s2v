@@ -1,5 +1,5 @@
 #!/bin/bash
-export SEN2VEC_DIR=~/Documents/sen2vec
+export SEN2VEC_DIR=~/Documents/news/sen2vec
 
 
 export NEWSGROUP_PATH=$SEN2VEC_DIR/Data/newsgroup/

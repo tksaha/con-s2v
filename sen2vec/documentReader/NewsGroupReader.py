@@ -105,13 +105,11 @@ class NewsGroupReader(DocumentReader):
         for first_level_folder in os.listdir(self.folderPath):
             if not(DocumentReader._folderISHidden(self, first_level_folder)):
                 for topic in self.topic_names:                  
-                    #if topic not in ['talk.politics.mideast', 'comp.graphics',\
-                    # 'soc.religion.christian', 'rec.autos', 'sci.space', 'talk.politics.guns',\
-                    #  'rec.sport.baseball', 'sci.med']:
-                    #    continue
-                    if topic not in ['rec.autos', 'talk.politics.guns']:
+                    if topic not in ['talk.politics.mideast', 'comp.graphics',\
+                    'soc.religion.christian', 'rec.autos', 'sci.space', 'talk.politics.guns',\
+                     'rec.sport.baseball', 'sci.med']:
                        continue
-
+                   
                     for file_ in os.listdir("%s%s%s%s%s" %(self.folderPath, "/", \
                                             first_level_folder, "/", topic)):
                         doc_content = self._getTextFromFile("%s%s%s%s%s%s%s" \
@@ -167,8 +165,8 @@ class NewsGroupReader(DocumentReader):
         """
         """
         nIter = 5
-       # self.performValidation('CLASS')
+        self.performValidation('CLASS')
         self.performTesting('CLASS', nIter)
 
-        #self.performValidation('CLUST')
-        #self.performTesting('CLUST', nIter)
+        self.performValidation('CLUST')
+        self.performTesting('CLUST', nIter)
