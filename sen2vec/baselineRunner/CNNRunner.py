@@ -1,13 +1,10 @@
-'''This example demonstrates the use of Convolution1D for text classification.
-Gets to 0.89 test accuracy after 2 epochs.
-90s/epoch on Intel i5 2.4Ghz CPU.
-10s/epoch on Tesla K40 GPU.
-'''
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-from __future__ import print_function
+import os 
+import sys
+import pickle
 import numpy as np
-np.random.seed(1337)  # for reproducibility
-
 from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
@@ -17,60 +14,77 @@ from keras.datasets import imdb
 from keras import backend as K
 
 
-# set parameters:
-max_features = 5000
-maxlen = 400
-batch_size = 32
-embedding_dims = 50
-nb_filter = 250
-filter_length = 3
-hidden_dims = 250
-nb_epoch = 2
 
-print('Loading data...')
-(X_train, y_train), (X_test, y_test) = imdb.load_data(nb_words=max_features)
-print(len(X_train), 'train sequences')
-print(len(X_test), 'test sequences')
 
-print('Pad sequences (samples x time)')
-X_train = sequence.pad_sequences(X_train, maxlen=maxlen)
-X_test = sequence.pad_sequences(X_test, maxlen=maxlen)
-print('X_train shape:', X_train.shape)
-print('X_test shape:', X_test.shape)
+class CNNRunner (BaselineRunner):
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        BaselineRunner.__init__(self, *args, **kwargs)
+        self.postgresConnection.connectDatabase()
+        self.max_features = 20000
+        self.maxlen = 400
+        self.dropout = 0.2
+        self.nb_filter = 250
+        self.filter_length = 3
+        self.border_mode = 'valid'
+        self.activation_h  = 'relu'
+        self.activation_out = 'sigmoid'
+        self.subsample_length = 1
+        self.hidden_dims = 250
+        self.optimizer = 'adam'
+        self.loss = 'categorical_crossentropy'
+        self.metric_list = 
+        self.nb_epoch = 2
+        self.batch_size = 64 
+        self.model = None 
 
-print('Build model...')
-model = Sequential()
 
-# we start off with an efficient embedding layer which maps
-# our vocab indices into embedding_dims dimensions
-model.add(Embedding(max_features,
-                    embedding_dims,
-                    input_length=maxlen,
-                    dropout=0.2))
+    def prepareData(self, pd):
+        pass
 
-# we add a Convolution1D, which will learn nb_filter
-# word group filters of size filter_length:
-model.add(Convolution1D(nb_filter=nb_filter,
-                        filter_length=filter_length,
-                        border_mode='valid',
-                        activation='relu',
-                        subsample_length=1))
-# we use max pooling:
-model.add(GlobalMaxPooling1D())
+    def runTheBaseline(self, rbase, latent_space_size):
+        model = Sequential()
 
-# We add a vanilla hidden layer:
-model.add(Dense(hidden_dims))
-model.add(Dropout(0.2))
-model.add(Activation('relu'))
+        # We start off with an efficient embedding layer which maps
+        # our vocab indices into embedding_dims dimensions
+        model.add(Embedding(self.max_features,
+                    latent_space_size*2,
+                    input_length=self.maxlen,
+                    dropout=self.dropout))
 
-# We project onto a single unit output layer, and squash it with a sigmoid:
-model.add(Dense(1))
-model.add(Activation('sigmoid'))
+        # We add a Convolution1D, which will learn nb_filter
+        # word group filters of size filter_length:
+        model.add(Convolution1D(nb_filter = self.nb_filter,
+                        filter_length = self.filter_length,
+                        border_mode = self.border_mode, 
+                        activation = self.activation
+                        subsample_length = self.subsample_length))
+        # We use max pooling:
+        model.add(GlobalMaxPooling1D())
 
-model.compile(loss='binary_crossentropy',
-              optimizer='adam',
-              metrics=['accuracy'])
-model.fit(X_train, y_train,
-          batch_size=batch_size,
-          nb_epoch=nb_epoch,
-          validation_data=(X_test, y_test))
+        # We add a vanilla hidden layer:
+        model.add(Dense(self.hidden_dims))
+        model.add(Dropout(self.dropout))
+        model.add(Activation(self.activation_h))
+
+        # We project onto a single unit output layer, 
+        # and squash it with a sigmoid:
+        model.add(Dense(1))
+        model.add(Activation(self.activation_out))
+
+        model.compile(loss=self.loss,
+              optimizer = self.optimizer, 
+              metrics=self.metric_list)
+
+
+
+    def generateSummary(self, gs,  lambda_val=1.0, diversity=False):
+        pass
+
+    def runEvaluationTask(self):
+        pass
+
+    def doHouseKeeping(self):
+        self.postgresConnection.disconnectDatabase()
+        

@@ -2,8 +2,8 @@
 export SEN2VEC_DIR=~/Documents/reuter/sen2vec
 
 
-export NEWSGROUP_PATH=$SEN2VEC_DIR/Data/newsgroup/
-export NEWSGROUP_DBSTRING=reuter,postgres,postgres,localhost,5432
+export REUTERS_PATH=$SEN2VEC_DIR/Data/newsgroup/
+export REUTERS_DBSTRING=reuter,postgres,postgres,localhost,5432
 
 
 export DOC2VECEXECDIR=$SEN2VEC_DIR/sen2vec/word2vec/word2vec

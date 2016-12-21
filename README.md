@@ -109,6 +109,25 @@ pip install theano
 sudo apt install nvidia-cuda-toolkit
 ```
 
+## Installation of Keras (Sequntial API)
+```
+pip install keras
+```
+
+To change the backend to ``theano`` please change the default configuration 
+in ~/.keras/keras.json
+
+```
+{
+    "image_dim_ordering": "tf",
+    "epsilon": 1e-07,
+    "floatx": "float32",
+    "backend": "theano"
+}
+
+source ~/.keras/keras.json
+```
+
 
 ## Running the Project 
 Run sen2vec with -h argument to see all possible options:
