@@ -11,5 +11,7 @@
 . Include splitta for sentence boundary detection: https://github.com/lukeorland/splitta
 
 0.0.3 
-. Use smart_open package for file handling. It can open any kind of file: hdfs, zip etc. For more details 
-please see: https://pypi.python.org/pypi/smart_open/1.3.3
+. Use smart_open package for file handling. It can open any kind of file: hdfs, zip etc. For more details please see: https://pypi.python.org/pypi/smart_open/1.3.3
+
+0.0.4
+. http://stackoverflow.com/questions/4470523/git-create-a-branch-from-another-branch

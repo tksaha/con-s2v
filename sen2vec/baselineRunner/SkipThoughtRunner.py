@@ -63,6 +63,12 @@ class SkipThoughtRunner(BaselineRunner):
             worddict, wordcount = vocab.build_dictionary (self.sentenceList)
             vocab.save_dictionary (worddict, wordcount, loc)
 
+    def convert_to_str(self, vec):
+        str_ = ""
+        for val in vec: 
+            str_ ="%s %0.3f"%(str_,val)
+        return str_
+
     def runTheBaseline(self, rbase, latent_space_size):
 
         if rbase <=0: return 0 
