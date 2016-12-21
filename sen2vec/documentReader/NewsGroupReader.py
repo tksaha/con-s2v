@@ -171,9 +171,9 @@ class NewsGroupReader(DocumentReader):
         #self.performValidation('CLUST')
         #self.performTesting('CLUST', nIter)
 
-        from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
+        # from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
 
-        skthought = SkipThoughtRunner(self.dbstring)
-        skthought.prepareData(1) 
-        skthought.runTheBaseline(1, 300)
+        # skthought = SkipThoughtRunner(self.dbstring)
+        # skthought.prepareData(1) 
+        # skthought.runTheBaseline(1, 300)
         
