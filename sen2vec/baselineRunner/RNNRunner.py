@@ -6,6 +6,7 @@ import sys
 import pickle
 import gensim 
 import numpy as np
+import pandas as pd 
 from collections import Counter 
 from log_manager.log_config import Logger 
 from keras.preprocessing import sequence
@@ -115,7 +116,7 @@ class RNNRunner (SupervisedBaselineRunner):
         for self.batch_size in [16]:
             for self.percent_vocab_size in [80]:
                 self.getData(self.percent_vocab_size)
-                for self.nb_epoch in [5]:
+                for self.nb_epoch in [1]:
                     self.run ()
                     metric[(self.batch_size, self.percent_vocab_size,\
                      self.nb_epoch)] = self.metric_val 
