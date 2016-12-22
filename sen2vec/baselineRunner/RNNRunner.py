@@ -7,6 +7,7 @@ import pickle
 import gensim 
 import numpy as np
 import pandas as pd 
+import sklearn.metrics as mt
 from collections import Counter 
 from log_manager.log_config import Logger 
 from keras.preprocessing import sequence
@@ -124,20 +125,16 @@ class RNNRunner (SupervisedBaselineRunner):
                     gc.collect()
 
         (self.batch_size, self.percent_vocab_size,\
-            self.nb_epoch) = max(metric, key=metric.get)
+        self.nb_epoch) = max(metric, key=metric.get)
         Logger.logr.info ("Optimal "\
             " configuration: batch_size = %i "\
-            " nb_filter = %i "\
-            " filter_length = %i "\
             " percent vocab size = %i "\
-            " nb_epoch = %i "%(self.batch_size, self.nb_filter,\
-                 self.filter_length, self.percent_vocab_size, \
+            " nb_epoch = %i "%(self.batch_size, self.percent_vocab_size, \
                  self.nb_epoch))
 
-    
 
         self.getData(self.percent_vocab_size)
-        self.runCNNBaseline (1)
+        self.runLSTMBaseline (1)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
              validation_data= (self.val_x, self.val_y_prime))
