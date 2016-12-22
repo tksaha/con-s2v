@@ -134,12 +134,12 @@ class CNNRunner (SupervisedBaselineRunner):
 
 
         import gc 
-        for self.batch_size in [16]:
-            for self.nb_filter in [50]:
-                for self.filter_length in [2]:
-                    for self.percent_vocab_size in [80]:
+        for self.batch_size in [16, 32]:
+            for self.nb_filter in [50, 100, 150]:
+                for self.filter_length in [2, 3, 4]:
+                    for self.percent_vocab_size in [80, 85]:
                         self.getData(self.percent_vocab_size)
-                        for self.nb_epoch in [5]:
+                        for self.nb_epoch in [2, 5, 7]:
                             self.run ()
                             metric[(self.batch_size, self.nb_filter,\
                             self.filter_length, self.percent_vocab_size,\
