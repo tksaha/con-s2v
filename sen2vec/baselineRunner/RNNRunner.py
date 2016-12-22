@@ -6,7 +6,8 @@ import sys
 import pickle
 import gensim 
 import numpy as np
-
+from collections import Counter 
+from log_manager.log_config import Logger 
 from keras.preprocessing import sequence
 from keras.utils import np_utils
 from keras.models import Sequential
@@ -19,7 +20,7 @@ from baselineRunner.SupervisedBaselineRunner import SupervisedBaselineRunner
 
 
 class RNNRunner (SupervisedBaselineRunner):
-	 def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         """
         SupervisedBaselineRunner.__init__(self, *args, **kwargs)
@@ -72,32 +73,24 @@ class RNNRunner (SupervisedBaselineRunner):
     def generateSummary(self, gs,  lambda_val=1.0, diversity=False):
         pass
 
-    def countFreq (self, sentence):
-        content = gensim.utils.to_unicode(sentence) 
-        content = self.utFunction.normalizeText(content, remove_stopwords=0)
-
-        for token in content:
-            self.word_counter[token] += 1
-
     def runLSTMBaseline(self, rbase):
 
         Logger.logr.info ("Running LSTM (RNN) with following"\
             " configuration: batch_size = %i "\
-            " nb_filter = %i "\
-            " filter_length = %i "\
             " percent vocab size = %i "\
-            " nb_epoch = %i "%(self.batch_size, self.nb_filter,\
-                 self.filter_length, self.percent_vocab_size, \
+            " nb_epoch = %i "%(self.batch_size, self.percent_vocab_size, \
                  self.nb_epoch))
 
-        model = Sequential()
-		model.add(Embedding(self.max_features, 50, dropout=self.dropout))
+        self.model = Sequential()
+        self.model.add(Embedding(self.max_features, 50, dropout=self.dropout))
 
 
         # We Could use simpleRNN or GRU instead
-		model.add(LSTM(128, dropout_W=self.dropout_W, dropout_U=self.dropout_U)) 
-		model.add(Dense(self.n_classes))
-		model.add(Activation(self.activation_out))
+        self.model.add(LSTM(128, dropout_W=self.dropout_W, dropout_U=self.dropout_U)) 
+        self.model.add(Dense(self.n_classes))
+        self.model.add(Activation(self.activation_out))
+        self.model.compile(loss=self.loss, optimizer = self.optimizer,\
+          metrics=self.metric_list)
 
     def run (self):
         self.runLSTMBaseline (1)

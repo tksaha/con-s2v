@@ -8,18 +8,7 @@ from documentReader.DocumentReader import DocumentReader
 from documentReader.PostgresDataRecorder   import PostgresDataRecorder
 from bs4 import BeautifulSoup
 from log_manager.log_config import Logger 
-from baselineRunner.Paragraph2VecSentenceRunner  import Paragraph2VecSentenceRunner 
-from baselineRunner.Node2VecRunner import Node2VecRunner
-from baselineRunner.IterativeUpdateRetrofitRunner import IterativeUpdateRetrofitRunner
-from baselineRunner.P2VSENTCExecutableRunner import P2VSENTCExecutableRunner
-from baselineRunner.RegularizedSen2VecRunner import RegularizedSen2VecRunner
-from baselineRunner.DictRegularizedSen2VecRunner import DictRegularizedSen2VecRunner
-from baselineRunner.JointLearningSen2VecRunner import JointLearningSen2VecRunner
-from baselineRunner.FastSentVariantRunner import FastSentVariantRunner
-from baselineRunner.JointSupervisedRunner import JointSupervisedRunner
-from baselineRunner.TFIDFBaselineRunner  import TFIDFBaselineRunner
-from evaluation.rankingevaluation.RankingEvaluation import RankingEvaluation 
-from baselineRunner.FastSentFHVersionRunner import FastSentFHVersionRunner
+
 
 
 
@@ -189,8 +178,14 @@ class ReutersReader(DocumentReader):
         #self.performValidation('CLASS')
         #self.performTesting('CLASS')
 
-        from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
+        # from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
 
-        skthought = SkipThoughtRunner(self.dbstring)
-        skthought.prepareData(1) 
-        skthought.runTheBaseline(1, 300)
+        # skthought = SkipThoughtRunner(self.dbstring)
+        # skthought.prepareData(1) 
+        # skthought.runTheBaseline(1, 300)
+
+        from baselineRunner.RNNRunner import RNNRunner 
+
+        rnn_runner = RNNRunner (self.dbstring)
+        rnn_runner.runEvaluationTask(rbase, 300)
+
