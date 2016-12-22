@@ -181,6 +181,7 @@ class CNNRunner (SupervisedBaselineRunner):
 
         evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
                 self.latReprName, summaryMethodID), "w")
+        Logger.logr.info(evaluationResultFile)
         self._writeClassificationReport(evaluationResultFile, self.latReprName)
 
 
