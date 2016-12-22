@@ -287,7 +287,7 @@ class CNNRunner (BaselineRunner):
              nb_epoch=self.nb_epoch, shuffle=True,\
              validation_data= (self.val_x, self.val_y_prime))
         result = pd.DataFrame()
-        result['predicted_values'] = self.model.predict_classes(ts_x)
+        result['predicted_values'] = self.model.predict_classes(self.ts_x)
         result['true_values'] = self.ts_y
 
         labels = set(result['true_values'])
