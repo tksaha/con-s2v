@@ -18,7 +18,7 @@ from utility.Utility import Utility
 from baselineRunner.SupervisedBaselineRunner import SupervisedBaselineRunner
 
 
-class RNNLSTMRunner (SupervisedBaselineRunner):
+class RNNRunner (SupervisedBaselineRunner):
 	 def __init__(self, *args, **kwargs):
         """
         """
@@ -65,34 +65,6 @@ class RNNLSTMRunner (SupervisedBaselineRunner):
         self.trainTestFolder = os.environ['TRTESTFOLDER']
         self.latReprName = "lstm"
 
-
-    def _getConfusionMatrix(self):
-        return mt.confusion_matrix(self.true_values, self.predicted_values, labels = self.class_keys)
-        
-    def _getCohenKappaScore(self):
-        return mt.cohen_kappa_score(self.true_values, self.predicted_values, labels = self.class_keys)
-        
-    def _getClassificationReport(self):
-        return mt.classification_report(self.true_values, self.predicted_values,\
-             labels = self.class_keys, target_names = self.class_names, digits=4)
-    
-    def _getAccuracyScore(self):
-        return mt.accuracy_score(self.true_values, self.predicted_values)
-
-    def __writeClassificationReport(self, evaluationResultFile, dummyName=""):
-
-        evaluationResultFile.write("%s%s%s%s" %("######Classification Report",\
-                    "(%s)######\n"%dummyName, \
-                    self._getClassificationReport(), "\n\n"))
-        evaluationResultFile.write("%s%s%s" %("######Accuracy Score######\n", \
-                    self._getAccuracyScore(), "\n\n"))
-        evaluationResultFile.write("%s%s%s" %("######Confusion Matrix######\n", \
-                    self._getConfusionMatrix(), "\n\n"))
-        evaluationResultFile.write("%s%s%s" %("######Cohen's Kappa######\n", \
-                    self._getCohenKappaScore(), "\n\n"))
-                    
-        Logger.logr.info("Evaluation with Logistic regression Completed.")
-
     def prepareData(self, pd):
         pass
     def runTheBaseline(self, rbase, latent_space_size):
@@ -107,7 +79,7 @@ class RNNLSTMRunner (SupervisedBaselineRunner):
         for token in content:
             self.word_counter[token] += 1
 
-    def runLSTMBaseline(self, rbase, latent_space_size):
+    def runLSTMBaseline(self, rbase):
 
         Logger.logr.info ("Running LSTM (RNN) with following"\
             " configuration: batch_size = %i "\
@@ -119,7 +91,7 @@ class RNNLSTMRunner (SupervisedBaselineRunner):
                  self.nb_epoch))
 
         model = Sequential()
-		model.add(Embedding(self.max_features, 128, dropout=self.dropout))
+		model.add(Embedding(self.max_features, 50, dropout=self.dropout))
 
 
         # We Could use simpleRNN or GRU instead
@@ -127,19 +99,72 @@ class RNNLSTMRunner (SupervisedBaselineRunner):
 		model.add(Dense(self.n_classes))
 		model.add(Activation(self.activation_out))
 
+    def run (self):
+        self.runLSTMBaseline (1)
+        self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
+             nb_epoch=self.nb_epoch, shuffle=True,\
+             validation_data= (self.val_x, self.val_y_prime))
+        result = pd.DataFrame()
+        result['predicted_values'] = self.model.predict_classes(self.val_x, batch_size=64)
+        result['true_values'] = self.val_y 
 
-    def getlistOfIndexes(self, sentence):
-        content = gensim.utils.to_unicode(sentence) 
-        content = self.utFunction.normalizeText(content, remove_stopwords=0)
+        self.metric_val = mt.f1_score(result['true_values'],\
+                result['predicted_values'], average = 'macro') 
 
-        list_of_indexes = []
-        for token in content:
-            if token in self.filtered_words:
-                list_of_indexes.append(self.filtered_words[token])
 
-        #Logger.logr.info(list_of_indexes)
-        return list_of_indexes
+    def runEvaluationTask(self,  rbase, latent_space_size):
+        # Run the cnn validation 
+        metric = {}
+        summaryMethodID = 2
+        import gc 
 
+
+        for self.batch_size in [16]:
+            for self.percent_vocab_size in [80]:
+                self.getData(self.percent_vocab_size)
+                for self.nb_epoch in [5]:
+                    self.run ()
+                    metric[(self.batch_size, self.percent_vocab_size,\
+                     self.nb_epoch)] = self.metric_val 
+                    Logger.logr.info ("F1 value =%.4f"%self.metric_val)
+                    gc.collect()
+
+        (self.batch_size, self.percent_vocab_size,\
+            self.nb_epoch) = max(metric, key=metric.get)
+        Logger.logr.info ("Optimal "\
+            " configuration: batch_size = %i "\
+            " nb_filter = %i "\
+            " filter_length = %i "\
+            " percent vocab size = %i "\
+            " nb_epoch = %i "%(self.batch_size, self.nb_filter,\
+                 self.filter_length, self.percent_vocab_size, \
+                 self.nb_epoch))
+
+    
+
+        self.getData(self.percent_vocab_size)
+        self.runCNNBaseline (1)
+        self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
+             nb_epoch=self.nb_epoch, shuffle=True,\
+             validation_data= (self.val_x, self.val_y_prime))
+        result = pd.DataFrame()
+        result['predicted_values'] = self.encoder.inverse_transform(self.model.predict_classes(self.ts_x))
+        result['true_values'] = self.encoder.inverse_transform(self.ts_y)
+
+        labels = set(result['true_values'])
+        class_labels = {}
+        for i, label in enumerate(labels):
+            class_labels[label] = label
+            
+        self.true_values =  result['true_values']
+        self.predicted_values = result['predicted_values']
+        self.class_keys = sorted(class_labels)
+        self.class_names = [class_labels[key] for key in self.class_keys]
+
+        evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
+                self.latReprName, summaryMethodID), "w")
+        Logger.logr.info(evaluationResultFile)
+        self._writeClassificationReport(evaluationResultFile, self.latReprName)
 
 
     def doHouseKeeping(self):

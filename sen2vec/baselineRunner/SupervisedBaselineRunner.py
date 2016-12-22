@@ -115,7 +115,7 @@ class SupervisedBaselineRunner:
                     self._getConfusionMatrix(), "\n\n"))
         evaluationResultFile.write("%s%s%s" %("######Cohen's Kappa######\n", \
                     self._getCohenKappaScore(), "\n\n"))
-         evaluationResultFile.flush()
+        evaluationResultFile.flush()
                     
         Logger.logr.info("Evaluation with Logistic regression Completed.")
 
