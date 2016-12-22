@@ -282,7 +282,7 @@ class CNNRunner (BaselineRunner):
 
     
         self.getData(self.percent_vocab_size)
-        self.model = self.runCNNBaseline (1)
+        self.runCNNBaseline (1)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
              validation_data= (self.val_x, self.val_y_prime))
