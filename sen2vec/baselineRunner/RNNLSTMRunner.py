@@ -6,29 +6,18 @@ import sys
 import pickle
 import gensim 
 import numpy as np
-import pandas as pd 
-from sklearn import linear_model
-import sklearn.metrics as mt
-from collections import Counter 
-from keras.utils import np_utils
-from keras import backend as K
-from log_manager.log_config import Logger 
-from keras.layers import Embedding
-from keras.models import Sequential
-from multiprocessing import Process
+
 from keras.preprocessing import sequence
-from utility.Utility import Utility
-from sklearn.preprocessing import LabelEncoder
-from keras.layers import Dense, Dropout, Activation
-from keras.layers import Convolution1D, GlobalMaxPooling1D
-from subprocess import Popen 
+from keras.utils import np_utils
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Embedding
+from keras.layers import LSTM, SimpleRNN, GRU
+from keras.datasets import imdb
 
 
 
-from baselineRunner.BaselineRunner import BaselineRunner
-
-class CNNRunner (BaselineRunner):
-    def __init__(self, *args, **kwargs):
+class RNNLSTMRunner (BaselineRunner):
+	 def __init__(self, *args, **kwargs):
         """
         """
         BaselineRunner.__init__(self, *args, **kwargs)
@@ -36,39 +25,30 @@ class CNNRunner (BaselineRunner):
         self.percent_vocab_size = 80
         self.maxlen = 400
         self.dropout = 0.2
-        self.nb_filter = 250
-        self.filter_length = 3
-        self.border_mode = 'valid'
-        self.activation_h  = 'relu'
+        self.dropout_W = 0.2 
+        self.dropout_U = 0.2 
         self.activation_out = 'sigmoid'
-        self.subsample_length = 1
-        self.hidden_dims = 250
+
         self.optimizer = 'adam'
         self.loss = 'categorical_crossentropy'
         self.metric_list = ['accuracy']
+
         self.nb_epoch = 2
-        self.batch_size = 64 
+        self.batch_size = 16
+
         self.model = None 
         self.utFunction = Utility("Text Utility")
+
+
         self.true_values = {}
         self.predicted_values = {}
         self.class_keys = {}
         self.class_names = {}
         self.n_classes  = 1
-        self.encoder = LabelEncoder()
-        self.isfirstTimeEncoding = True 
         self.word_counter = Counter() 
-        np.random.seed(2016)
 
-        self.max_features = None 
-        self.tr_x = None 
-        self.tr_y = None 
-        self.ts_x = None 
-        self.ts_y = None 
-        self.val_x = None 
-        self.val_y = None 
-        self.val_y_prime = None 
-        self.metric_val = None 
+
+        np.random.seed(2016)
 
     def _getConfusionMatrix(self):
         return mt.confusion_matrix(self.true_values, self.predicted_values, labels = self.class_keys)
@@ -111,14 +91,9 @@ class CNNRunner (BaselineRunner):
         for token in content:
             self.word_counter[token] += 1
 
-    def runCNNBaseline(self, rbase):
-        """
-        We start off with an efficient embedding layer which maps
-        our vocab indices into embedding_dims dimensions. 
-        We add a Convolution1D, which will learn nb_filter word 
-        group filters of size filter_length. We use max pooling:
-        """
-        Logger.logr.info ("Running CNN with following"\
+    def runLSTMBaseline(self, rbase, latent_space_size):
+
+        Logger.logr.info ("Running LSTM (RNN) with following"\
             " configuration: batch_size = %i "\
             " nb_filter = %i "\
             " filter_length = %i "\
@@ -127,22 +102,15 @@ class CNNRunner (BaselineRunner):
                  self.filter_length, self.percent_vocab_size, \
                  self.nb_epoch))
 
-        self.model = Sequential()
-        self.model.add(Embedding(self.max_features, 50, input_length=self.maxlen,
-                    dropout=self.dropout))
-        self.model.add(Convolution1D(nb_filter = self.nb_filter,
-                        filter_length = self.filter_length,
-                        border_mode = self.border_mode, 
-                        activation = self.activation_h,
-                        subsample_length = self.subsample_length))
-        
-        self.model.add(GlobalMaxPooling1D())
-        self.model.add(Dense(self.hidden_dims))
-        self.model.add(Dropout(self.dropout))
-        self.model.add(Activation(self.activation_h))
-        self.model.add(Dense(self.n_classes))
-        self.model.add(Activation(self.activation_out))
-        self.model.compile(loss=self.loss, optimizer = self.optimizer,  metrics=self.metric_list)
+        model = Sequential()
+		model.add(Embedding(self.max_features, 128, dropout=self.dropout))
+
+
+        # We Could use simpleRNN or GRU instead
+		model.add(LSTM(128, dropout_W=self.dropout_W, dropout_U=self.dropout_U)) 
+		model.add(Dense(self.n_classes))
+		model.add(Activation(self.activation_out))
+
 
     def getlistOfIndexes(self, sentence):
         content = gensim.utils.to_unicode(sentence) 
@@ -157,11 +125,9 @@ class CNNRunner (BaselineRunner):
         return list_of_indexes
 
     def encodeLabel (self, Y):
-        if  self.isfirstTimeEncoding:
-            self.encoder.fit(Y)
-            self.isfirstTimeEncoding = False 
-        
-        encoded_Y = self.encoder.transform(Y)
+        encoder = LabelEncoder()
+        encoder.fit(Y)
+        encoded_Y = encoder.transform(Y)
         return encoded_Y
 
     def getData (self, percent_vocab_size):
@@ -192,7 +158,6 @@ class CNNRunner (BaselineRunner):
                     self.countFreq(result[row_id][1])
 
         #Logger.logr.info (len(train_sentences))  
-
         for result in self.postgresConnection.memoryEfficientSelect(["sentence.id", "content", "sentence.topic"],\
              ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
                 ["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'VALID'"] ], [], []):
@@ -213,64 +178,57 @@ class CNNRunner (BaselineRunner):
             id_ = id_ + 1
 
         # prepare data 
-        self.tr_x = []
+        train_x = []
         for sentence in train_sentences:
-            self.tr_x.append(self.getlistOfIndexes(sentence))
+            train_x.append(self.getlistOfIndexes(sentence))
 
-        self.ts_x = []
+        test_x = []
         for sentence in test_sentences:
-            self.ts_x.append(self.getlistOfIndexes(sentence))
+            test_x.append(self.getlistOfIndexes(sentence))
 
-        self.val_x = []
+        val_x = []
         for sentence in valid_sentences: 
-            self.val_x.append(self.getlistOfIndexes(sentence))
+            val_x.append(self.getlistOfIndexes(sentence))
 
-        self.tr_x = sequence.pad_sequences(self.tr_x, maxlen=self.maxlen)
-        self.ts_x = sequence.pad_sequences(self.ts_x, maxlen=self.maxlen)
-        self.val_x = sequence.pad_sequences(self.val_x, maxlen=self.maxlen)
+        train_x = sequence.pad_sequences(train_x, maxlen=self.maxlen)
+        test_x = sequence.pad_sequences(test_x, maxlen=self.maxlen)
+        val_x = sequence.pad_sequences(val_x, maxlen=self.maxlen)
 
         self.n_classes = len(np.unique(train_labels))
 
-        self.tr_y  = np_utils.to_categorical(self.encodeLabel(train_labels), self.n_classes)
-        self.val_y_prime = np_utils.to_categorical(self.encodeLabel(valid_labels), self.n_classes)
-        self.ts_y  = self.encodeLabel(test_labels)
-        self.val_y  = self.encodeLabel(valid_labels)
+        train_labels = np_utils.to_categorical(self.encodeLabel(train_labels), self.n_classes)
+        test_labels  = np_utils.to_categorical(self.encodeLabel(test_labels), self.n_classes)
+        valid_labels = np_utils.to_categorical(self.encodeLabel(valid_labels), self.n_classes)
+        Logger.logr.info ("Total Number of Classes =%i" %self.n_classes)
 
-        self.max_features = total_to_take
-        Logger.logr.info ("Total Number of Classes = %i" %self.n_classes)
-
-        
-
-    def run (self):
-        self.runCNNBaseline (1)
-        self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
-             nb_epoch=self.nb_epoch, shuffle=True,\
-             validation_data= (self.val_x, self.val_y_prime))
-        result = pd.DataFrame()
-        result['predicted_values'] = self.model.predict_classes(self.val_x, batch_size=64)
-        result['true_values'] = self.val_y 
-
-        self.metric_val = mt.f1_score(result['true_values'],\
-                result['predicted_values'], average = 'macro') 
+        return train_x, train_labels, test_x, test_labels, val_x, valid_labels, total_to_take
 
     def runEvaluationTask(self,  rbase, latent_space_size):
-        # Run the cnn validation 
+        # Run the LSTM baseline 
+      
         metric = {}
-        import gc 
 
+        for self.batch_size in [16, 32, 64, 128]:
+            for self.percent_vocab_size in [80, 85, 90, 95]:
+                tr_X, tr_Y, ts_X, ts_Y, val_X, val_Y, val_Y_prime,\
+                     max_feat = self.getData(self.percent_vocab_size)
+                for self.nb_epoch in [2, 5, 7]:
+                    self.max_features = max_feat
+                    self.runLSTMBaseline (1, latent_space_size)
+                    self.model.fit(tr_X, tr_Y, batch_size=self.batch_size,\
+                         nb_epoch=self.nb_epoch, shuffle=True,\
+                         validation_data= (val_X, val_Y_prime))
+                    result = pd.DataFrame()
+                    result['predicted_values'] = self.model.predict_classes(val_X, batch_size=64)
+                    result['true_values'] = val_Y
 
-        for self.batch_size in [16, 32, 64]:
-            for self.nb_filter in [50, 100, 150]:
-                for self.filter_length in [2, 3, 4]:
-                    for self.percent_vocab_size in [80, 85]:
-                        self.getData(self.percent_vocab_size)
-                        for self.nb_epoch in [2, 5, 7]:
-                            self.run ()
-                            metric[(self.batch_size, self.nb_filter,\
-                            self.filter_length, self.percent_vocab_size,\
-                             self.nb_epoch)] = self.metric_val 
-                            Logger.logr.info ("F1 value =%.4f"%self.metric_val)
-                            gc.collect()
+                    val = mt.f1_score(result['true_values'],\
+                            result['predicted_values'], average = 'macro') 
+
+                    metric[(self.batch_size, self.nb_filter,\
+                        self.filter_length, self.percent_vocab_size,\
+                        self.nb_epoch)] = val 
+                    Logger.logr.info ("F1 value =%.4f"%val)
 
         (self.batch_size, self.nb_filter, self.filter_length, self.percent_vocab_size,\
             self.nb_epoch) = max(metric, key=metric.get)
@@ -284,28 +242,27 @@ class CNNRunner (BaselineRunner):
                  self.nb_epoch))
 
     
-        # tr_X, tr_Y, ts_X, ts_Y, val_X, val_Y, self.max_features = self.getData(self.percent_vocab_size)
-        # self.model = self.runCNNBaseline (1, latent_space_size)
-        # self.model.fit(tr_X, tr_Y, batch_size=self.batch_size,\
-        #                          nb_epoch=self.nb_epoch, validation_data= (val_X, val_Y))
-        # result = pd.DataFrame()
-        # result['predicted_values'] = self.model.predict_classes(test_X)
-        # result['true_values'] = test_Y
+        tr_X, tr_Y, ts_X, ts_Y, val_X, val_Y, self.max_features = self.getData(self.percent_vocab_size)
+        self.model = self.runCNNBaseline (1, latent_space_size)
+        self.model.fit(tr_X, tr_Y, batch_size=self.batch_size,\
+                                 nb_epoch=self.nb_epoch, validation_data= (val_X, val_Y))
+        result = pd.DataFrame()
+        result['predicted_values'] = self.model.predict_classes(test_X)
+        result['true_values'] = test_Y
 
-        # labels = set(result['true_values'])
-        # class_labels = {}
-        # for i, label in enumerate(labels):
-        #     class_labels[label] = label
+        labels = set(result['true_values'])
+        class_labels = {}
+        for i, label in enumerate(labels):
+            class_labels[label] = label
             
-        # self.true_values =  result['true_values']
-        # self.predicted_values = result['predicted_values']
-        # self.class_keys = sorted(class_labels)
-        # self.class_names = [class_labels[key] for key in self.class_keys]
+        self.true_values =  result['true_values']
+        self.predicted_values = result['predicted_values']
+        self.class_keys = sorted(class_labels)
+        self.class_names = [class_labels[key] for key in self.class_keys]
 
-        # evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
-        #         latReprName, summaryMethodID), "w")
-        # self.__writeClassificationReport(evaluationResultFile, latReprName)
-
+        evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
+                latReprName, summaryMethodID), "w")
+        self.__writeClassificationReport(evaluationResultFile, latReprName)
 
 
     def doHouseKeeping(self):
