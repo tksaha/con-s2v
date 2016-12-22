@@ -13,14 +13,16 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Embedding
 from keras.layers import LSTM, SimpleRNN, GRU
 from keras.datasets import imdb
+from sklearn.preprocessing import LabelEncoder
+from utility.Utility import Utility
+from baselineRunner.SupervisedBaselineRunner import SupervisedBaselineRunner
 
 
-
-class RNNLSTMRunner (BaselineRunner):
+class RNNLSTMRunner (SupervisedBaselineRunner):
 	 def __init__(self, *args, **kwargs):
         """
         """
-        BaselineRunner.__init__(self, *args, **kwargs)
+        SupervisedBaselineRunner.__init__(self, *args, **kwargs)
         self.postgresConnection.connectDatabase()
         self.percent_vocab_size = 80
         self.maxlen = 400
@@ -45,10 +47,24 @@ class RNNLSTMRunner (BaselineRunner):
         self.class_keys = {}
         self.class_names = {}
         self.n_classes  = 1
+        self.encoder = LabelEncoder()
+        self.isfirstTimeEncoding = True 
         self.word_counter = Counter() 
 
-
         np.random.seed(2016)
+
+        self.max_features = None 
+        self.tr_x = None 
+        self.tr_y = None 
+        self.ts_x = None 
+        self.ts_y = None 
+        self.val_x = None 
+        self.val_y = None 
+        self.val_y_prime = None 
+        self.metric_val = None 
+        self.trainTestFolder = os.environ['TRTESTFOLDER']
+        self.latReprName = "lstm"
+
 
     def _getConfusionMatrix(self):
         return mt.confusion_matrix(self.true_values, self.predicted_values, labels = self.class_keys)

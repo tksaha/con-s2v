@@ -21,7 +21,6 @@ from utility.Utility import Utility
 from sklearn.preprocessing import LabelEncoder
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Convolution1D, GlobalMaxPooling1D
-from subprocess import Popen 
 from baselineRunner.SupervisedBaselineRunner import SupervisedBaselineRunner
 
 
@@ -48,7 +47,9 @@ class CNNRunner (SupervisedBaselineRunner):
         self.nb_epoch = 2
         self.batch_size = 64 
         self.model = None 
+
         self.utFunction = Utility("Text Utility")
+
         self.true_values = {}
         self.predicted_values = {}
         self.class_keys = {}
@@ -57,6 +58,8 @@ class CNNRunner (SupervisedBaselineRunner):
         self.encoder = LabelEncoder()
         self.isfirstTimeEncoding = True 
         self.word_counter = Counter() 
+
+
         np.random.seed(2016)
 
         self.max_features = None 
@@ -127,13 +130,16 @@ class CNNRunner (SupervisedBaselineRunner):
     def runEvaluationTask(self,  rbase, latent_space_size):
         # Run the cnn validation 
         metric = {}
+        summaryMethodID = 2
+
+
         import gc 
         for self.batch_size in [16]:
             for self.nb_filter in [50]:
                 for self.filter_length in [2]:
                     for self.percent_vocab_size in [80]:
                         self.getData(self.percent_vocab_size)
-                        for self.nb_epoch in [2]:
+                        for self.nb_epoch in [1]:
                             self.run ()
                             metric[(self.batch_size, self.nb_filter,\
                             self.filter_length, self.percent_vocab_size,\
@@ -153,14 +159,15 @@ class CNNRunner (SupervisedBaselineRunner):
                  self.nb_epoch))
 
     
+
         self.getData(self.percent_vocab_size)
         self.runCNNBaseline (1)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
              validation_data= (self.val_x, self.val_y_prime))
         result = pd.DataFrame()
-        result['predicted_values'] = self.model.predict_classes(self.ts_x)
-        result['true_values'] = self.ts_y
+        result['predicted_values'] = self.encoder.inverse_transform(self.model.predict_classes(self.ts_x))
+        result['true_values'] = self.encoder.inverse_transform(self.ts_y)
 
         labels = set(result['true_values'])
         class_labels = {}
@@ -174,7 +181,7 @@ class CNNRunner (SupervisedBaselineRunner):
 
         evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
                 self.latReprName, summaryMethodID), "w")
-        self.__writeClassificationReport(evaluationResultFile, self.latReprName)
+        self._writeClassificationReport(evaluationResultFile, self.latReprName)
 
 
 
