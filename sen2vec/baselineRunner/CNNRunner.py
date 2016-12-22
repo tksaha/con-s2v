@@ -192,7 +192,6 @@ class CNNRunner (BaselineRunner):
                     self.countFreq(result[row_id][1])
 
         #Logger.logr.info (len(train_sentences))  
-
         for result in self.postgresConnection.memoryEfficientSelect(["sentence.id", "content", "sentence.topic"],\
              ["sentence,summary"], [["sentence.id", "=", "summary.sentence_id"],\
                 ["summary.method_id", "=", summaryMethodID], ['sentence.istrain','=',"'VALID'"] ], [], []):
@@ -257,14 +256,12 @@ class CNNRunner (BaselineRunner):
         # Run the cnn validation 
         metric = {}
         import gc 
-
-
-        for self.batch_size in [16, 32, 64]:
-            for self.nb_filter in [50, 100, 150]:
-                for self.filter_length in [2, 3, 4]:
-                    for self.percent_vocab_size in [80, 85]:
+        for self.batch_size in [16]:
+            for self.nb_filter in [50]:
+                for self.filter_length in [2]:
+                    for self.percent_vocab_size in [80]:
                         self.getData(self.percent_vocab_size)
-                        for self.nb_epoch in [2, 5, 7]:
+                        for self.nb_epoch in [2]:
                             self.run ()
                             metric[(self.batch_size, self.nb_filter,\
                             self.filter_length, self.percent_vocab_size,\
@@ -284,27 +281,28 @@ class CNNRunner (BaselineRunner):
                  self.nb_epoch))
 
     
-        # tr_X, tr_Y, ts_X, ts_Y, val_X, val_Y, self.max_features = self.getData(self.percent_vocab_size)
-        # self.model = self.runCNNBaseline (1, latent_space_size)
-        # self.model.fit(tr_X, tr_Y, batch_size=self.batch_size,\
-        #                          nb_epoch=self.nb_epoch, validation_data= (val_X, val_Y))
-        # result = pd.DataFrame()
-        # result['predicted_values'] = self.model.predict_classes(test_X)
-        # result['true_values'] = test_Y
+        self.getData(self.percent_vocab_size)
+        self.model = self.runCNNBaseline (1)
+        self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
+             nb_epoch=self.nb_epoch, shuffle=True,\
+             validation_data= (self.val_x, self.val_y_prime))
+        result = pd.DataFrame()
+        result['predicted_values'] = self.model.predict_classes(ts_x)
+        result['true_values'] = self.ts_y
 
-        # labels = set(result['true_values'])
-        # class_labels = {}
-        # for i, label in enumerate(labels):
-        #     class_labels[label] = label
+        labels = set(result['true_values'])
+        class_labels = {}
+        for i, label in enumerate(labels):
+            class_labels[label] = label
             
-        # self.true_values =  result['true_values']
-        # self.predicted_values = result['predicted_values']
-        # self.class_keys = sorted(class_labels)
-        # self.class_names = [class_labels[key] for key in self.class_keys]
+        self.true_values =  result['true_values']
+        self.predicted_values = result['predicted_values']
+        self.class_keys = sorted(class_labels)
+        self.class_names = [class_labels[key] for key in self.class_keys]
 
-        # evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
-        #         latReprName, summaryMethodID), "w")
-        # self.__writeClassificationReport(evaluationResultFile, latReprName)
+        evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
+                latReprName, summaryMethodID), "w")
+        self.__writeClassificationReport(evaluationResultFile, latReprName)
 
 
 
