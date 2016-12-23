@@ -121,7 +121,7 @@ class SkipThoughtRunner(BaselineRunner):
                     sentence = result[row_id][1]
                     sentence_list.append(sentence)
 
-            Logger.logr.info("Total Number of sentences = %i"%len(sentece_list))
+            Logger.logr.info("Total Number of sentences = %i"%len(sentence_list))
 
             feature_map = model.encode (sentence_list)
 
