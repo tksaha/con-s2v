@@ -123,7 +123,7 @@ class SkipThoughtRunner(BaselineRunner):
 
             Logger.logr.info("Total Number of sentences = %i"%len(sentence_list))
 
-            feature_map = model.encode (sentence_list)
+            feature_map = tools.encode (model, sentence_list)
 
             start_id = 0
             for result in self.postgresConnection.memoryEfficientSelect(["id", "content"],\
