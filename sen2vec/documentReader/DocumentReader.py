@@ -29,7 +29,7 @@ from baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
 
 from baselineEvaluator.JointLearningSen2VecEvaluator import JointLearningSen2VecEvaluator
 from baselineEvaluator.FastSentVariantEvaluator import FastSentVariantEvaluator
-from baselineRunner.SkipThoughtEvaluator import SkipThoughtEvaluator
+from baselineEvaluator.SkipThoughtEvaluator import SkipThoughtEvaluator
 
 class DocumentReader:
     """
