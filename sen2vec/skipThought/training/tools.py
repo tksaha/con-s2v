@@ -12,7 +12,7 @@ import pickle as pkl
 import numpy
 import nltk
 import gensim 
-
+from log_manager.log_config import Logger 
 
 from collections import OrderedDict, defaultdict
 from nltk.tokenize import word_tokenize
