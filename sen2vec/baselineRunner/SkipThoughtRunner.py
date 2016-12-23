@@ -6,6 +6,7 @@ import re
 import logging 
 import gensim 
 import numpy as np 
+import pickle
 from skipThought.training import vocab, train, tools 
 from baselineRunner.BaselineRunner import BaselineRunner
 from log_manager.log_config import Logger 
