@@ -175,8 +175,12 @@ class ReutersReader(DocumentReader):
         """
         CLASS, CLUST, RANK, RANKCORR
         """
+
         #self.performValidation('CLASS')
-        #self.performTesting('CLASS')
+        self.performTesting('CLASS')
+
+        #self.performValidation('CLUST')
+        self.performTesting('CLUST')
 
         # from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
 
@@ -184,8 +188,8 @@ class ReutersReader(DocumentReader):
         # skthought.prepareData(1) 
         # skthought.runTheBaseline(1, 300)
 
-        from baselineRunner.RNNRunner import RNNRunner 
+        # from baselineRunner.RNNRunner import RNNRunner 
 
-        rnn_runner = RNNRunner (self.dbstring)
-        rnn_runner.runEvaluationTask(rbase, 300)
+        # rnn_runner = RNNRunner (self.dbstring)
+        # rnn_runner.runEvaluationTask(rbase, 300)
 
