@@ -131,11 +131,16 @@ class SkipThoughtRunner(BaselineRunner):
              ["sentence"], [], [], ["id"]):
                 for row_id in range(0,len(result)):
                     id_ = result[row_id][0] 
+                    #Logger.logr.info (result[row_id][1])
                     vec = feature_map[start_id]
+
+
                     start_id = start_id + 1
                     sent2vecFileRaw.write("%s "%(str(id_))) 
                     vec_str = self.convert_to_str(vec)
                
+                    sent2vec_raw_dict[id_] = vec 
+
                     sent2vecFileRaw.write("%s%s"%(vec_str, os.linesep))
                     sent2vec_dict[id_] = vec /  ( np.linalg.norm(vec) +  1e-6)
 
@@ -181,6 +186,7 @@ class SkipThoughtRunner(BaselineRunner):
             vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
             vDict = pickle.load(vecFile_raw)
 
+        Logger.logr.info("Total ids in dictionary =%i"%len(vDict))
         Logger.logr.info ("Performing evaluation for %s"%what_for)
         self.performEvaluation(summaryMethodID, self.latReprName, vDict)
        

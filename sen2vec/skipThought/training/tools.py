@@ -179,6 +179,7 @@ def preprocess(text):
         result += ' ' + ' '.join(tokens)
         X.append(result)
 
+    #Logger.logr.info(X)
     return X
 
 def load_googlenews_vectors(path_to_word2vec):
