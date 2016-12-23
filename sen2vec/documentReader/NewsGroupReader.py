@@ -166,10 +166,10 @@ class NewsGroupReader(DocumentReader):
         """
         nIter = 5
         #self.performValidation('CLASS')
-        #self.performTesting('CLASS', nIter)
+        self.performTesting('CLASS', nIter)
 
         #self.performValidation('CLUST')
-        #self.performTesting('CLUST', nIter)
+        self.performTesting('CLUST', nIter)
 
         # from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
 
@@ -177,8 +177,8 @@ class NewsGroupReader(DocumentReader):
         # skthought.prepareData(1) 
         # skthought.runTheBaseline(1, 300)
 
-        from baselineRunner.CNNRunner import CNNRunner
+        # from baselineRunner.CNNRunner import CNNRunner
 
-        cnnrunner = CNNRunner(self.dbstring)
-        cnnrunner.runEvaluationTask(rbase, 300)
+        # cnnrunner = CNNRunner(self.dbstring)
+        # cnnrunner.runEvaluationTask(rbase, 300)
         
