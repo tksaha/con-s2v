@@ -189,7 +189,6 @@ class ReutersReader(DocumentReader):
         # skthought.runTheBaseline(1, 300)
 
         # from baselineRunner.RNNRunner import RNNRunner 
-
         # rnn_runner = RNNRunner (self.dbstring)
         # rnn_runner.runEvaluationTask(rbase, 300)
 
