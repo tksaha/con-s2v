@@ -175,12 +175,12 @@ class ReutersReader(DocumentReader):
         """
         CLASS, CLUST, RANK, RANKCORR
         """
-
+        nIter = 1
         #self.performValidation('CLASS')
-        self.performTesting('CLASS')
+        self.performTesting('CLASS', nIter)
 
         #self.performValidation('CLUST')
-        self.performTesting('CLUST')
+        self.performTesting('CLUST', nIter)
 
         # from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
 

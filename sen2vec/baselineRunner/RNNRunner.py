@@ -117,7 +117,7 @@ class RNNRunner (SupervisedBaselineRunner):
         for self.batch_size in [16]:
             for self.percent_vocab_size in [80]:
                 self.getData(self.percent_vocab_size)
-                for self.nb_epoch in [1]:
+                for self.nb_epoch in [7,10,15]:
                     self.run ()
                     metric[(self.batch_size, self.percent_vocab_size,\
                      self.nb_epoch)] = self.metric_val 
