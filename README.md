@@ -85,6 +85,11 @@ file using following command (schema only):
 sudo -u postgres pg_dump -s --no-owner -FC news >sql-dump.dump 
 ```
 
+To dump the data of a particular table from the database: 
+```
+sudo -u postgres pg_dump --data-only -t summary news --no-owner -Fc > news_summary.dump
+```
+
 ## Setting Environment Variables
 
 Set the dataset folder path and the connection string in the environment.sh file properly and 
