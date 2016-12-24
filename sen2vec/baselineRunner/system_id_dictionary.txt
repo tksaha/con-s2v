@@ -14,3 +14,4 @@ FastSentFHVersionRunner: 84
 FastSentVariantRunner (CON-S2V-S):85
 JointLearningSen2VecRunner:86
 SkipThoughtRunner:87
+SDAERunner:88
