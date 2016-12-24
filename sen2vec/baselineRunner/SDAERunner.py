@@ -12,7 +12,7 @@ from collections import Counter
 from log_manager.log_config import Logger 
 from utility.Utility import Utility
 from SDAE.desent import train
-
+from baselineRunner.BaselineRunner import BaselineRunner
 
 class SDAERunner(BaselineRunner):
 	def __init__(self, *args, **kwargs):
@@ -22,6 +22,8 @@ class SDAERunner(BaselineRunner):
 		self.postgresConnection.connectDatabase()
 		self.latReprName = "sdae"
 		self.system_id = 88
+		self.utFunction = Utility("Text Utility")
+		self.dataDir = os.environ['TRTESTFOLDER']
 
 		self.dim_word = 300, # word vector dimensionality
         self.dim = 600, # the number of RNN units
@@ -39,25 +41,26 @@ class SDAERunner(BaselineRunner):
         self.optimizer = 'adam', 
         self.batch_size = 16,
         self.valid_batch_size = 16,
-        self.saveto = 'model.npz',
+        self.saveto = os.path.join(self.dataDir,\
+        		 "model_%s_%s.npz"%(os.environ['DATASET'], self.latReprName)),
         self.validFreq = 1000,
         self.saveFreq = 1000, # save the parameters after every saveFreq updates
         self.encoder = 'gru',
         self.decoder = 'gru_cond',
-        self.dataset = 'wiki',
+        self.dataset = os.environ['DATASET']
         self.use_preemb = False,
         self.embeddings = None,
         self.dictionary = os.path.join(self.dataDir,\
         		"%s_%s_dictionary.p"%(os.environ['DATASET'], self.latReprName)),
-        self.valid_text = ,
-        self.test_text =  ,
+        self.valid_text = None,
+        self.test_text =  None,
         self.use_dropout = False,
         self.reload_ = False
 
     # The following three function has been copied from
     # SDAE (Felix Hill). I have modified the functions 
     # according to my need.
-	def add_line(self.textline, D):
+	def add_line(self, textline, D):
 	    content = gensim.utils.to_unicode(textline) 
 	    words = self.utFunction.normalizeText(content, remove_stopwords=0)
 	    for w in words:
@@ -92,31 +95,36 @@ class SDAERunner(BaselineRunner):
 
 
 	def runSDAE (self):
-		trainerr, validerr, testerr = train(saveto=params['model'][0],
-                                        reload_=params['reload'][0],
-                                        corruption=params['corruption'][0],
-                                        corruption_prob=params['corruption_prob'][0],
-                                        dim_word=params['dim_word'][0],
-                                        dim=params['dim'][0],
-                                        n_words=params['n-words'][0],
-                                        decay_c=params['decay-c'][0],
-                                        param_noise=params['param-noise'][0],
-                                        lrate=params['learning-rate'][0],
-                                        optimizer=self.optimizer, 
-                                        maxlen=100,
-                                        batch_size=16,
-                                        dictionary = params['dictionary'][0],
-                                        valid_batch_size=16,
-                                        validFreq=1000,
-                                        dispFreq=1,
-                                        saveFreq=1000,
-                                        clip_c=params['clip-c'][0],
+		trainerr, validerr, testerr = train(saveto = self.saveto
+                                        reload_= self.reload_,
+                                        corruption = self.corruption,
+                                        corruption_prob = self.corruption_prob,
+                                        dim_word = self.dim_word,
+                                        dim = self.dim,
+                                        n_words = self.n_words,
+                                        decay_c = self.decay_c,
+                                        param_noise = self.param_noise,
+                                        lrate = self.lrate,
+                                        optimizer = self.optimizer, 
+                                        maxlen = self.maxlen, 
+                                        batch_size = self.batch_size,
+                                        dictionary = self.dictionary,
+                                        valid_batch_size = self.valid_batch_size,
+                                        validFreq = 1000,
+                                        dispFreq = 1,
+                                        saveFreq = 1000,
+                                        clip_c = self.clip_c,
                                         encoder = self.encoder,
                                         decoder = self.decoder,
-                                        use_preemb=params['use_preemb'][0],
-                                        dataset='book', 
-                                        use_dropout=params['use-dropout'][0],
-                                        embeddings=params['embeddings'][0])
+                                        use_preemb = self.use_preemb, 
+                                        dataset = self.dataset, 
+                                        use_dropout= self.use_dropout,
+                                        embeddings= self.embeddings, 
+                                        valid_text = self.valid_text, 
+                                        test_text = self.test_text) 
+
+		Logger.logr.info("train error = %0.4f"%trainerr)
+
 
 	def runTheBaseline(self, rbase, latent_space_size):
 		pass 

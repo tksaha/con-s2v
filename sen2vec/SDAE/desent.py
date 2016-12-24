@@ -2,21 +2,25 @@
 Denoising Sentence Autoencoder
 Code by KyungHyunCho with some help from Felix Hill
 '''
+from __future__ import print_function
+from __future__ import absolute_import
 import theano
-import theano.tensor as tensor
-from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
-import cPickle as pkl
 import numpy
 import copy
 import os
 import pdb
+import pickle as pkl
+import theano.tensor as tensor
+from log_manager.log_config import Logger 
+from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
+
 from scipy import optimize, stats
 from collections import OrderedDict
 from sklearn.cross_validation import KFold
 
 from nltk.tokenize import wordpunct_tokenize
 
-import book
+from . import book
 
 profile = False
 datasets = {'book': book.load_data}
@@ -497,10 +501,10 @@ def build_sampler(tparams, options, trng):
 
     init_state = get_layer('ff')[1](tparams, ctx_mean, options, prefix='ff_state', activ='tanh')
 
-    print 'Building f_init...',
+    print('Building f_init...', end=' ')
     outs = [init_state, ctx]
     f_init = theano.function([x], outs, name='f_init', profile=profile)
-    print 'Done'
+    print('Done')
 
     # x: 1 x 1
     y = tensor.vector('y_sampler', dtype='int64')
@@ -524,11 +528,11 @@ def build_sampler(tparams, options, trng):
     next_sample = trng.multinomial(pvals=next_probs).argmax(1)
 
     # next word probability
-    print 'Building f_next..', 
+    print('Building f_next..', end=' ') 
     inps = [y, ctx, init_state]
     outs = [next_probs, next_sample, next_state]
     f_next = theano.function(inps, outs, name='f_next', profile=profile)
-    print 'Done'
+    print('Done')
 
     return f_init, f_next
 
@@ -646,7 +650,7 @@ def recon_err(f_recon_err, prepare_data, data, iterator,
 
         n_done += len(valid_index)
         if verbose:
-            print '%d/%d samples computed'%(n_done,n_samples)
+            print('%d/%d samples computed'%(n_done,n_samples))
 
     return probs
 
@@ -757,7 +761,7 @@ def perplexity(f_cost, lines, worddict, options, verbose=False, wv_embs=None):
         cost += cost_one
 
         if verbose:
-            print 'Sentence ', i, '/', n_lines, ' (', seq.mean(), '):', 2 ** (cost_one/len(seq)/numpy.log(2)), ', ', cost_one/len(seq)
+            print('Sentence ', i, '/', n_lines, ' (', seq.mean(), '):', 2 ** (cost_one/len(seq)/numpy.log(2)), ', ', cost_one/len(seq))
     cost = cost / n_words
     return cost
 
@@ -821,11 +825,11 @@ def train(dim_word=100, # word vector dimensionality
             reloaded_options = pkl.load(f)
             model_options.update(reloaded_options)
 
-    print 'Loading data'
+    print('Loading data')
     load_data = get_dataset(dataset)
     train, valid, test = load_data(batch_size=batch_size)
 
-    print 'Building model'
+    print('Building model')
     params = init_params(model_options)
     # reload parameters
     if reload_ and os.path.exists(saveto):
@@ -855,14 +859,14 @@ def train(dim_word=100, # word vector dimensionality
         f_rem_noise = theano.function([], [], updates=rem_update)
 
     # before any regularizer
-    print 'Building f_log_probs...',
+    print('Building f_log_probs...', end=' ')
     f_log_probs = theano.function(inps, cost)
-    print 'Done'
+    print('Done')
 
     # sentence representation
-    print 'Building f_ctx...',
+    print('Building f_ctx...', end=' ')
     f_ctx = theano.function([x_noise, xn_mask], ctx)
-    print 'Done'
+    print('Done')
 
     if decay_c > 0.:
         decay_c = theano.shared(numpy.float32(decay_c), name='decay_c')
@@ -873,14 +877,14 @@ def train(dim_word=100, # word vector dimensionality
         cost += weight_decay
 
     # after any regularizer
-    print 'Building f_cost...',
+    print('Building f_cost...', end=' ')
     f_cost = theano.function(inps, cost)
-    print 'Done'
+    print('Done')
 
-    print 'Computing gradient...',
+    print('Computing gradient...', end=' ')
     grads = tensor.grad(cost, wrt=itemlist(tparams))
     f_grad = theano.function(inps, grads)
-    print 'Done'
+    print('Done')
 
     if clip_c > 0.:
         g2 = 0.
@@ -894,11 +898,11 @@ def train(dim_word=100, # word vector dimensionality
         grads = new_grads
 
     lr = tensor.scalar(name='lr')
-    print 'Building optimizers...',
+    print('Building optimizers...', end=' ')
     f_grad_shared, f_update = eval(optimizer)(lr, tparams, grads, inps, cost)
-    print 'Done'
+    Logger.logr.info('Done')
 
-    print 'Optimization'
+    Logger.logr.info('Optimization')
 
     history_errs = []
     # reload history
@@ -954,7 +958,7 @@ def train(dim_word=100, # word vector dimensionality
                 x_noise = wv_embs[x_noise.flatten()].reshape([shp[0], shp[1], wv_embs.shape[1]])
 
             if x == None:
-                print 'Minibatch with zero sample under length ', maxlen
+                Logger.logr.info('Minibatch with zero sample under length ', maxlen)
                 continue
 
             if param_noise > 0.:
@@ -966,14 +970,14 @@ def train(dim_word=100, # word vector dimensionality
             f_update(lrate)
 
             if numpy.isnan(cost) or numpy.isinf(cost):
-                print 'NaN detected'
+                Logger.logr.info('NaN detected')
                 return 1., 1., 1.
 
             if numpy.mod(uidx, dispFreq) == 0:
-                print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost
+                Logger.logr.info('Epoch ', eidx, 'Update ', uidx, 'Cost ', cost)
 
             if numpy.mod(uidx, saveFreq) == 0:
-                print 'Saving...',
+                Logger.logr.info('Saving...', end=' ')
 
                 #import ipdb; ipdb.set_trace()
 
@@ -983,7 +987,7 @@ def train(dim_word=100, # word vector dimensionality
                     params = unzip(tparams)
                 numpy.savez(saveto, history_errs=history_errs, **params)
                 pkl.dump(model_options, open('%s.pkl'%saveto, 'wb'))
-                print 'Done'
+                Logger.logr.info('Done')
 
             if numpy.mod(uidx, validFreq) == 0:
                 use_noise.set_value(0.)
@@ -1010,15 +1014,15 @@ def train(dim_word=100, # word vector dimensionality
                     if eidx > patience and valid_err >= numpy.array(history_errs)[:-patience,0].min():
                         bad_counter += 1
                         if bad_counter > patience:
-                            print 'Early Stop!'
+                            Logger.logr.info('Early Stop!')
                             estop = True
                             break
 
-                print 'Train ', train_err, 'Valid ', valid_err, 'Test ', test_err
+                Logger.logr.info('Train ', train_err, 'Valid ', valid_err, 'Test ', test_err)
 
-        #print 'Epoch ', eidx, 'Update ', uidx, 'Train ', train_err, 'Valid ', valid_err, 'Test ', test_err
+        #Logger.logr.info 'Epoch ', eidx, 'Update ', uidx, 'Train ', train_err, 'Valid ', valid_err, 'Test ', test_err
 
-        print 'Seen %d samples'%n_samples
+        Logger.logr.info('Seen %d samples'%n_samples)
 
         if estop:
             break
@@ -1036,7 +1040,7 @@ def train(dim_word=100, # word vector dimensionality
     if test_text != None:
         test_err = perplexity(f_cost, test_lines, worddict, model_options, wv_embs=wv_embs)
 
-    print 'Train ', train_err, 'Valid ', valid_err, 'Test ', test_err
+    Logger.logr.info('Train ', train_err, 'Valid ', valid_err, 'Test ', test_err)
 
     params = copy.copy(best_p)
     numpy.savez(saveto, zipped_params=best_p, train_err=train_err, 
@@ -1045,10 +1049,6 @@ def train(dim_word=100, # word vector dimensionality
 
     return train_err, valid_err, test_err
 
-
-
-if __name__ == '__main__':
-    pass
 
 
 
