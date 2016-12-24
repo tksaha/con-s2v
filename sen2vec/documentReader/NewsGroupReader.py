@@ -177,12 +177,12 @@ class NewsGroupReader(DocumentReader):
         # skthought.prepareData(1) 
         # skthought.runTheBaseline(1, 300)
 
-        # from baselineRunner.CNNRunner import CNNRunner
-        # cnnrunner = CNNRunner(self.dbstring)
-        # cnnrunner.runEvaluationTask(rbase, 300)
+        from baselineRunner.CNNRunner import CNNRunner
+        cnnrunner = CNNRunner(self.dbstring)
+        cnnrunner.runEvaluationTask(rbase, 300)
 
-        from baselineRunner.RNNRunner import RNNRunner 
-        rnn_runner = RNNRunner (self.dbstring)
-        rnn_runner.runEvaluationTask(rbase, 300)
+        # from baselineRunner.RNNRunner import RNNRunner 
+        # rnn_runner = RNNRunner (self.dbstring)
+        # rnn_runner.runEvaluationTask(rbase, 300)
 
         
