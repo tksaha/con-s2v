@@ -1,8 +1,8 @@
 import numpy
-import cPickle as pkl
+import pickle as pkl
 
 import gzip
-
+from log_manager.log_config import Logger 
 from nltk.tokenize import wordpunct_tokenize
 import pdb
 
@@ -17,6 +17,8 @@ class TextIterator:
             self.source = gzip.open(source, 'r')
         else:
             self.source = open(source, 'r')
+
+        Logger.logr.info (source_dict)
         with open(source_dict, 'rb') as f:
             self.source_dict = pkl.load(f)
 
@@ -33,7 +35,7 @@ class TextIterator:
     def reset(self):
         self.source.seek(0)
 
-    def next(self):
+    def __next__(self):
         if self.end_of_data:
             self.end_of_data = False
             self.reset()
@@ -43,11 +45,11 @@ class TextIterator:
         ii = 0
 
         try:
-            for ii in xrange(self.batch_size):
+            for ii in range(self.batch_size):
                 ss = self.source.readline()
                 if ss == "":
                     raise IOError
-                ss = wordpunct_tokenize(ss.decode('utf-8').strip())
+                ss = wordpunct_tokenize(ss.strip())
                 ss = [self.source_dict[w] if w in self.source_dict else 1 for w in ss]
                 if self.n_words_source > 0:
                     ss = [w if w < self.n_words_source else 1 for w in ss]
@@ -103,7 +105,7 @@ class TextIteratorMSRP:
         ii = 0
 
         try:
-            for ii in xrange(self.batch_size//2):
+            for ii in range(self.batch_size//2):
                 ss = self.source.readline()
                 if ss == "":
                     raise IOError
@@ -167,13 +169,13 @@ class MSRPTextIterator:
         ii = 0
 
         try:
-            for ii in xrange(self.batch_size):
+            for ii in range(self.batch_size):
                 ss = self.source.readline()
                 if ss == "":
                     raise IOError
                 (ss1,ss2) = tuple(ss.split('\t')[3:])
-                ss1,ss2 = wordpunct_tokenize(ss1.lower().decode('utf-8').strip()),\
-                           wordpunct_tokenize(ss2.lower().decode('utf-8').strip())
+                ss1,ss2 = wordpunct_tokenize(ss1.lower().strip()),\
+                           wordpunct_tokenize(ss2.lower().strip())
                 ss1 = [self.source_dict[w] if w in self.source_dict else 1 for w in ss1]
                 ss2 = [self.source_dict[w] if w in self.source_dict else 1 for w in ss2]
                 if self.n_words_source > 0:
@@ -192,12 +194,3 @@ class MSRPTextIterator:
             raise StopIteration
 
         return source
-
-
-
-
-
-
-
-
-

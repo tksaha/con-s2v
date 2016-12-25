@@ -19,14 +19,24 @@ from collections import OrderedDict
 from sklearn.cross_validation import KFold
 
 from nltk.tokenize import wordpunct_tokenize
+from SDAE.text_iterator import TextIterator
 
-from . import book
 
 profile = False
-datasets = {'book': book.load_data}
+#datasets = {'book': book.load_data}
              
-def get_dataset(name):
-    return datasets[name]
+
+def load_data(data_path, dict_path, valid_path=None, 
+        test_path=None, 
+        batch_size=128):
+    Logger.logr.info('... initializing data iterators')
+    train = TextIterator(data_path, dict_path, batch_size=batch_size, maxlen=-1, n_words_source=-1)
+    valid = TextIterator(valid_path, dict_path, batch_size=batch_size, maxlen=-1, n_words_source=-1) if valid_path else None
+    test = TextIterator(test_path, dict_path, batch_size=batch_size, maxlen=-1, n_words_source=-1) if test_path else None
+
+    return train, valid, test
+
+
 
 def prepare_data(seqs_x, seqs_xn, maxlen=None, n_words=30000):
     # x: a list of sentences
@@ -125,19 +135,19 @@ def _remove(x, degree=0.1, use_preemb=False):
 
 # push parameters to Theano shared variables
 def zipp(params, tparams):
-    for kk, vv in params.iteritems():
+    for kk, vv in params.items():
         tparams[kk].set_value(vv)
 
 # pull parameters from Theano shared variables
 def unzip(zipped):
     new_params = OrderedDict()
-    for kk, vv in zipped.iteritems():
+    for kk, vv in zipped.items():
         new_params[kk] = vv.get_value()
     return new_params
 
 # get the list of parameters: Note that tparams must be OrderedDict
 def itemlist(tparams):
-    return [vv for kk, vv in tparams.iteritems()]
+    return [vv for kk, vv in tparams.items()]
 
 # dropout
 def dropout_layer(state_before, use_noise, trng):
@@ -153,14 +163,14 @@ def _p(pp, name):
 # initialize Theano shared variables according to the initial parameters
 def init_tparams(params):
     tparams = OrderedDict()
-    for kk, pp in params.iteritems():
+    for kk, pp in params.items():
         tparams[kk] = theano.shared(params[kk], name=kk)
     return tparams
 
 # load parameters
 def load_params(path, params):
     pp = numpy.load(path)
-    for kk, vv in params.iteritems():
+    for kk, vv in params.items():
         if kk not in pp:
             raise Warning('%s is not in the archive'%kk)
         params[kk] = pp[kk]
@@ -501,10 +511,10 @@ def build_sampler(tparams, options, trng):
 
     init_state = get_layer('ff')[1](tparams, ctx_mean, options, prefix='ff_state', activ='tanh')
 
-    print('Building f_init...', end=' ')
+    Logger.logr.info('Building f_init...', end=' ')
     outs = [init_state, ctx]
     f_init = theano.function([x], outs, name='f_init', profile=profile)
-    print('Done')
+    Logger.logr.info('Done')
 
     # x: 1 x 1
     y = tensor.vector('y_sampler', dtype='int64')
@@ -528,11 +538,11 @@ def build_sampler(tparams, options, trng):
     next_sample = trng.multinomial(pvals=next_probs).argmax(1)
 
     # next word probability
-    print('Building f_next..', end=' ') 
+    Logger.logr.info('Building f_next..', end=' ') 
     inps = [y, ctx, init_state]
     outs = [next_probs, next_sample, next_state]
     f_next = theano.function(inps, outs, name='f_next', profile=profile)
-    print('Done')
+    Logger.logr.info('Done')
 
     return f_init, f_next
 
@@ -558,7 +568,7 @@ def gen_sample(tparams, f_init, f_next, x, options, trng=None, k=1, maxlen=30,
     next_state, ctx0 = ret[0], ret[1]
     next_w = -1 * numpy.ones((1,)).astype('int64')
 
-    for ii in xrange(maxlen):
+    for ii in range(maxlen):
         ctx = numpy.tile(ctx0, [live_k, 1])
         inps = [next_w, ctx, next_state]
         ret = f_next(*inps)
@@ -598,7 +608,7 @@ def gen_sample(tparams, f_init, f_next, x, options, trng=None, k=1, maxlen=30,
             hyp_scores = []
             hyp_states = []
 
-            for idx in xrange(len(new_hyp_samples)):
+            for idx in range(len(new_hyp_samples)):
                 if new_hyp_samples[idx][-1] == 0:
                     sample.append(new_hyp_samples[idx])
                     sample_score.append(new_hyp_scores[idx])
@@ -622,7 +632,7 @@ def gen_sample(tparams, f_init, f_next, x, options, trng=None, k=1, maxlen=30,
     if not stochastic:
         # dump every remaining one
         if live_k > 0:
-            for idx in xrange(live_k):
+            for idx in range(live_k):
                 sample.append(hyp_samples[idx])
                 sample_score.append(hyp_scores[idx])
 
@@ -650,16 +660,16 @@ def recon_err(f_recon_err, prepare_data, data, iterator,
 
         n_done += len(valid_index)
         if verbose:
-            print('%d/%d samples computed'%(n_done,n_samples))
+            Logger.logr.info('%d/%d samples computed'%(n_done,n_samples))
 
     return probs
 
 # optimizers
 # name(hyperp, tparams, grads, inputs (list), cost) = f_grad_shared, f_update
 def adadelta(lr, tparams, grads, inp, cost):
-    zipped_grads = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_grad'%k) for k, p in tparams.iteritems()]
-    running_up2 = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_rup2'%k) for k, p in tparams.iteritems()]
-    running_grads2 = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_rgrad2'%k) for k, p in tparams.iteritems()]
+    zipped_grads = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_grad'%k) for k, p in tparams.items()]
+    running_up2 = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_rup2'%k) for k, p in tparams.items()]
+    running_grads2 = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_rgrad2'%k) for k, p in tparams.items()]
 
     zgup = [(zg, g) for zg, g in zip(zipped_grads, grads)]
     rg2up = [(rg2, 0.95 * rg2 + 0.05 * (g ** 2)) for rg2, g in zip(running_grads2, grads)]
@@ -675,7 +685,7 @@ def adadelta(lr, tparams, grads, inp, cost):
     return f_grad_shared, f_update
 
 def adam(lr, tparams, grads, inp, cost):
-    gshared = [theano.shared(p.get_value() * 0., name='%s_grad'%k) for k, p in tparams.iteritems()]
+    gshared = [theano.shared(p.get_value() * 0., name='%s_grad'%k) for k, p in tparams.items()]
     gsup = [(gs, g) for gs, g in zip(gshared, grads)]
 
     f_grad_shared = theano.function(inp, cost, updates=gsup)
@@ -711,9 +721,9 @@ def adam(lr, tparams, grads, inp, cost):
 
 
 def rmsprop(lr, tparams, grads, inp, cost):
-    zipped_grads = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_grad'%k) for k, p in tparams.iteritems()]
-    running_grads = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_rgrad'%k) for k, p in tparams.iteritems()]
-    running_grads2 = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_rgrad2'%k) for k, p in tparams.iteritems()]
+    zipped_grads = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_grad'%k) for k, p in tparams.items()]
+    running_grads = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_rgrad'%k) for k, p in tparams.items()]
+    running_grads2 = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_rgrad2'%k) for k, p in tparams.items()]
 
     zgup = [(zg, g) for zg, g in zip(zipped_grads, grads)]
     rgup = [(rg, 0.95 * rg + 0.05 * g) for rg, g in zip(running_grads, grads)]
@@ -721,7 +731,7 @@ def rmsprop(lr, tparams, grads, inp, cost):
 
     f_grad_shared = theano.function(inp, cost, updates=zgup+rgup+rg2up)
 
-    updir = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_updir'%k) for k, p in tparams.iteritems()]
+    updir = [theano.shared(p.get_value() * numpy.float32(0.), name='%s_updir'%k) for k, p in tparams.items()]
     updir_new = [(ud, 0.9 * ud - 1e-4 * zg / tensor.sqrt(rg2 - rg ** 2 + 1e-4)) for ud, zg, rg, rg2 in zip(updir, zipped_grads, running_grads, running_grads2)]
     param_up = [(p, p + udn[1]) for p, udn in zip(itemlist(tparams), updir_new)]
     f_update = theano.function([lr], [], updates=updir_new+param_up, on_unused_input='ignore')
@@ -729,7 +739,7 @@ def rmsprop(lr, tparams, grads, inp, cost):
     return f_grad_shared, f_update
 
 def sgd(lr, tparams, grads, inp, cost):
-    gshared = [theano.shared(p.get_value() * 0., name='%s_grad'%k) for k, p in tparams.iteritems()]
+    gshared = [theano.shared(p.get_value() * 0., name='%s_grad'%k) for k, p in tparams.items()]
     gsup = [(gs, g) for gs, g in zip(gshared, grads)]
 
     f_grad_shared = theano.function(inp, cost, updates=gsup)
@@ -761,7 +771,7 @@ def perplexity(f_cost, lines, worddict, options, verbose=False, wv_embs=None):
         cost += cost_one
 
         if verbose:
-            print('Sentence ', i, '/', n_lines, ' (', seq.mean(), '):', 2 ** (cost_one/len(seq)/numpy.log(2)), ', ', cost_one/len(seq))
+            Logger.logr.info('Sentence ', i, '/', n_lines, ' (', seq.mean(), '):', 2 ** (cost_one/len(seq)/numpy.log(2)), ', ', cost_one/len(seq))
     cost = cost / n_words
     return cost
 
@@ -787,6 +797,7 @@ def train(dim_word=100, # word vector dimensionality
           encoder='gru',
           decoder='gru_cond',
           dataset='wiki',
+          data_path='apath',
           use_preemb=True,
           embeddings='../Files/D_medium_cbow_pdw_8B.pkl',
           dictionary='../Files/dict.pkl',
@@ -802,7 +813,7 @@ def train(dim_word=100, # word vector dimensionality
         with open(dictionary, 'rb') as f:
             worddict = pkl.load(f)
         word_idict = dict()
-        for kk, vv in worddict.iteritems():
+        for kk, vv in worddict.items():
             word_idict[vv] = kk
 
     if use_preemb:
@@ -811,7 +822,7 @@ def train(dim_word=100, # word vector dimensionality
         with open(embeddings, 'rb') as f:
             wv = pkl.load(f)
         wv_embs = numpy.zeros((len(worddict.keys()), len(wv.values()[0])), dtype='float32')
-        for ii, vv in wv.iteritems():
+        for ii, vv in wv.items():
             if ii in worddict:
                 wv_embs[worddict[ii],:] = vv
         wv_embs = wv_embs.astype('float32')
@@ -825,11 +836,11 @@ def train(dim_word=100, # word vector dimensionality
             reloaded_options = pkl.load(f)
             model_options.update(reloaded_options)
 
-    print('Loading data')
-    load_data = get_dataset(dataset)
-    train, valid, test = load_data(batch_size=batch_size)
+    Logger.logr.info('Loading data')
+    #load_data = get_dataset(dataset)
+    train, valid, test = load_data(data_path, dictionary, batch_size=batch_size)
 
-    print('Building model')
+    Logger.logr.info('Building model')
     params = init_params(model_options)
     # reload parameters
     if reload_ and os.path.exists(saveto):
@@ -846,7 +857,7 @@ def train(dim_word=100, # word vector dimensionality
     if param_noise > 0.:
         noise_update = []
         noise_tparams = OrderedDict()
-        for kk, vv in tparams.iteritems():
+        for kk, vv in tparams.items():
             noise_tparams[kk] = theano.shared(vv.get_value() * 0.)
             noise_update.append((noise_tparams[kk], param_noise * trng.normal(vv.shape)))
         f_noise = theano.function([], [], updates=noise_update)
@@ -859,32 +870,32 @@ def train(dim_word=100, # word vector dimensionality
         f_rem_noise = theano.function([], [], updates=rem_update)
 
     # before any regularizer
-    print('Building f_log_probs...', end=' ')
+    Logger.logr.info('Building f_log_probs...')
     f_log_probs = theano.function(inps, cost)
-    print('Done')
+    Logger.logr.info('Done')
 
     # sentence representation
-    print('Building f_ctx...', end=' ')
+    Logger.logr.info('Building f_ctx...')
     f_ctx = theano.function([x_noise, xn_mask], ctx)
-    print('Done')
+    Logger.logr.info('Done')
 
     if decay_c > 0.:
         decay_c = theano.shared(numpy.float32(decay_c), name='decay_c')
         weight_decay = 0.
-        for kk, vv in tparams.iteritems():
+        for kk, vv in tparams.items():
             weight_decay += (vv ** 2).sum()
         weight_decay *= decay_c
         cost += weight_decay
 
     # after any regularizer
-    print('Building f_cost...', end=' ')
+    Logger.logr.info('Building f_cost...')
     f_cost = theano.function(inps, cost)
-    print('Done')
+    Logger.logr.info('Done')
 
-    print('Computing gradient...', end=' ')
+    Logger.logr.info('Computing gradient...')
     grads = tensor.grad(cost, wrt=itemlist(tparams))
     f_grad = theano.function(inps, grads)
-    print('Done')
+    Logger.logr.info('Done')
 
     if clip_c > 0.:
         g2 = 0.
@@ -898,7 +909,7 @@ def train(dim_word=100, # word vector dimensionality
         grads = new_grads
 
     lr = tensor.scalar(name='lr')
-    print('Building optimizers...', end=' ')
+    Logger.logr.info('Building optimizers...')
     f_grad_shared, f_update = eval(optimizer)(lr, tparams, grads, inps, cost)
     Logger.logr.info('Done')
 
@@ -933,7 +944,7 @@ def train(dim_word=100, # word vector dimensionality
 
     uidx = 0
     estop = False
-    for eidx in xrange(max_epochs):
+    for eidx in range(max_epochs):
         n_samples = 0
 
         if 'start' in dir(train):
@@ -958,7 +969,7 @@ def train(dim_word=100, # word vector dimensionality
                 x_noise = wv_embs[x_noise.flatten()].reshape([shp[0], shp[1], wv_embs.shape[1]])
 
             if x == None:
-                Logger.logr.info('Minibatch with zero sample under length ', maxlen)
+                Logger.logr.info('Minibatch with zero sample under length %i'%maxlen)
                 continue
 
             if param_noise > 0.:
@@ -974,10 +985,10 @@ def train(dim_word=100, # word vector dimensionality
                 return 1., 1., 1.
 
             if numpy.mod(uidx, dispFreq) == 0:
-                Logger.logr.info('Epoch ', eidx, 'Update ', uidx, 'Cost ', cost)
+                Logger.logr.info('Epoch=%i  Update=%i Cost=%.4f'%(eidx, uidx, cost))
 
             if numpy.mod(uidx, saveFreq) == 0:
-                Logger.logr.info('Saving...', end=' ')
+                Logger.logr.info('Saving...')
 
                 #import ipdb; ipdb.set_trace()
 
@@ -1018,7 +1029,7 @@ def train(dim_word=100, # word vector dimensionality
                             estop = True
                             break
 
-                Logger.logr.info('Train ', train_err, 'Valid ', valid_err, 'Test ', test_err)
+                #Logger.logr.info('Train ', train_err, 'Valid ', valid_err, 'Test ', test_err)
 
         #Logger.logr.info 'Epoch ', eidx, 'Update ', uidx, 'Train ', train_err, 'Valid ', valid_err, 'Test ', test_err
 
@@ -1040,7 +1051,7 @@ def train(dim_word=100, # word vector dimensionality
     if test_text != None:
         test_err = perplexity(f_cost, test_lines, worddict, model_options, wv_embs=wv_embs)
 
-    Logger.logr.info('Train ', train_err, 'Valid ', valid_err, 'Test ', test_err)
+    #Logger.logr.info('Train ', train_err, 'Valid ', valid_err, 'Test ', test_err)
 
     params = copy.copy(best_p)
     numpy.savez(saveto, zipped_params=best_p, train_err=train_err, 

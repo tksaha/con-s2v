@@ -114,7 +114,7 @@ pip install theano
 sudo apt install nvidia-cuda-toolkit
 ```
 
-## Installation of Keras (Sequntial API)
+## Installation of Keras (Sequential API)
 ```
 pip install keras
 ```
