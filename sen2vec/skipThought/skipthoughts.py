@@ -7,10 +7,11 @@ import os
 import theano
 import theano.tensor as tensor
 
-import cPickle as pkl
+import pickle as pkl
 import numpy
 import copy
 import nltk
+from log_manager.log_config import Logger 
 
 from collections import OrderedDict, defaultdict
 from scipy.linalg import norm
@@ -21,7 +22,7 @@ profile = False
 #-----------------------------------------------------------------------------#
 # Specify model and table locations here
 #-----------------------------------------------------------------------------#
-path_to_models = os.path.join(os.environ['TRTESTFOLDER'], "skip_thought_data")
+path_to_models = os.path.join(os.environ['TRTESTFOLDER'], "skip_thought_data/")
 path_to_tables = path_to_models
 #-----------------------------------------------------------------------------#
 
@@ -77,8 +78,8 @@ def load_tables():
     Load the tables
     """
     words = []
-    utable = numpy.load(path_to_tables + 'utable.npy')
-    btable = numpy.load(path_to_tables + 'btable.npy')
+    utable = numpy.load(path_to_tables + 'utable.npy', encoding='latin1')
+    btable = numpy.load(path_to_tables + 'btable.npy', encoding='latin1')
     f = open(path_to_tables + 'dictionary.txt', 'rb')
     for line in f:
         words.append(line.decode('utf-8').strip())
@@ -112,7 +113,8 @@ def encode(model, X, use_norm=True, verbose=True, batch_size=128, use_eos=False)
     for k in ds.keys():
         if verbose:
             Logger.logr.info(k)
-        numbatches = len(ds[k]) / batch_size + 1
+	numbatches = len(ds[k]) / batch_size + 1
+	numbatches = int (numbatches)
         for minibatch in range(numbatches):
             caps = ds[k][minibatch::numbatches]
 
@@ -225,7 +227,7 @@ def init_tparams(params):
     initialize Theano shared variables according to the initial parameters
     """
     tparams = OrderedDict()
-    for kk, pp in params.iteritems():
+    for kk, pp in params.items():
         tparams[kk] = theano.shared(params[kk], name=kk)
     return tparams
 
@@ -235,7 +237,7 @@ def load_params(path, params):
     load parameters
     """
     pp = numpy.load(path)
-    for kk, vv in params.iteritems():
+    for kk, vv in params.items():
         if kk not in pp:
             warnings.warn('%s is not in the archive'%kk)
             continue

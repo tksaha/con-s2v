@@ -45,7 +45,7 @@ class SkipThoughtPreLoadedRunner(BaselineRunner):
 
         if rbase <=0: return 0 
 
-        from skipThought.skipthoughts import skipthoughts
+        from skipThought import skipthoughts 
         model = skipthoughts.load_model()
 
         nSent = 0
