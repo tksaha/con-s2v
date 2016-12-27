@@ -21,8 +21,8 @@ profile = False
 #-----------------------------------------------------------------------------#
 # Specify model and table locations here
 #-----------------------------------------------------------------------------#
-path_to_models = os.environ['TRTESTFOLDER']
-path_to_tables = os.environ['TRTESTFOLDER']
+path_to_models = os.path.join(os.environ['TRTESTFOLDER'], "skip_thought_data")
+path_to_tables = path_to_models
 #-----------------------------------------------------------------------------#
 
 path_to_umodel = path_to_models + 'uni_skip.npz'

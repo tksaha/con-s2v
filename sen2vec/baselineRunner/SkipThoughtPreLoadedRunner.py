@@ -18,17 +18,14 @@ class SkipThoughtPreLoadedRunner(BaselineRunner):
         """
         """
         BaselineRunner.__init__(self, *args, **kwargs)
-        self.latReprName = "skip-thought"
+        self.latReprName = "pretrained-skip-thought"
         self.rootdir = os.environ['SEN2VEC_DIR']
         self.postgresConnection.connectDatabase()
         self.utFunction = Utility("Text Utility")
         self.sentIDList = list()
         self.sentenceList = list()
         self.dataDir = os.environ['TRTESTFOLDER']
-        self.system_id = 87
-        self.build_model = False 
-        self.dictionary = os.path.join(self.dataDir, "%s_dictionary.p"%os.environ['DATASET'])
-        self.model =  os.path.join(self.dataDir, "model_%s.npz"%os.environ['DATASET'])
+        self.system_id = 89
         self.sentReprFile = os.path.join(self.dataDir, "%s_sents_repr"%self.latReprName)
 
     def prepareData(self, pd):
@@ -48,7 +45,7 @@ class SkipThoughtPreLoadedRunner(BaselineRunner):
 
         if rbase <=0: return 0 
 
-        import skipthoughts
+        from skipThought.skipthoughts import skipthoughts
         model = skipthoughts.load_model()
 
         nSent = 0
