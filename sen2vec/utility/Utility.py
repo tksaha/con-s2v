@@ -23,7 +23,8 @@ class Utility:
 		
 	def normalizeText(self, text, remove_stopwords):
 		"""
-		Replace breaks with spaces and then pad punctuation with spaces on both sides
+		Replace breaks with spaces and then pad punctuation 
+		with spaces on both sides
 		"""
 		norm_text = text.lower().replace('<br />', ' ')
 		for char in string.punctuation:
@@ -37,3 +38,23 @@ class Utility:
 
 		stemmer = SnowballStemmer("english")
 		return [stemmer.stem(words.strip()) for words in norm_text.split() if words not in stops]
+
+	def normalizeTextNoStemming(self, text, remove_stopwords):
+		"""
+		Replace breaks with spaces and then 
+		pad punctuation with spaces on both sides. 
+		Do not do any stemming.
+		"""
+		norm_text = text.lower().replace('<br />', ' ')
+
+
+		for char in string.punctuation:
+			norm_text = norm_text.replace(char, ' ' )
+
+		norm_text = norm_text.replace("\n", " ")
+
+		stops = []
+		if remove_stopwords==1:
+			stops = set(stopwords.words("english"))
+
+		return [words.strip() for words in norm_text.split() if words not in stops]
