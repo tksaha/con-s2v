@@ -1,6 +1,7 @@
 '''
 Skip-thought vectors
 '''
+from __future__ import print_function
 import os
 
 import theano
@@ -33,7 +34,7 @@ def load_model():
     Load the model with saved tables
     """
     # Load model options
-    print 'Loading model parameters...'
+    Logger.logr.info('Loading model parameters...')
     with open('%s.pkl'%path_to_umodel, 'rb') as f:
         uoptions = pkl.load(f)
     with open('%s.pkl'%path_to_bmodel, 'rb') as f:
@@ -48,18 +49,18 @@ def load_model():
     btparams = init_tparams(bparams)
 
     # Extractor functions
-    print 'Compiling encoders...'
+    Logger.logr.info('Compiling encoders...')
     embedding, x_mask, ctxw2v = build_encoder(utparams, uoptions)
     f_w2v = theano.function([embedding, x_mask], ctxw2v, name='f_w2v')
     embedding, x_mask, ctxw2v = build_encoder_bi(btparams, boptions)
     f_w2v2 = theano.function([embedding, x_mask], ctxw2v, name='f_w2v2')
 
     # Tables
-    print 'Loading tables...'
+    Logger.logr.info('Loading tables...')
     utable, btable = load_tables()
 
     # Store everything we need in a dictionary
-    print 'Packing up...'
+    Logger.logr.info('Packing up...')
     model = {}
     model['uoptions'] = uoptions
     model['boptions'] = boptions
@@ -110,7 +111,7 @@ def encode(model, X, use_norm=True, verbose=True, batch_size=128, use_eos=False)
     # Get features. This encodes by length, in order to avoid wasting computation
     for k in ds.keys():
         if verbose:
-            print k
+            Logger.logr.info(k)
         numbatches = len(ds[k]) / batch_size + 1
         for minibatch in range(numbatches):
             caps = ds[k][minibatch::numbatches]
@@ -179,10 +180,10 @@ def nn(model, text, vectors, query, k=5):
     scores = numpy.dot(qf, vectors.T).flatten()
     sorted_args = numpy.argsort(scores)[::-1]
     sentences = [text[a] for a in sorted_args[:k]]
-    print 'QUERY: ' + query
-    print 'NEAREST: '
+    Logger.logr.info('QUERY: ' + query)
+    Logger.logr.info('NEAREST: ')
     for i, s in enumerate(sentences):
-        print s, sorted_args[i]
+        Logger.logr.info(s, sorted_args[i])
 
 
 def word_features(table):
@@ -206,10 +207,10 @@ def nn_words(table, wordvecs, query, k=10):
     scores = numpy.dot(qf, wordvecs.T).flatten()
     sorted_args = numpy.argsort(scores)[::-1]
     words = [keys[a] for a in sorted_args[:k]]
-    print 'QUERY: ' + query
-    print 'NEAREST: '
+    Logger.logr.info('QUERY: ' + query)
+    Logger.logr.info('NEAREST: ')
     for i, w in enumerate(words):
-        print w
+        Logger.logr.info(w)
 
 
 def _p(pp, name):
