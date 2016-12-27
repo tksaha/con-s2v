@@ -14,7 +14,7 @@ from baselineRunner.SkipThoughtPreLoadedRunner import SkipThoughtPreLoadedRunner
 class SkipThoughtPreLoadedEvaluator(BaselineEvaluator):
 	def __init__(self, *args, **kwargs):
 		"""
-		Word Vector Averaging Evaluator
+		Skip Thought Preloaded Evaluator
 		"""
 		BaselineEvaluator.__init__(self, *args, **kwargs)
 		self.filePrefix = ""
