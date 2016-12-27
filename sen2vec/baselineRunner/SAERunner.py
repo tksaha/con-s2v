@@ -6,12 +6,12 @@ import sys
 import pickle
 import gensim 
 import operator
-from collections import defaultdict
 import numpy as np
 import pandas as pd 
 import sklearn.metrics as mt
 from collections import Counter 
 from log_manager.log_config import Logger 
+from collections import defaultdict
 from utility.Utility import Utility
 from SDAE.desent import train
 
