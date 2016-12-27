@@ -205,5 +205,5 @@ class ReutersReader(DocumentReader):
         sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
         #sloadedrunner.prepareData(pd)
         #sloadedrunner.runTheBaseline(rbase, 300)
-	sloadedrunner.runEvaluationTask()
+        sloadedrunner.runEvaluationTask()
 
