@@ -196,8 +196,14 @@ class ReutersReader(DocumentReader):
         # rnn_runner = RNNRunner (self.dbstring)
         # rnn_runner.runEvaluationTask(rbase, 300)
 
-        from baselineRunner.SDAERunner import SDAERunner
-        sdaerunner = SDAERunner (self.dbstring)
-        sdaerunner.prepareData(pd) 
-        sdaerunner.runTheBaseline(rbase, 300)
+        # from baselineRunner.SDAERunner import SDAERunner
+        # sdaerunner = SDAERunner (self.dbstring)
+        # sdaerunner.prepareData(pd) 
+        # sdaerunner.runTheBaseline(rbase, 300)
+
+        from baselineRunner.SkipThoughtPreLoadedRunner  import SkipThoughtPreLoadedRunner
+        sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
+        sloadedrunner.prepareData(pd)
+        sloadedrunner.runTheBaseline(rbase, 300)
+
 
