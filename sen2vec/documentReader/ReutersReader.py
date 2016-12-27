@@ -201,7 +201,17 @@ class ReutersReader(DocumentReader):
         # sdaerunner.prepareData(pd) 
         # sdaerunner.runTheBaseline(rbase, 300)
 
+        os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = 'CLASS'
+
         from baselineRunner.SkipThoughtPreLoadedRunner  import SkipThoughtPreLoadedRunner
+        sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
+        #sloadedrunner.prepareData(pd)
+        #sloadedrunner.runTheBaseline(rbase, 300)
+        sloadedrunner.runEvaluationTask()
+
+        os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = 'CLUST'
         sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
         #sloadedrunner.prepareData(pd)
         #sloadedrunner.runTheBaseline(rbase, 300)

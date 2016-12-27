@@ -241,9 +241,9 @@ class DocumentReader:
             # jnteval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
             # system_list.extend(jnteval.system_id_list)
 
-            sthoughteval = SkipThoughtEvaluator (self.dbstring)
-            sthoughteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
-            system_list.extend(sthoughteval.system_id_list)
+            # sthoughteval = SkipThoughtEvaluator (self.dbstring)
+            # sthoughteval.evaluateOptimum(pd, rbase, latent_space_size, optPDict, f)
+            # system_list.extend(sthoughteval.system_id_list)
 
 
             # fstvar     = FastSentVariantEvaluator (self.dbstring)
