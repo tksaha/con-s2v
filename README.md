@@ -129,8 +129,6 @@ in ~/.keras/keras.json
     "floatx": "float32",
     "backend": "theano"
 }
-
-source ~/.keras/keras.json
 ```
 
 

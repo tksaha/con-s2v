@@ -87,7 +87,7 @@ int main(int argc, char **argv)
         printf("\t-class <int>\n");
         printf("\t\tWill use specified amount of classes to decompose vocabulary; default is 100\n");
 	
-	printf("\t-old-classes\n");
+	    printf("\t-old-classes\n");
         printf("\t\tThis will use old algorithm to compute classes, which results in slower models but can be a bit more precise\n");
 
     	printf("\t-rnnlm <file>\n");
