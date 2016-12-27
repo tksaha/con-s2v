@@ -17,9 +17,11 @@ from SDAE.desent import train
 
 from baselineRunner.BaselineRunner import BaselineRunner
 
-class SDAERunner(BaselineRunner):
+class SAERunner(BaselineRunner):
     def __init__(self, *args, **kwargs):
         """
+        The only difference of this model with the 
+        SDAE is that it has no corruption probability.
         """
         BaselineRunner.__init__(self, *args, **kwargs)
         self.postgresConnection.connectDatabase()
@@ -35,7 +37,7 @@ class SDAERunner(BaselineRunner):
         self.max_epochs = 5000
         self.dispFreq  = 100
         self.corruption = ['_mask', '_shuffle']
-        self.corruption_prob = [0.1, 0.1]
+        self.corruption_prob = [0.0, 0.0] # This is the only difference with the SDAE version
         self.decay_c = 0. 
         self.lrate = 0.01 
         self.clip_c = -1.
@@ -149,7 +151,7 @@ class SDAERunner(BaselineRunner):
          lambda_val=1.0, diversity=False):
 
         if gs <= 0: return 0
-    
+        
 
     def runEvaluationTask(self):
         """
@@ -159,7 +161,6 @@ class SDAERunner(BaselineRunner):
         """
         summaryMethodID = 2
 
-        
         
     def doHouseKeeping(self):
         """
