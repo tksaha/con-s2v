@@ -228,12 +228,11 @@ class DUCReader(DocumentReader):
     def runBaselines(self, pd, rbase, gs):
         """
         """
-        #nIter = 5
+        nIter = 1
         #self.performValidation('RANK')
-        #self.performTesting('RANK', nIter)
+        self.performTesting('RANK', nIter)
         
-        from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
-
-        skthought = SkipThoughtRunner(self.dbstring)
-        skthought.prepareData(1) 
-        skthought.runTheBaseline(1, 300)
+        # from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
+        # skthought = SkipThoughtRunner(self.dbstring)
+        # skthought.prepareData(1) 
+        # skthought.runTheBaseline(1, 300)

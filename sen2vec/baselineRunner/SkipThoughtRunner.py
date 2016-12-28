@@ -11,7 +11,7 @@ from skipThought.training import vocab, train, tools
 from baselineRunner.BaselineRunner import BaselineRunner
 from log_manager.log_config import Logger 
 from utility.Utility import Utility
-
+from summaryGenerator.SummaryGenerator import SummaryGenerator
 
 class SkipThoughtRunner(BaselineRunner):
     def __init__(self, *args, **kwargs):

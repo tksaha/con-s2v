@@ -30,6 +30,7 @@ from baselineEvaluator.SeqRegSentEvaluator import SeqRegSentEvaluator
 from baselineEvaluator.JointLearningSen2VecEvaluator import JointLearningSen2VecEvaluator
 from baselineEvaluator.FastSentVariantEvaluator import FastSentVariantEvaluator
 from baselineEvaluator.SkipThoughtEvaluator import SkipThoughtEvaluator
+from baselineEvaluator.SkipThoughtPreloadedEvaluator import SkipThoughtPreLoadedEvaluator
 
 class DocumentReader:
     """
@@ -249,6 +250,10 @@ class DocumentReader:
             # fstvar     = FastSentVariantEvaluator (self.dbstring)
             # fstvar.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
             # system_list.extend(fstvar.system_id_list)
+
+            seval = SkipThoughtPreLoadedEvaluator (self.dbstring)
+            seval.evaluateOptimum (pd, rbase, latent_space_size, optPDict, f)
+            system_list.extend(seval.system_id_list)
 
 
             if test_for == 'RANK':
