@@ -109,6 +109,9 @@ class SDAERunner(BaselineRunner):
 
 
     def runSDAE (self):
+        """
+        Now, it trains the model for 500 epochs.
+        """
         trainerr, validerr, testerr = train(saveto = self.saveto,
                                         reload_= self.reload_,
                                         corruption = self.corruption,
@@ -142,7 +145,7 @@ class SDAERunner(BaselineRunner):
 
 
     def runTheBaseline(self, rbase, latent_space_size):
-        self.runSDAE()
+        #self.runSDAE()
 
 
     def generateSummary(self, gs, methodId, filePrefix,\
