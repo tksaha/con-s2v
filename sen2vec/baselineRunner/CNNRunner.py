@@ -124,6 +124,7 @@ class CNNRunner (SupervisedBaselineRunner):
     def run (self):
 
         self.runCNNBaseline (1)
+        self.checkpointer = ModelCheckpoint(filepath=self.model_filepath, monitor='val_loss', verbose=1, save_best_only=True)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
              validation_data= (self.val_x, self.val_y_prime), callbacks=[self.early_stopping, self.checkpointer])
