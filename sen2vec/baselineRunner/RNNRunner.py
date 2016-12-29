@@ -32,13 +32,16 @@ class RNNRunner (SupervisedBaselineRunner):
         self.dropout = 0.2
         self.dropout_W = 0.2 
         self.dropout_U = 0.2 
-        self.activation_out = 'sigmoid'
+        self.activation_out = 'softmax'
 
-        self.optimizer = 'adam'
+        self.embedding_dim = 50 
+        self.lstm_units  = 128
+
+        self.optimizer = 'rmsprop'
         self.loss = 'categorical_crossentropy'
         self.metric_list = ['accuracy']
 
-        self.nb_epoch = 2
+        self.nb_epoch = 50
         self.batch_size = 16
 
         self.model = None 
@@ -84,11 +87,11 @@ class RNNRunner (SupervisedBaselineRunner):
                  self.nb_epoch))
 
         self.model = Sequential()
-        self.model.add(Embedding(self.max_features, 50, dropout=self.dropout))
+        self.model.add(Embedding(self.max_features, self.embedding_dim, dropout=self.dropout))
 
 
         # We Could use simpleRNN or GRU instead
-        self.model.add(LSTM(128, dropout_W=self.dropout_W, dropout_U=self.dropout_U)) 
+        self.model.add(LSTM(self.lstm_units, dropout_W=self.dropout_W, dropout_U=self.dropout_U)) 
         self.model.add(Dense(self.n_classes))
         self.model.add(Activation(self.activation_out))
         self.model.compile(loss=self.loss, optimizer = self.optimizer,\
@@ -115,14 +118,17 @@ class RNNRunner (SupervisedBaselineRunner):
 
 
         for self.batch_size in [16, 32]:
-            for self.percent_vocab_size in [80, 85]:
-                self.getData(self.percent_vocab_size)
-                for self.nb_epoch in [5,7,10,15]:
-                    self.run ()
-                    metric[(self.batch_size, self.percent_vocab_size,\
-                     self.nb_epoch)] = self.metric_val 
-                    Logger.logr.info ("F1 value =%.4f"%self.metric_val)
-                    gc.collect()
+            for self.dropout in [0.2, 0.3, 0.4]:
+                for self.dropout_U in [0.2, 0.3, 0.4]:
+                    for self.dropout_W in [0.2, 0.3, 0.4]:
+                        for self.percent_vocab_size in [80, 85]:
+                            self.getData(self.percent_vocab_size)
+                            for self.nb_epoch in [50, 70, 100]:
+                                self.run ()
+                                metric[(self.batch_size, self.percent_vocab_size,\
+                                 self.nb_epoch)] = self.metric_val 
+                                Logger.logr.info ("F1 value =%.4f"%self.metric_val)
+                                gc.collect()
 
         (self.batch_size, self.percent_vocab_size,\
         self.nb_epoch) = max(metric, key=metric.get)

@@ -22,6 +22,8 @@ from sklearn.preprocessing import LabelEncoder
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Convolution1D, GlobalMaxPooling1D
 from baselineRunner.SupervisedBaselineRunner import SupervisedBaselineRunner
+from keras.callbacks import EarlyStopping
+
 
 
 
@@ -32,28 +34,30 @@ class CNNRunner (SupervisedBaselineRunner):
         SupervisedBaselineRunner.__init__(self, *args, **kwargs)
         self.postgresConnection.connectDatabase()
         self.percent_vocab_size = 80
-        self.maxlen = 400
+
+        # Validation over 100, 200, 300
+        self.maxlen = 100
+
+        # validation on dropout
         self.dropout = 0.2
         self.nb_filter = 250
         self.filter_length = 3
         self.border_mode = 'valid'
         self.activation_h  = 'relu'
-        self.activation_out = 'sigmoid'
+        self.activation_out = 'softmax'
         self.subsample_length = 1
         self.hidden_dims = 250
-        self.optimizer = 'adam'
+        self.embedding_dims = 100
+        self.optimizer = 'rmsprop'
         self.loss = 'categorical_crossentropy'
         self.metric_list = ['accuracy']
-        self.nb_epoch = 2
+        self.nb_epoch = 50
         self.batch_size = 64 
         self.model = None 
 
         self.utFunction = Utility("Text Utility")
-
-        self.true_values = {}
-        self.predicted_values = {}
-        self.class_keys = {}
-        self.class_names = {}
+        self.early_stopping = EarlyStopping(monitor='val_acc', patience=10)
+        self.true_values, self.predicted_values, self.class_keys, self.class_names = {}, {}, {}, {}
         self.n_classes  = 1
         self.encoder = LabelEncoder()
         self.isfirstTimeEncoding = True 
@@ -63,14 +67,8 @@ class CNNRunner (SupervisedBaselineRunner):
         np.random.seed(2016)
 
         self.max_features = None 
-        self.tr_x = None 
-        self.tr_y = None 
-        self.ts_x = None 
-        self.ts_y = None 
-        self.val_x = None 
-        self.val_y = None 
-        self.val_y_prime = None 
-        self.metric_val = None 
+        self.tr_x,  self.tr_y, self.ts_x, self.ts_y = None, None, None, None  
+        self.val_x, self.val_y, self.val_y_prime, self.metric_val = None, None, None, None 
         self.trainTestFolder = os.environ['TRTESTFOLDER']
         self.latReprName = "cnn"
     
@@ -89,17 +87,21 @@ class CNNRunner (SupervisedBaselineRunner):
         We add a Convolution1D, which will learn nb_filter word 
         group filters of size filter_length. We use max pooling:
         """
-        Logger.logr.info ("Running CNN with following"\
+        Logger.logr.info ("Running CNN with the following "\
             " configuration: batch_size = %i "\
+            " maxlen = %i "\
+            " embedding dim = %i "\
             " nb_filter = %i "\
             " filter_length = %i "\
+            " dropout = %0.2f "\
             " percent vocab size = %i "\
-            " nb_epoch = %i "%(self.batch_size, self.nb_filter,\
-                 self.filter_length, self.percent_vocab_size, \
+            " nb_epoch = %i "%(self.batch_size, self.maxlen, self.embedding_dims, self.nb_filter,\
+                 self.filter_length, self.dropout, self.percent_vocab_size, \
                  self.nb_epoch))
 
+
         self.model = Sequential()
-        self.model.add(Embedding(self.max_features, 50, input_length=self.maxlen,
+        self.model.add(Embedding(self.max_features, self.embedding_dims, input_length=self.maxlen,
                     dropout=self.dropout))
         self.model.add(Convolution1D(nb_filter = self.nb_filter,
                         filter_length = self.filter_length,
@@ -116,10 +118,11 @@ class CNNRunner (SupervisedBaselineRunner):
         self.model.compile(loss=self.loss, optimizer = self.optimizer,  metrics=self.metric_list)
 
     def run (self):
+
         self.runCNNBaseline (1)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
-             validation_data= (self.val_x, self.val_y_prime))
+             validation_data= (self.val_x, self.val_y_prime), callbacks=[self.early_stopping])
         result = pd.DataFrame()
         result['predicted_values'] = self.model.predict_classes(self.val_x, batch_size=64)
         result['true_values'] = self.val_y 
@@ -131,31 +134,39 @@ class CNNRunner (SupervisedBaselineRunner):
         # Run the cnn validation 
         metric = {}
         summaryMethodID = 2
-
+       
 
         import gc 
-        for self.batch_size in [16]:
-            for self.nb_filter in [1000]:
-                for self.filter_length in [3]:
-                    for self.percent_vocab_size in [70]:
-                        self.getData(self.percent_vocab_size)
-                        for self.nb_epoch in [15]:
-                            self.run ()
-                            metric[(self.batch_size, self.nb_filter,\
-                            self.filter_length, self.percent_vocab_size,\
-                             self.nb_epoch)] = self.metric_val 
-                            Logger.logr.info ("F1 value =%.4f"%self.metric_val)
-                            gc.collect()
+        for self.batch_size in [16, 24, 32]:
+            for self.maxlen in [100, 200, 300]:
+                for self.embedding_dims in [100, 200, 300]:
+                    for self.nb_filter in [200, 300, 400]:
+                        for self.filter_length in [3, 4, 5]:
+                            for self.dropout in [0.2, 0.3, 0.4]:
+                                for self.percent_vocab_size in [70, 80, 85]:
+                                    self.getData(self.percent_vocab_size)
+                                    for self.nb_epoch in [50, 70, 100]:
+                                        self.run ()
+                                        metric[(self.batch_size, self.maxlen, self.embedding_dims,\
+                                            self.nb_filter, self.filter_length, self.dropout, self.percent_vocab_size,\
+                                         self.nb_epoch)] = self.metric_val 
+                                        Logger.logr.info ("F1 value =%.4f"%self.metric_val)
+                                        gc.collect()
 
-        (self.batch_size, self.nb_filter, self.filter_length, self.percent_vocab_size,\
-            self.nb_epoch) = max(metric, key=metric.get)
+        (self.batch_size, self.maxlen, self.embedding_dims,\
+        self.nb_filter, self.filter_length, self.dropout, self.percent_vocab_size,\
+        self.nb_epoch) = max(metric, key=metric.get)
+
         Logger.logr.info ("Optimal "\
             " configuration: batch_size = %i "\
+            " maxlen = %i "\
+            " embedding dim = %i "\
             " nb_filter = %i "\
             " filter_length = %i "\
+            " dropout = %0.2f "\
             " percent vocab size = %i "\
-            " nb_epoch = %i "%(self.batch_size, self.nb_filter,\
-                 self.filter_length, self.percent_vocab_size, \
+            " nb_epoch = %i "%(self.batch_size, self.maxlen, self.embedding_dims, self.nb_filter,\
+                 self.filter_length, self.dropout, self.percent_vocab_size, \
                  self.nb_epoch))
 
     

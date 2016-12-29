@@ -177,9 +177,9 @@ class NewsGroupReader(DocumentReader):
         # skthought.prepareData(1) 
         # skthought.runTheBaseline(1, 300)
 
-        # from baselineRunner.CNNRunner import CNNRunner
-        # cnnrunner = CNNRunner(self.dbstring)
-        # cnnrunner.runEvaluationTask(rbase, 300)
+        from baselineRunner.CNNRunner import CNNRunner
+        cnnrunner = CNNRunner(self.dbstring)
+        cnnrunner.runEvaluationTask(rbase, 300)
 
         # from baselineRunner.RNNRunner import RNNRunner 
         # rnn_runner = RNNRunner (self.dbstring)
@@ -190,18 +190,18 @@ class NewsGroupReader(DocumentReader):
         # sdaerunner.prepareData(pd) 
         # sdaerunner.runTheBaseline(rbase, 300)
 
-        os.environ["EVAL"]='TEST'
-        os.environ['TEST_FOR'] = 'CLASS'
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLASS'
 
-        from baselineRunner.SkipThoughtPreLoadedRunner  import SkipThoughtPreLoadedRunner
-        sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
+        # from baselineRunner.SkipThoughtPreLoadedRunner  import SkipThoughtPreLoadedRunner
+        # sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
         #sloadedrunner.prepareData(pd)
         #sloadedrunner.runTheBaseline(rbase, 300)
-        sloadedrunner.runEvaluationTask()
+        # sloadedrunner.runEvaluationTask()
 
-        os.environ["EVAL"]='TEST'
-        os.environ['TEST_FOR'] = 'CLUST'
-        sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLUST'
+        # sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
         #sloadedrunner.prepareData(pd)
         #sloadedrunner.runTheBaseline(rbase, 300)
-        sloadedrunner.runEvaluationTask()
+        # sloadedrunner.runEvaluationTask()
