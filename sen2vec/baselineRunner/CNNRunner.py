@@ -22,7 +22,7 @@ from sklearn.preprocessing import LabelEncoder
 from keras.layers import Dense, Dropout, Activation
 from keras.layers import Convolution1D, GlobalMaxPooling1D
 from baselineRunner.SupervisedBaselineRunner import SupervisedBaselineRunner
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 
 
@@ -46,7 +46,7 @@ class CNNRunner (SupervisedBaselineRunner):
         self.activation_h  = 'relu'
         self.activation_out = 'softmax'
         self.subsample_length = 1
-        self.hidden_dims = 250
+        self.hidden_dims = 128
         self.embedding_dims = 100
         self.optimizer = 'rmsprop'
         self.loss = 'categorical_crossentropy'
@@ -54,9 +54,12 @@ class CNNRunner (SupervisedBaselineRunner):
         self.nb_epoch = 50
         self.batch_size = 64 
         self.model = None 
+        self.trainTestFolder = os.environ['TRTESTFOLDER']
 
         self.utFunction = Utility("Text Utility")
-        self.early_stopping = EarlyStopping(monitor='val_acc', patience=10)
+        self.model_filepath = os.path.join(self.trainTestFolder, "cnn_weights.hdf5");
+        self.early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+        self.checkpointer = ModelCheckpoint(filepath=self.model_filepath, monitor='val_loss' verbose=1, save_best_only=True)
         self.true_values, self.predicted_values, self.class_keys, self.class_names = {}, {}, {}, {}
         self.n_classes  = 1
         self.encoder = LabelEncoder()
@@ -69,7 +72,7 @@ class CNNRunner (SupervisedBaselineRunner):
         self.max_features = None 
         self.tr_x,  self.tr_y, self.ts_x, self.ts_y = None, None, None, None  
         self.val_x, self.val_y, self.val_y_prime, self.metric_val = None, None, None, None 
-        self.trainTestFolder = os.environ['TRTESTFOLDER']
+        
         self.latReprName = "cnn"
     
     def prepareData(self, pd):
@@ -110,7 +113,8 @@ class CNNRunner (SupervisedBaselineRunner):
                         subsample_length = self.subsample_length))
         
         self.model.add(GlobalMaxPooling1D())
-        self.model.add(Dense(self.hidden_dims))
+        # The model parameter is becoming huge with this as hidden dimension
+        self.model.add(Dense(self.hidden_dims)) 
         self.model.add(Dropout(self.dropout))
         self.model.add(Activation(self.activation_h))
         self.model.add(Dense(self.n_classes))
@@ -122,7 +126,8 @@ class CNNRunner (SupervisedBaselineRunner):
         self.runCNNBaseline (1)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
-             validation_data= (self.val_x, self.val_y_prime), callbacks=[self.early_stopping])
+             validation_data= (self.val_x, self.val_y_prime), callbacks=[self.early_stopping, self.checkpointer])
+        self.model.load_weights(self.model_filepath)
         result = pd.DataFrame()
         result['predicted_values'] = self.model.predict_classes(self.val_x, batch_size=64)
         result['true_values'] = self.val_y 
@@ -137,15 +142,15 @@ class CNNRunner (SupervisedBaselineRunner):
        
 
         import gc 
-        for self.batch_size in [16, 24, 32]:
-            for self.maxlen in [100, 200, 300]:
-                for self.embedding_dims in [100, 200, 300]:
-                    for self.nb_filter in [200, 300, 400]:
-                        for self.filter_length in [3, 4, 5]:
-                            for self.dropout in [0.2, 0.3, 0.4]:
-                                for self.percent_vocab_size in [70, 80, 85]:
+        for self.batch_size in [8, 16]:
+            for self.maxlen in [100, 200]:
+                for self.embedding_dims in [64, 128]:
+                    for self.nb_filter in [200, 300]:
+                        for self.filter_length in [3]:
+                            for self.dropout in [0.2, 0.3]:
+                                for self.percent_vocab_size in [50, 60]:
                                     self.getData(self.percent_vocab_size)
-                                    for self.nb_epoch in [50, 70, 100]:
+                                    for self.nb_epoch in [20]:
                                         self.run ()
                                         metric[(self.batch_size, self.maxlen, self.embedding_dims,\
                                             self.nb_filter, self.filter_length, self.dropout, self.percent_vocab_size,\
@@ -175,7 +180,8 @@ class CNNRunner (SupervisedBaselineRunner):
         self.runCNNBaseline (1)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
-             validation_data= (self.val_x, self.val_y_prime))
+             validation_data= (self.val_x, self.val_y_prime), callbacks=[self.early_stopping, self.checkpointer])
+        self.model.load_weights(self.model_filepath)
         result = pd.DataFrame()
         result['predicted_values'] = self.encoder.inverse_transform(self.model.predict_classes(self.ts_x))
         result['true_values'] = self.encoder.inverse_transform(self.ts_y)
