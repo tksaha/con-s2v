@@ -59,7 +59,7 @@ class CNNRunner (SupervisedBaselineRunner):
         self.utFunction = Utility("Text Utility")
         self.model_filepath = os.path.join(self.trainTestFolder, "cnn_weights.hdf5");
         self.early_stopping = EarlyStopping(monitor='val_loss', patience=5)
-        self.checkpointer = ModelCheckpoint(filepath=self.model_filepath, monitor='val_loss' verbose=1, save_best_only=True)
+        self.checkpointer = ModelCheckpoint(filepath=self.model_filepath, monitor='val_loss', verbose=1, save_best_only=True)
         self.true_values, self.predicted_values, self.class_keys, self.class_names = {}, {}, {}, {}
         self.n_classes  = 1
         self.encoder = LabelEncoder()
