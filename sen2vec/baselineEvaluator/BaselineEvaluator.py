@@ -44,7 +44,7 @@ class BaselineEvaluator:
         elif os.environ['VALID_FOR'] == 'RANK':
            self.metric_str = "Recall"
         elif os.environ['VALID_FOR'] == 'RANK_CORR':
-           self.metric_str = "Spearman Corr"
+           self.metric_str = "Pearson_Corr"
 
     def __getAdjustedMutulScore(self, latreprName):
         file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclustereval_2.txt"%latreprName)
@@ -57,7 +57,7 @@ class BaselineEvaluator:
     def __getF1(self, latreprName):
         """
         """
-        file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_raweval_2.txt"%latreprName)
+        file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclasseval_2.txt"%latreprName)
         for line in open(file_):
             if "avg" in line:
                 line_elems = line.strip().split()
@@ -91,7 +91,7 @@ class BaselineEvaluator:
 
     def __writeResult(self, latreprName, f):
         if os.environ['TEST_FOR'] == 'CLASS':
-            file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_raweval_2.txt"%latreprName)
+            file_ = os.path.join(os.environ["TRTESTFOLDER"], "%s_rawclasseval_2.txt"%latreprName)
             for line in open(file_):
                 f.write(line)
         elif os.environ['TEST_FOR'] == 'CLUST':
@@ -119,6 +119,12 @@ class BaselineEvaluator:
             self.__runSpecificEvaluation(models = [20], systems = [baseline.system_id]) 
             return self.__getRecall(method_id=baseline.system_id,\
                  models = [20], systems = [baseline.system_id])
+
+        elif os.environ['VALID_FOR'] == 'RANK_CORR':
+            baseline.runTheBaseline(1, latent_space_size)
+            baseline.runEvaluationTask()
+            pearsonr = self.__getpearsonr("%s%s"%(baseline.latReprName, prefix))
+            return pearsonr
 
     def writeResults(self, pd, rbase, latent_space_size, baseline, filePrefix, f):
         # Prepare Data can be omitted

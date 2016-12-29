@@ -188,7 +188,7 @@ class ClassificationEvaluation:
 		self.predicted_values = result['predicted_values']
 		self.class_keys = sorted(class_labels)
 		self.class_names = [class_labels[key] for key in self.class_keys]
-		evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
+		evaluationResultFile = open("%s/%sclasseval_%i.txt"%(self.trainTestFolder,\
 				latReprName, summaryMethodID), "w")
 		
 		self.__writeClassificationReport(evaluationResultFile, latReprName)
@@ -231,7 +231,7 @@ class ClassificationEvaluation:
 		self.predicted_values = result['predicted_values']
 		self.class_keys = sorted(class_labels)
 		self.class_names = [class_labels[key] for key in self.class_keys]
-		evaluationResultFile = open("%s/%seval_%i.txt"%(self.trainTestFolder,\
+		evaluationResultFile = open("%s/%sclasseval_%i.txt"%(self.trainTestFolder,\
 				latReprName, summaryMethodID), "w")
 		
 		self.__writeClassificationReport(evaluationResultFile, latReprName)

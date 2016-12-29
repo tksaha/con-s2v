@@ -25,7 +25,7 @@ class SkipThoughtPreLoadedEvaluator(BaselineEvaluator):
 		return optPDict
 
 	def evaluateOptimum(self, pd, rbase, latent_space_size, optPDict, f):
-		f.write("[Skip-Thought Baseline] (No Tuning) %s" %(os.linesep))	
+		f.write("[Skip-Thought PreLoaded Baseline] (No Tuning) %s" %(os.linesep))	
 		sthoughtBaseline = SkipThoughtPreLoadedRunner(self.dbstring)
 		self.system_id_list.append(sthoughtBaseline.system_id)
 		self.writeResults(pd, rbase, latent_space_size, sthoughtBaseline, self.filePrefix, f)
