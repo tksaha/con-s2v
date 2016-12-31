@@ -46,7 +46,10 @@ class RNNRunner (SupervisedBaselineRunner):
 
         self.model = None 
         self.utFunction = Utility("Text Utility")
-
+        self.model_filepath = os.path.join(self.trainTestFolder, "rnn_weights.hdf5");
+        self.early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+        self.checkpointer = ModelCheckpoint(filepath=self.model_filepath,\
+             monitor='val_loss', verbose=1, save_best_only=True)
 
         self.true_values = {}
         self.predicted_values = {}
@@ -80,10 +83,14 @@ class RNNRunner (SupervisedBaselineRunner):
 
     def runLSTMBaseline(self, rbase):
 
-        Logger.logr.info ("Running LSTM (RNN) with following"\
+        Logger.logr.info ("Running with "\
             " configuration: batch_size = %i "\
+            " dropout = %0.2f "\
+            " dropout_U = %0.2f "\
+            " droput_W = %0.2f "\
             " percent vocab size = %i "\
             " nb_epoch = %i "%(self.batch_size, self.percent_vocab_size, \
+                 self.dropout, self.dropout_U, self.dropout_W,\
                  self.nb_epoch))
 
         self.model = Sequential()
@@ -101,7 +108,8 @@ class RNNRunner (SupervisedBaselineRunner):
         self.runLSTMBaseline (1)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
-             validation_data= (self.val_x, self.val_y_prime))
+             validation_data= (self.val_x, self.val_y_prime),\
+                callbacks=[self.early_stopping, self.checkpointer])
         result = pd.DataFrame()
         result['predicted_values'] = self.model.predict_classes(self.val_x, batch_size=64)
         result['true_values'] = self.val_y 
@@ -118,24 +126,28 @@ class RNNRunner (SupervisedBaselineRunner):
 
 
         for self.batch_size in [16, 32]:
-            for self.dropout in [0.2, 0.3, 0.4]:
-                for self.dropout_U in [0.2, 0.3, 0.4]:
-                    for self.dropout_W in [0.2, 0.3, 0.4]:
+            for self.dropout in [0.2, 0.3]:
+                for self.dropout_U in [0.2, 0.3]:
+                    for self.dropout_W in [0.2, 0.3]:
                         for self.percent_vocab_size in [80, 85]:
                             self.getData(self.percent_vocab_size)
-                            for self.nb_epoch in [50, 70, 100]:
+                            for self.nb_epoch in [20]:
                                 self.run ()
                                 metric[(self.batch_size, self.percent_vocab_size,\
                                  self.nb_epoch)] = self.metric_val 
                                 Logger.logr.info ("F1 value =%.4f"%self.metric_val)
                                 gc.collect()
 
-        (self.batch_size, self.percent_vocab_size,\
+        (self.batch_size, self.dropout, self.dropout_U, self.dropout_W, self.percent_vocab_size,\
         self.nb_epoch) = max(metric, key=metric.get)
         Logger.logr.info ("Optimal "\
             " configuration: batch_size = %i "\
+            " dropout = %0.2f "\
+            " dropout_U = %0.2f "\
+            " droput_W = %0.2f "\
             " percent vocab size = %i "\
             " nb_epoch = %i "%(self.batch_size, self.percent_vocab_size, \
+                 self.dropout, self.dropout_U, self.dropout_W,\
                  self.nb_epoch))
 
 
@@ -143,7 +155,8 @@ class RNNRunner (SupervisedBaselineRunner):
         self.runLSTMBaseline (1)
         self.model.fit(self.tr_x,  self.tr_y, batch_size=self.batch_size,\
              nb_epoch=self.nb_epoch, shuffle=True,\
-             validation_data= (self.val_x, self.val_y_prime))
+             validation_data= (self.val_x, self.val_y_prime),\
+                 callbacks=[self.early_stopping, self.checkpointer])
         result = pd.DataFrame()
         result['predicted_values'] = self.encoder.inverse_transform(self.model.predict_classes(self.ts_x))
         result['true_values'] = self.encoder.inverse_transform(self.ts_y)
