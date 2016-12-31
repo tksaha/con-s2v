@@ -19,7 +19,7 @@ from keras.datasets import imdb
 from sklearn.preprocessing import LabelEncoder
 from utility.Utility import Utility
 from baselineRunner.SupervisedBaselineRunner import SupervisedBaselineRunner
-
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 class RNNRunner (SupervisedBaselineRunner):
     def __init__(self, *args, **kwargs):
@@ -27,6 +27,7 @@ class RNNRunner (SupervisedBaselineRunner):
         """
         SupervisedBaselineRunner.__init__(self, *args, **kwargs)
         self.postgresConnection.connectDatabase()
+        self.trainTestFolder = os.environ['TRTESTFOLDER']
         self.percent_vocab_size = 80
         self.maxlen = 400
         self.dropout = 0.2
@@ -71,7 +72,7 @@ class RNNRunner (SupervisedBaselineRunner):
         self.val_y = None 
         self.val_y_prime = None 
         self.metric_val = None 
-        self.trainTestFolder = os.environ['TRTESTFOLDER']
+      
         self.latReprName = "lstm"
 
     def prepareData(self, pd):
@@ -89,8 +90,8 @@ class RNNRunner (SupervisedBaselineRunner):
             " dropout_U = %0.2f "\
             " droput_W = %0.2f "\
             " percent vocab size = %i "\
-            " nb_epoch = %i "%(self.batch_size, self.percent_vocab_size, \
-                 self.dropout, self.dropout_U, self.dropout_W,\
+            " nb_epoch = %i "%(self.batch_size, \
+                 self.dropout, self.dropout_U, self.dropout_W, self.percent_vocab_size,\
                  self.nb_epoch))
 
         self.model = Sequential()
@@ -125,16 +126,18 @@ class RNNRunner (SupervisedBaselineRunner):
         import gc 
 
 
-        for self.batch_size in [16, 32]:
+        for self.batch_size in [16]:
             for self.dropout in [0.2, 0.3]:
                 for self.dropout_U in [0.2, 0.3]:
                     for self.dropout_W in [0.2, 0.3]:
-                        for self.percent_vocab_size in [80, 85]:
+                        for self.percent_vocab_size in [40,50]:
                             self.getData(self.percent_vocab_size)
                             for self.nb_epoch in [20]:
                                 self.run ()
-                                metric[(self.batch_size, self.percent_vocab_size,\
-                                 self.nb_epoch)] = self.metric_val 
+                                metric[(self.batch_size, self.dropout,\
+                                self.dropout_U, self.dropout_W,\
+                                self.percent_vocab_size,\
+                                self.nb_epoch)] = self.metric_val 
                                 Logger.logr.info ("F1 value =%.4f"%self.metric_val)
                                 gc.collect()
 
@@ -146,8 +149,8 @@ class RNNRunner (SupervisedBaselineRunner):
             " dropout_U = %0.2f "\
             " droput_W = %0.2f "\
             " percent vocab size = %i "\
-            " nb_epoch = %i "%(self.batch_size, self.percent_vocab_size, \
-                 self.dropout, self.dropout_U, self.dropout_W,\
+            " nb_epoch = %i "%(self.batch_size, \
+                 self.dropout, self.dropout_U, self.dropout_W, self.percent_vocab_size,\
                  self.nb_epoch))
 
 
