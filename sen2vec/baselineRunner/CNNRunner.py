@@ -143,7 +143,7 @@ class CNNRunner (SupervisedBaselineRunner):
        
 
         import gc 
-        for self.batch_size in [8, 16]:
+        for self.batch_size in [16]:
             for self.maxlen in [100, 200]:
                 for self.embedding_dims in [64, 128]:
                     for self.nb_filter in [200, 300]:
