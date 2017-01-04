@@ -131,6 +131,14 @@ in ~/.keras/keras.json
 }
 ```
 
+## Downloading the {C-PHRASE} vectors:
+Please download the C-Phrase vectors from [C-Phrase link] (http://clic.cimec.unitn.it/composes/cphrase-vectors.html) and 
+joint the files using following command:
+
+```
+cat cphrase.txt.zip_* > cphrase.txt.zip 
+```
+
 
 ## Running the Project 
 Run sen2vec with -h argument to see all possible options:
