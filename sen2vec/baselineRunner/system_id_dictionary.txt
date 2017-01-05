@@ -16,3 +16,5 @@ JointLearningSen2VecRunner:86
 SkipThoughtRunner:87
 SDAERunner:88
 SkipThoughtPreLoadedRunner:89
+CPhraseRunner:90
+SAERunner:91

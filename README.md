@@ -133,10 +133,11 @@ in ~/.keras/keras.json
 
 ## Downloading the {C-PHRASE} vectors:
 Please download the C-Phrase vectors from [C-Phrase link] (http://clic.cimec.unitn.it/composes/cphrase-vectors.html) and 
-joint the files using following command:
+joint the files using following commands:
 
 ```
 cat cphrase.txt.zip_* > cphrase.txt.zip 
+sed -i  '1 i\174814 300'  cphrase.txt  # converting into word2vec format
 ```
 
 
