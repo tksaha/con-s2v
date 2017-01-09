@@ -1,5 +1,5 @@
 '''
-Skip-thought vectors
+Adapted and Modified from Skip-thought vectors
 '''
 from __future__ import print_function
 import os
@@ -23,7 +23,7 @@ profile = False
 
 
 
-def load_model(path_to_model, table_file, dictionary_file):
+def load_model(path_to_model):
     """
     Load the model with saved tables
     """
@@ -127,21 +127,34 @@ def encode(model, X, use_norm=False, verbose=True, batch_size=128, use_eos=False
     return features
 
 
-def preprocess(text):
-    """
-    Preprocess text for encoder
-    """
-    X = []
-    sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
-    for t in text:
-        sents = sent_detector.tokenize(t)
-        result = ''
-        for s in sents:
-            tokens = word_tokenize(s)
-            result += ' ' + ' '.join(tokens)
-        X.append(result)
-    return X
+# def preprocess(text):
+#     """
+#     Preprocess text for encoder
+#     """
+#     X = []
+#     sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
+#     for t in text:
+#         sents = sent_detector.tokenize(t)
+#         result = ''
+#         for s in sents:
+#             tokens = word_tokenize(s)
+#             result += ' ' + ' '.join(tokens)
+#         X.append(result)
+#     return X
 
+def preprocess(text):
+    X = []
+    from utility.Utility import Utility
+    utFunction = Utility("Text Utility")
+    for t in text:
+        result = ''
+        content = gensim.utils.to_unicode(t) 
+        tokens = utFunction.normalizeText(content, remove_stopwords=0)
+        result += ' ' + ' '.join(tokens)
+        X.append(result)
+
+    #Logger.logr.info(X)
+    return X
 
 def nn(model, text, vectors, query, k=5):
     """
