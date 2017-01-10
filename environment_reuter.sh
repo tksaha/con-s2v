@@ -1,8 +1,8 @@
 #!/bin/bash
-export SEN2VEC_DIR=~/Documents/reuters/sen2vec
+export SEN2VEC_DIR=~/Documents/reuter/sen2vec
 
 
-export REUTERS_PATH=$SEN2VEC_DIR/Data/newsgroup/
+export REUTERS_PATH=$SEN2VEC_DIR/Data/reuters21578/
 export REUTERS_DBSTRING=reuter,postgres,postgres,localhost,5432
 
 
@@ -41,4 +41,4 @@ export DICTREGDICT=wordnet-synonyms.txt
 
 
 # Theano Stuffs : device=gpu0,lib.cnmem=1' 
-export THEANO_FLAGS='floatX=float32, device=gpu0'
+#export THEANO_FLAGS='floatX=float32, device=gpu0'

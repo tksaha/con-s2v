@@ -175,45 +175,61 @@ class ReutersReader(DocumentReader):
         """
         CLASS, CLUST, RANK, RANKCORR
         """
-        nIter = 5
-        self.performValidation('CLASS')
-        self.performTesting('CLASS', nIter)
+        # nIter = 5
+        # self.performValidation('CLASS')
+        # self.performTesting('CLASS', nIter)
 
-        self.performValidation('CLUST')
-        self.performTesting('CLUST', nIter)
+        # self.performValidation('CLUST')
+        # self.performTesting('CLUST', nIter)
 
-        from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
+        # from baselineRunner.SkipThoughtRunner import SkipThoughtRunner 
 
-        skthought = SkipThoughtRunner(self.dbstring)
-        skthought.prepareData(1) 
-        skthought.runTheBaseline(1, 300)
+        # skthought = SkipThoughtRunner(self.dbstring)
+        # skthought.prepareData(1) 
+        # skthought.runTheBaseline(1, 300)
 
-        from baselineRunner.CNNRunner import CNNRunner
-        cnnrunner = CNNRunner(self.dbstring)
-        cnnrunner.runEvaluationTask(rbase, 300)
+        # from baselineRunner.CNNRunner import CNNRunner
+        # cnnrunner = CNNRunner(self.dbstring)
+        # cnnrunner.runEvaluationTask(rbase, 300)
 
-        from baselineRunner.RNNRunner import RNNRunner 
-        rnn_runner = RNNRunner (self.dbstring)
-        rnn_runner.runEvaluationTask(rbase, 300)
+        # from baselineRunner.RNNRunner import RNNRunner 
+        # rnn_runner = RNNRunner (self.dbstring)
+        # rnn_runner.runEvaluationTask(rbase, 300)
 
         # from baselineRunner.SDAERunner import SDAERunner
         # sdaerunner = SDAERunner (self.dbstring)
         # sdaerunner.prepareData(pd) 
         # sdaerunner.runTheBaseline(rbase, 300)
 
-        os.environ["EVAL"]='TEST'
-        os.environ['TEST_FOR'] = 'CLASS'
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLASS'
 
-        from baselineRunner.SkipThoughtPreLoadedRunner  import SkipThoughtPreLoadedRunner
-        sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
-        sloadedrunner.prepareData(pd)
-        sloadedrunner.runTheBaseline(rbase, 300)
-        sloadedrunner.runEvaluationTask()
+        # from baselineRunner.SkipThoughtPreLoadedRunner  import SkipThoughtPreLoadedRunner
+        # sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
+        # sloadedrunner.prepareData(pd)
+        # sloadedrunner.runTheBaseline(rbase, 300)
+        # sloadedrunner.runEvaluationTask()
+
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLUST'
+        # sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
+        # sloadedrunner.prepareData(pd)
+        # sloadedrunner.runTheBaseline(rbase, 300)
+        # sloadedrunner.runEvaluationTask()
+
+        from baselineRunner.CPhraseRunner import CPhraseRunner
+
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLASS'
+        # cphraserunner = CPhraseRunner (self.dbstring)
+        # cphraserunner.prepareData(pd) 
+        # cphraserunner.runTheBaseline(rbase, 300)
+        # cphraserunner.runEvaluationTask()
 
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = 'CLUST'
-        sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
-        sloadedrunner.prepareData(pd)
-        sloadedrunner.runTheBaseline(rbase, 300)
-        sloadedrunner.runEvaluationTask()
+        cphraserunner = CPhraseRunner (self.dbstring)
+        cphraserunner.prepareData(pd) 
+        cphraserunner.runTheBaseline(rbase, 300)
+        cphraserunner.runEvaluationTask()
 
