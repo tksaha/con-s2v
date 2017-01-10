@@ -111,7 +111,7 @@ class CPhraseRunner(BaselineRunner):
             vecFile = open("%s.p"%(os.path.join(self.dataDir,"%s_repr"%self.latReprName)),"rb")
             vDict = pickle.load(vecFile)
         else:
-            vecFile_raw = open("%s_raw.p"%(os.path.join(self.dataDir,"%s_repr"%self.latReprName)),"rb")
+            vecFile_raw = open("%s.p"%(os.path.join(self.dataDir,"%s_repr"%self.latReprName)),"rb")
             vDict = pickle.load(vecFile_raw)
 
         Logger.logr.info ("Performing evaluation for %s"%what_for)

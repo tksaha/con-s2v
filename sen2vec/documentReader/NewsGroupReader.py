@@ -214,3 +214,10 @@ class NewsGroupReader(DocumentReader):
         cphraserunner.prepareData(pd) 
         cphraserunner.runTheBaseline(rbase, 300)
         cphraserunner.runEvaluationTask()
+
+        os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = 'CLUST'
+        cphraserunner = CPhraseRunner (self.dbstring)
+        cphraserunner.prepareData(pd) 
+        cphraserunner.runTheBaseline(rbase, 300)
+        cphraserunner.runEvaluationTask()
