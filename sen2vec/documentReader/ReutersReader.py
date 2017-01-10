@@ -219,12 +219,12 @@ class ReutersReader(DocumentReader):
 
         from baselineRunner.CPhraseRunner import CPhraseRunner
 
-        # os.environ["EVAL"]='TEST'
-        # os.environ['TEST_FOR'] = 'CLASS'
-        # cphraserunner = CPhraseRunner (self.dbstring)
-        # cphraserunner.prepareData(pd) 
-        # cphraserunner.runTheBaseline(rbase, 300)
-        # cphraserunner.runEvaluationTask()
+        os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = 'CLASS'
+        cphraserunner = CPhraseRunner (self.dbstring)
+        cphraserunner.prepareData(pd) 
+        cphraserunner.runTheBaseline(rbase, 300)
+        cphraserunner.runEvaluationTask()
 
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = 'CLUST'
