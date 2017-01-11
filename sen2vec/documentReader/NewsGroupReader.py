@@ -185,26 +185,51 @@ class NewsGroupReader(DocumentReader):
         # rnn_runner = RNNRunner (self.dbstring)
         # rnn_runner.runEvaluationTask(rbase, 300)
 
-        # from baselineRunner.SDAERunner import SDAERunner
-        # sdaerunner = SDAERunner (self.dbstring)
-        # sdaerunner.prepareData(pd) 
-        # sdaerunner.runTheBaseline(rbase, 300)
-
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = 'CLASS'
-
-        from baselineRunner.SkipThoughtPreLoadedRunner  import SkipThoughtPreLoadedRunner
-        sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
-        sloadedrunner.prepareData(pd)
-        sloadedrunner.runTheBaseline(rbase, 300)
-        sloadedrunner.runEvaluationTask()
+        from baselineRunner.SAERunner import SAERunner
+        saerunner = SAERunner (self.dbstring)
+        saerunner.prepareData(pd) 
+        saerunner.runTheBaseline(rbase, 300)
+        saerunner.runEvaluationTask()
 
         os.environ["EVAL"]='TEST'
         os.environ['TEST_FOR'] = 'CLUST'
-        sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
-        sloadedrunner.prepareData(pd)
-        sloadedrunner.runTheBaseline(rbase, 300)
-        sloadedrunner.runEvaluationTask()
+        saerunner.runEvaluationTask()
+
+
+
+
+        os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = 'CLASS'
+        from baselineRunner.SDAERunner import SDAERunner
+        sdaerunner = SDAERunner (self.dbstring)
+        sdaerunner.prepareData(pd) 
+        sdaerunner.runTheBaseline(rbase, 300)
+        sdaerunner.runEvaluationTask()
+
+        os.environ["EVAL"]='TEST'
+        os.environ['TEST_FOR'] = 'CLUST'
+        sdaerunner.runEvaluationTask()
+
+
+
+
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLASS'
+
+        # from baselineRunner.SkipThoughtPreLoadedRunner  import SkipThoughtPreLoadedRunner
+        # sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
+        # sloadedrunner.prepareData(pd)
+        # sloadedrunner.runTheBaseline(rbase, 300)
+        # sloadedrunner.runEvaluationTask()
+
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLUST'
+        # sloadedrunner =  SkipThoughtPreLoadedRunner (self.dbstring)
+        # sloadedrunner.prepareData(pd)
+        # sloadedrunner.runTheBaseline(rbase, 300)
+        # sloadedrunner.runEvaluationTask()
 
         # from baselineRunner.CPhraseRunner import CPhraseRunner
 

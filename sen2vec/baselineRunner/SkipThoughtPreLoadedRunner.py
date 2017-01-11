@@ -67,6 +67,9 @@ class SkipThoughtPreLoadedRunner(BaselineRunner):
             for row_id in range(0,len(result)):
                 id_ = result[row_id][0] 
                 sentence = result[row_id][1]
+                # Ranking Task was performing better without our normalization 
+                # So we keep that result. For classification and clustering 
+                # using our normalization was producing better result.
                 content = gensim.utils.to_unicode(sentence) 
                 content = self.utFunction.normalizeTextNoStemming(content,\
                     remove_stopwords=0)

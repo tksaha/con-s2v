@@ -194,7 +194,7 @@ def ortho_weight(ndim):
     return u.astype('float32')
 
 def norm_weight(nin,nout=None, scale=0.01, orth=True):
-    if nout == None:
+    if nout is None:
         nout = nin
     if nout == nin and orth:
         W = ortho_weight(nin)
@@ -213,9 +213,9 @@ def linear(x):
 
 # feedforward layer: affine transformation + point-wise nonlinearity
 def param_init_fflayer(options, params, prefix='ff', nin=None, nout=None, orth=True):
-    if nin == None:
+    if nin is  None:
         nin = options['dim_proj']
-    if nout == None:
+    if nout is None:
         nout = options['dim_proj']
     params[_p(prefix,'W')] = norm_weight(nin, nout, scale=0.01, orth=orth)
     params[_p(prefix,'b')] = numpy.zeros((nout,)).astype('float32')
@@ -227,9 +227,9 @@ def fflayer(tparams, state_below, options, prefix='rconv', activ='lambda x: tens
 
 # GRU layer
 def param_init_gru(options, params, prefix='gru', nin=None, dim=None, hiero=False):
-    if nin == None:
+    if nin is  None:
         nin = options['dim_proj']
-    if dim == None:
+    if dim is None:
         dim = options['dim_proj']
     if not hiero:
         W = numpy.concatenate([norm_weight(nin,dim),
@@ -257,7 +257,7 @@ def gru_layer(tparams, state_below, options, prefix='gru', mask=None, **kwargs):
 
     dim = tparams[_p(prefix,'Ux')].shape[1]
 
-    if mask == None:
+    if mask is None:
         mask = tensor.alloc(1., state_below.shape[0], 1)
 
     def _slice(_x, n, dim):
@@ -306,11 +306,11 @@ def gru_layer(tparams, state_below, options, prefix='gru', mask=None, **kwargs):
 
 # Conditional GRU layer without Attention
 def param_init_gru_cond(options, params, prefix='gru_cond', nin=None, dim=None, dimctx=None):
-    if nin == None:
+    if nin is None:
         nin = options['dim']
-    if dim == None:
+    if dim is None:
         dim = options['dim']
-    if dimctx == None:
+    if dimctx is None:
         dimctx = options['dim']
 
     params = param_init_gru(options, params, prefix, nin=nin, dim=dim)
@@ -342,13 +342,13 @@ def gru_cond_layer(tparams, state_below, options, prefix='gru',
         n_samples = 1
 
     # mask
-    if mask == None:
+    if mask is None:
         mask = tensor.alloc(1., state_below.shape[0], 1)
 
     dim = tparams[_p(prefix, 'Ux')].shape[1]
 
     # initial/previous state
-    if init_state == None:
+    if init_state is None:
         init_state = tensor.alloc(0., n_samples, dim)
 
     # projected context 
@@ -778,7 +778,7 @@ def perplexity(f_cost, lines, worddict, options, verbose=False, wv_embs=None):
 def train(dim_word=100, # word vector dimensionality
           dim=1000, # the number of RNN units
           patience=10,
-          max_epochs=5000,
+          max_epochs=5,
           dispFreq=100,
           corruption=['_mask', '_shuffle'],
           corruption_prob=[0.1, 0.1],

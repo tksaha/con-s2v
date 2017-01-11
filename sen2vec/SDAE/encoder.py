@@ -12,7 +12,7 @@ import numpy
 import copy
 import nltk
 from log_manager.log_config import Logger 
-
+import gensim 
 from collections import OrderedDict, defaultdict
 from scipy.linalg import norm
 from nltk.tokenize import word_tokenize
@@ -142,14 +142,13 @@ def encode(model, X, use_norm=False, verbose=True, batch_size=128, use_eos=False
 #         X.append(result)
 #     return X
 
+# Tokens should be preprocessed so that 
+# it can be splitted with split command 
 def preprocess(text):
     X = []
-    from utility.Utility import Utility
-    utFunction = Utility("Text Utility")
     for t in text:
         result = ''
-        content = gensim.utils.to_unicode(t) 
-        tokens = utFunction.normalizeText(content, remove_stopwords=0)
+        tokens = t.split()
         result += ' ' + ' '.join(tokens)
         X.append(result)
 
@@ -246,7 +245,7 @@ def init_params(options):
     params = OrderedDict()
 
     # embedding
-    params['Wemb'] = norm_weight(options['n_words_src'], options['dim_word'])
+    params['Wemb'] = norm_weight(options['n_words'], options['dim_word'])
 
     # encoder: GRU
     params = get_layer(options['encoder'])[0](options, params, prefix='encoder',
