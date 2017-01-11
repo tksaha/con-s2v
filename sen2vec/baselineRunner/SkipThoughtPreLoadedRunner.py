@@ -67,6 +67,10 @@ class SkipThoughtPreLoadedRunner(BaselineRunner):
             for row_id in range(0,len(result)):
                 id_ = result[row_id][0] 
                 sentence = result[row_id][1]
+                content = gensim.utils.to_unicode(sentence) 
+                content = self.utFunction.normalizeTextNoStemming(content,\
+                    remove_stopwords=0)
+                sentence = ' '.join(content)
                 sentence_list.append(sentence)
 
         Logger.logr.info("Total Number of sentences = %i"%len(sentence_list))
@@ -127,7 +131,7 @@ class SkipThoughtPreLoadedRunner(BaselineRunner):
             vecFile = open("%s.p"%(self.sentReprFile),"rb")
             vDict = pickle.load(vecFile)
         else:
-            vecFile_raw = open("%s_raw.p"%(self.sentReprFile),"rb")
+            vecFile_raw = open("%s.p"%(self.sentReprFile),"rb")
             vDict = pickle.load(vecFile_raw)
 
         Logger.logr.info("Total ids in dictionary =%i"%len(vDict))
