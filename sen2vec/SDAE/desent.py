@@ -968,7 +968,7 @@ def train(dim_word=100, # word vector dimensionality
                 shp = x_noise.shape
                 x_noise = wv_embs[x_noise.flatten()].reshape([shp[0], shp[1], wv_embs.shape[1]])
 
-            if x == None:
+            if x is None:
                 Logger.logr.info('Minibatch with zero sample under length %i'%maxlen)
                 continue
 
