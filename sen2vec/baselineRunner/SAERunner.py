@@ -155,9 +155,8 @@ class SAERunner(BaselineRunner):
 
 
     def runTheBaseline(self, rbase, latent_space_size):
-        self.runSAE()
+        #self.runSAE()
         model = load_model (self.saveto)
-        #return 0 
 
         nSent = 0
         for result in self.postgresConnection.memoryEfficientSelect(["count(*)"],\
@@ -179,7 +178,7 @@ class SAERunner(BaselineRunner):
                 id_ = result[row_id][0] 
                 sentence = result[row_id][1]
                 content = gensim.utils.to_unicode(sentence) 
-                content = self.utFunction.normalizeTextNoStemming(content,\
+                content = self.utFunction.normalizeText(content,\
                     remove_stopwords=0)
                 sentence = ' '.join(content)
                 sentence_list.append(sentence)

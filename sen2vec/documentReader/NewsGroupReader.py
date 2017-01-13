@@ -189,7 +189,7 @@ class NewsGroupReader(DocumentReader):
         os.environ['TEST_FOR'] = 'CLASS'
         from baselineRunner.SAERunner import SAERunner
         saerunner = SAERunner (self.dbstring)
-        saerunner.prepareData(pd) 
+        #saerunner.prepareData(pd) 
         saerunner.runTheBaseline(rbase, 300)
         saerunner.runEvaluationTask()
 
@@ -200,17 +200,17 @@ class NewsGroupReader(DocumentReader):
 
 
 
-        os.environ["EVAL"]='TEST'
-        os.environ['TEST_FOR'] = 'CLASS'
-        from baselineRunner.SDAERunner import SDAERunner
-        sdaerunner = SDAERunner (self.dbstring)
-        sdaerunner.prepareData(pd) 
-        sdaerunner.runTheBaseline(rbase, 300)
-        sdaerunner.runEvaluationTask()
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLASS'
+        # from baselineRunner.SDAERunner import SDAERunner
+        # sdaerunner = SDAERunner (self.dbstring)
+        # sdaerunner.prepareData(pd) 
+        # sdaerunner.runTheBaseline(rbase, 300)
+        # sdaerunner.runEvaluationTask()
 
-        os.environ["EVAL"]='TEST'
-        os.environ['TEST_FOR'] = 'CLUST'
-        sdaerunner.runEvaluationTask()
+        # os.environ["EVAL"]='TEST'
+        # os.environ['TEST_FOR'] = 'CLUST'
+        # sdaerunner.runEvaluationTask()
 
 
 

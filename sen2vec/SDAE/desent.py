@@ -778,7 +778,7 @@ def perplexity(f_cost, lines, worddict, options, verbose=False, wv_embs=None):
 def train(dim_word=100, # word vector dimensionality
           dim=1000, # the number of RNN units
           patience=10,
-          max_epochs=5,
+          max_epochs=1,
           dispFreq=100,
           corruption=['_mask', '_shuffle'],
           corruption_prob=[0.1, 0.1],
@@ -968,7 +968,7 @@ def train(dim_word=100, # word vector dimensionality
                 shp = x_noise.shape
                 x_noise = wv_embs[x_noise.flatten()].reshape([shp[0], shp[1], wv_embs.shape[1]])
 
-            if x == None:
+            if x is None:
                 Logger.logr.info('Minibatch with zero sample under length %i'%maxlen)
                 continue
 
