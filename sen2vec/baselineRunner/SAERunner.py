@@ -54,13 +54,13 @@ class SAERunner(BaselineRunner):
         self.encoder = 'gru'
         self.decoder = 'gru_cond'
         self.dataset = os.environ['DATASET']
-        self.use_preemb = False
-        self.embeddings = None
+        self.use_preemb = True
+        self.embeddings = os.path.join(self.dataDir, "sdae_data/glove.pkl")
         self.dictionary = os.path.join(self.dataDir,\
                 "%s_%s_dictionary.p"%(os.environ['DATASET'], self.latReprName))
         self.valid_text = None
         self.test_text =  None
-        self.use_dropout = False
+        self.use_dropout = True 
         self.reload_ = False
         self.outembFile = os.path.join(self.dataDir, "%s_repr"%(self.latReprName))
 
@@ -155,7 +155,7 @@ class SAERunner(BaselineRunner):
 
 
     def runTheBaseline(self, rbase, latent_space_size):
-        #self.runSAE()
+        self.runSAE()
         model = load_model (self.saveto)
 
         nSent = 0
