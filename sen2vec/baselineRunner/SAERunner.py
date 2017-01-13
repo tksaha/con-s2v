@@ -90,7 +90,7 @@ class SAERunner(BaselineRunner):
 
         D = defaultdict(int)
         sentfiletoWrite = open("%s.txt"%(self.sentsFile),"w")
-        Logger.logr.info ("Preparing Data for SDAE")
+        Logger.logr.info ("Preparing Data for SAE")
         for doc_result in self.postgresConnection.memoryEfficientSelect(["id"],\
             ["document"], [], [], ["id"]):
             for row_id in range(0,len(doc_result)):
