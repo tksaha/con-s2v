@@ -145,7 +145,7 @@ Please download the vectors from [Glove link] (http://nlp.stanford.edu/projects/
 a line in the first line using following command:
 
 ```
-sed -i `1 i\400000 300' glove.6B.300d.txt
+sed -i '1 i\400000 300' glove.6B.300d.txt
 ```
 
 

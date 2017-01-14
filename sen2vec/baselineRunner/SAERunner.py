@@ -31,7 +31,7 @@ class SAERunner(BaselineRunner):
         self.dataDir = os.environ['TRTESTFOLDER']
         self.sentsFile = os.path.join(self.dataDir, "%s_sents"%self.latReprName)
 
-        self.dim_word = 100 # word vector dimensionality
+        self.dim_word = 300 # word vector dimensionality
         self.dim = 2400 # the number of RNN units
         self.patience = 10
         self.max_epochs = 5
@@ -69,7 +69,7 @@ class SAERunner(BaselineRunner):
     # according to my need.
     def add_line(self, textline, D):
         content = gensim.utils.to_unicode(textline) 
-        words = self.utFunction.normalizeText(content, remove_stopwords=0)
+        words = self.utFunction.normalizeTextNoStemming(content, remove_stopwords=0)
         for w in words:
             D[w] += 1
         return D
@@ -102,7 +102,7 @@ class SAERunner(BaselineRunner):
                         sentence = sentence_result[inrow_id][1]
                         D = self.add_line(sentence, D)
                         content = gensim.utils.to_unicode(sentence)
-                        content = self.utFunction.normalizeText(content, remove_stopwords=0)
+                        content = self.utFunction.normalizeTextNoStemming(content, remove_stopwords=0)
                         sentfiletoWrite.write("%s%s"%(' '.join(content), os.linesep))
 
         sentfiletoWrite.flush()
@@ -178,7 +178,7 @@ class SAERunner(BaselineRunner):
                 id_ = result[row_id][0] 
                 sentence = result[row_id][1]
                 content = gensim.utils.to_unicode(sentence) 
-                content = self.utFunction.normalizeText(content,\
+                content = self.utFunction.normalizeTextNoStemming(content,\
                     remove_stopwords=0)
                 sentence = ' '.join(content)
                 sentence_list.append(sentence)

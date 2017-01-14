@@ -778,7 +778,7 @@ def perplexity(f_cost, lines, worddict, options, verbose=False, wv_embs=None):
 def train(dim_word=100, # word vector dimensionality
           dim=1000, # the number of RNN units
           patience=10,
-          max_epochs=1,
+          max_epochs=5,
           dispFreq=100,
           corruption=['_mask', '_shuffle'],
           corruption_prob=[0.1, 0.1],
@@ -821,9 +821,10 @@ def train(dim_word=100, # word vector dimensionality
 
         with open(embeddings, 'rb') as f:
             wv = pkl.load(f)
-        wv_embs = numpy.zeros((len(worddict.keys()), len(wv.values()[0])), dtype='float32')
+        wv_embs = numpy.zeros((len(worddict.keys()), len(list(wv.values())[0])), dtype='float32')
         for ii, vv in wv.items():
             if ii in worddict:
+                print ("Got it")
                 wv_embs[worddict[ii],:] = vv
         wv_embs = wv_embs.astype('float32')
         model_options['dim_word'] = wv_embs.shape[1]

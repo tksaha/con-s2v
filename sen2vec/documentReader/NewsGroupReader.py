@@ -189,7 +189,7 @@ class NewsGroupReader(DocumentReader):
         os.environ['TEST_FOR'] = 'CLASS'
         from baselineRunner.SAERunner import SAERunner
         saerunner = SAERunner (self.dbstring)
-        #saerunner.prepareData(pd) 
+        saerunner.prepareData(pd) 
         saerunner.runTheBaseline(rbase, 300)
         saerunner.runEvaluationTask()
 
