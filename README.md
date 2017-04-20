@@ -1,4 +1,5 @@
-# Discourse Informed Sentence To Vector 
+# C ON -S2V: A Generic Framework for Incorporating
+Extra-Sentential Context into Sen2Vec
 Latent Representation for the sentences.
  
 
