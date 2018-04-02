@@ -1,7 +1,30 @@
 # CON-S2V: A Generic Framework for Incorporating
 Extra-Sentential Context into Sen2Vec
 Latent Representation for the sentences.
- 
+
+# Citation
+If you are using the code, please consider citing the following papers:
+
+```
+@inproceedings{saha2017c,
+  title={C on-S2V: A Generic Framework for Incorporating Extra-Sentential Context into Sen2Vec},
+  author={Saha, Tanay Kumar and Joty, Shafiq and Al Hasan, Mohammad},
+  booktitle={Joint European Conference on Machine Learning and Knowledge Discovery in Databases},
+  pages={753--769},
+  year={2017},
+  organization={Springer}
+}
+```
+```
+@inproceedings{saha2017regularized,
+  title={Regularized and Retrofitted models for Learning Sentence Representation with Context},
+  author={Saha, Tanay Kumar and Joty, Shafiq and Hassan, Naeemul and Hasan, Mohammad Al},
+  booktitle={Proceedings of the 2017 ACM on Conference on Information and Knowledge Management},
+  pages={547--556},
+  year={2017},
+  organization={ACM}
+}
+```
 
 ## Requirements
 * [Anaconda with Python 3.5](https://www.continuum.io/downloads)
