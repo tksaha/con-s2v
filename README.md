@@ -1,5 +1,5 @@
 # Sentence To Vector 
-Vector representation of sentences.
+Vector representation of sentences. **(Please use the code under jointlearning branch)**
 
 ## Requirements
 * [Anaconda with Python 3.5](https://www.continuum.io/downloads)
