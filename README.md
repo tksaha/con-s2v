@@ -7,7 +7,7 @@ If you are using the code, please consider citing the following papers:
 
 ```
 @inproceedings{saha2017c,
-  title={C on-S2V: A Generic Framework for Incorporating Extra-Sentential Context into Sen2Vec},
+  title={Con-S2V: A Generic Framework for Incorporating Extra-Sentential Context into Sen2Vec},
   author={Saha, Tanay Kumar and Joty, Shafiq and Al Hasan, Mohammad},
   booktitle={Joint European Conference on Machine Learning and Knowledge Discovery in Databases},
   pages={753--769},
